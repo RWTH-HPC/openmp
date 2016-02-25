@@ -734,16 +734,6 @@ __kmp_parallel_dxo( int *gtid_ref, int *cid_ref, ident_t *loc_ref )
         /* TODO repleace with general release procedure */
         team->t.t_ordered.dt.t_value = ((tid + 1) % team->t.t_nproc );
 
-#if OMPT_SUPPORT && OMPT_BLAME
-        if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_event_release_ordered)) {
-            /* accept blame for "ordered" waiting */
-            kmp_info_t *this_thread = __kmp_threads[gtid];
-            ompt_callbacks.ompt_callback(ompt_event_release_ordered)(
-                this_thread->th.ompt_thread_info.wait_id);
-        }
-#endif
-
         KMP_MB();       /* Flush all pending memory write invalidates.  */
     }
 #endif /* BUILD_PARALLEL_ORDERED */

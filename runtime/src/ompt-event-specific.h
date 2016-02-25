@@ -120,16 +120,16 @@
 #define ompt_event_taskgroup_end_implemented            ompt_event_UNIMPLEMENTED
 
 #define ompt_event_release_nest_lock_prev_implemented   ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_wait_lock_implemented                ompt_event_UNIMPLEMENTED
-#define ompt_event_wait_nest_lock_implemented           ompt_event_UNIMPLEMENTED
-#define ompt_event_wait_critical_implemented            ompt_event_UNIMPLEMENTED
+#define ompt_event_wait_lock_implemented                ompt_event_MAY_ALWAYS_TRACE
+#define ompt_event_wait_nest_lock_implemented           ompt_event_MAY_ALWAYS_TRACE
+#define ompt_event_wait_critical_implemented            ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_wait_atomic_implemented              ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_wait_ordered_implemented             ompt_event_MAY_ALWAYS_TRACE
 
 #define ompt_event_acquired_lock_implemented            ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_acquired_nest_lock_first_implemented ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_acquired_nest_lock_next_implemented  ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_acquired_critical_implemented        ompt_event_UNIMPLEMENTED
+#define ompt_event_acquired_critical_implemented        ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_acquired_atomic_implemented          ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_acquired_ordered_implemented         ompt_event_MAY_ALWAYS_TRACE
 
