@@ -486,6 +486,16 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
                 new_taskdata->ompt_task_info.deps[ndeps+i].dependence_flags =
                   ompt_task_dependence_type_in;
         }
+        ompt_callbacks.ompt_callback(ompt_event_task_dependences)(
+            new_taskdata->ompt_task_info.task_id,
+            new_taskdata->ompt_task_info.deps,
+            new_taskdata->ompt_task_info.ndeps
+        );
+		/* We can now free the allocated memory for the dependencies */
+        /* For OMPD we might want to delay the free until task_end */
+		KMP_OMPT_DEPS_FREE (thread, new_taskdata->ompt_task_info.deps);
+        new_taskdata->ompt_task_info.deps = NULL;
+        new_taskdata->ompt_task_info.ndeps = 0;
     }
 #endif /* OMPT_SUPPORT && OMPT_TRACE */
 
