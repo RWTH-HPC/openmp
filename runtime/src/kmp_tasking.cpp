@@ -450,17 +450,6 @@ __kmp_task_start( kmp_int32 gtid, kmp_task_t * task, kmp_taskdata_t * current_ta
     KA_TRACE(10, ("__kmp_task_start(exit): T#%d task=%p\n",
                   gtid, taskdata ) );
 
-#if OMPT_SUPPORT
-    if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
-        kmp_taskdata_t *parent = taskdata->td_parent;
-        ompt_callbacks.ompt_callback(ompt_event_task_begin)(
-            parent ? parent->ompt_task_info.task_id : ompt_task_id_none,
-            parent ? &(parent->ompt_task_info.frame) : NULL,
-            taskdata->ompt_task_info.task_id,
-            taskdata->ompt_task_info.function);
-    }
-#endif
 #if OMP_40_ENABLED && OMPT_SUPPORT && OMPT_TRACE
     /* OMPT emit all dependences if requested by the tool */
     if (ompt_enabled && taskdata->ompt_task_info.ndeps > 0 &&
@@ -1129,6 +1118,17 @@ __kmp_task_alloc( ident_t *loc_ref, kmp_int32 gtid, kmp_tasking_flags_t *flags,
 
 #if OMPT_SUPPORT
     __kmp_task_init_ompt(taskdata, gtid, (void*) task_entry);
+#endif
+#if OMPT_SUPPORT
+    if (ompt_enabled &&
+        ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+        kmp_taskdata_t *parent = taskdata->td_parent;
+        ompt_callbacks.ompt_callback(ompt_event_task_begin)(
+            parent ? parent->ompt_task_info.task_id : ompt_task_id_none,
+            parent ? &(parent->ompt_task_info.frame) : NULL,
+            taskdata->ompt_task_info.task_id,
+            taskdata->ompt_task_info.function);
+    }
 #endif
 
     return task;
