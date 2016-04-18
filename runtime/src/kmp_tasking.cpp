@@ -611,7 +611,7 @@ __kmp_task_finish( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t *resumed_tas
         ompt_callbacks.ompt_callback(ompt_event_task_end)) {
         kmp_taskdata_t *parent = taskdata->td_parent;
         ompt_callbacks.ompt_callback(ompt_event_task_end)(
-            taskdata->ompt_task_info.task_id);
+            taskdata->ompt_task_info.task_data);
     }
 #endif
 
@@ -783,7 +783,7 @@ static inline void
 __kmp_task_init_ompt( kmp_taskdata_t * task, int tid, void * function )
 {
     if (ompt_enabled) {
-        task->ompt_task_info.task_id = __ompt_task_id_new(tid);
+        task->ompt_task_info.task_data.value = __ompt_task_id_new(tid);
         task->ompt_task_info.function = function;
         task->ompt_task_info.frame.exit_runtime_frame = NULL;
         task->ompt_task_info.frame.reenter_runtime_frame = NULL;
@@ -1106,10 +1106,11 @@ __kmp_task_alloc( ident_t *loc_ref, kmp_int32 gtid, kmp_tasking_flags_t *flags,
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
         kmp_taskdata_t *parent = taskdata->td_parent;
+        ompt_task_data_t task_data = ompt_task_id_none;
         ompt_callbacks.ompt_callback(ompt_event_task_begin)(
-            parent ? parent->ompt_task_info.task_id : ompt_task_id_none,
+            parent ? parent->ompt_task_info.task_data : task_data,
             parent ? &(parent->ompt_task_info.frame) : NULL,
-            taskdata->ompt_task_info.task_id,
+            &(taskdata->ompt_task_info.task_data),
             taskdata->ompt_task_info.function);
     }
 #endif
@@ -1254,8 +1255,8 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
              ompt_callbacks.ompt_callback(ompt_event_task_switch))
         {
           ompt_callbacks.ompt_callback(ompt_event_task_switch)(
-            current_task->ompt_task_info.task_id,
-            taskdata->ompt_task_info.task_id);
+            current_task->ompt_task_info.task_data,
+            taskdata->ompt_task_info.task_data);
         }
 #endif
 
@@ -1276,8 +1277,8 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
              ompt_callbacks.ompt_callback(ompt_event_task_switch))
         {
           ompt_callbacks.ompt_callback(ompt_event_task_switch)(
-            taskdata->ompt_task_info.task_id,
-            current_task->ompt_task_info.task_id);
+            taskdata->ompt_task_info.task_data,
+            current_task->ompt_task_info.task_data);
         }
 #endif
 
@@ -1448,18 +1449,18 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
         taskdata = thread -> th.th_current_task;
 
 #if OMPT_SUPPORT && OMPT_TRACE
-        ompt_task_id_t my_task_id;
-        ompt_parallel_id_t my_parallel_id;
-
+        ompt_task_data_t my_task_data;
+        ompt_parallel_data_t my_parallel_data;
+        
         if (ompt_enabled) {
             kmp_team_t *team = thread->th.th_team;
-            my_task_id = taskdata->ompt_task_info.task_id;
-            my_parallel_id = team->t.ompt_team_info.parallel_id;
-
-            taskdata->ompt_task_info.frame.reenter_runtime_frame = __builtin_frame_address(1);
+            my_task_data = taskdata->ompt_task_info.task_data;
+            my_parallel_data = team->t.ompt_team_info.parallel_data;
+            
+            taskdata->ompt_task_info.frame.reenter_runtime_frame = __builtin_frame_address(0);
             if (ompt_callbacks.ompt_callback(ompt_event_taskwait_begin)) {
                 ompt_callbacks.ompt_callback(ompt_event_taskwait_begin)(
-                                my_parallel_id, my_task_id);
+                                my_parallel_data, my_task_data);
             }
         }
 #endif
@@ -1504,7 +1505,7 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
         if (ompt_enabled) {
             if (ompt_callbacks.ompt_callback(ompt_event_taskwait_end)) {
                 ompt_callbacks.ompt_callback(ompt_event_taskwait_end)(
-                                my_parallel_id, my_task_id);
+                                my_parallel_data, my_task_data);
             }
             taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
         }

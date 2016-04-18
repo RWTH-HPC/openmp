@@ -380,7 +380,7 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
         // implicit task callback
         if (ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)) {
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)(
-                team_info->parallel_id, task_info->task_id);
+                team_info->parallel_data, &(task_info->task_data));
         }
 #endif
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
@@ -392,17 +392,21 @@ static void
 __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *))
 {
 #if OMPT_SUPPORT
-    ompt_parallel_id_t ompt_parallel_id;
+    ompt_parallel_data_t ompt_parallel_data;
+    ompt_task_data_t my_ompt_task_data;
     if (ompt_enabled) {
-        ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
+        ompt_task_data_t ompt_task_data = __ompt_get_task_data_internal(0);
+        ompt_frame_t  *ompt_frame = __ompt_get_task_frame_internal(0);
+        kmp_info_t *thr = __kmp_threads[gtid];
 
-        ompt_parallel_id = __ompt_parallel_id_new(gtid);
+        ompt_parallel_data = {.value=__ompt_parallel_id_new(gtid)};
+        my_ompt_task_data = {.value=__ompt_task_id_new(gtid)};
 
         // parallel region callback
         if (ompt_callbacks.ompt_callback(ompt_event_parallel_begin)) {
             int team_size = 1;
             ompt_callbacks.ompt_callback(ompt_event_parallel_begin)(
-                task_info->task_id, &task_info->frame, ompt_parallel_id,
+                ompt_task_data, ompt_frame, &ompt_parallel_data,
                 team_size, (void *) task,
                 OMPT_INVOKER(fork_context_gnu));
         }
@@ -415,20 +419,19 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
     if (ompt_enabled) {
         kmp_info_t *thr = __kmp_threads[gtid];
 
-        ompt_task_id_t my_ompt_task_id = __ompt_task_id_new(gtid);
-
         // set up lightweight task
         ompt_lw_taskteam_t *lwt = (ompt_lw_taskteam_t *)
             __kmp_allocate(sizeof(ompt_lw_taskteam_t));
-        __ompt_lw_taskteam_init(lwt, thr, gtid, (void *) task, ompt_parallel_id);
-        lwt->ompt_task_info.task_id = my_ompt_task_id;
+        __ompt_lw_taskteam_init(lwt, thr, gtid, (void *) task, ompt_parallel_data);
+        lwt->ompt_task_info.task_data = my_ompt_task_data;
+        lwt->ompt_task_info.frame.exit_runtime_frame = 0;
         __ompt_lw_taskteam_link(lwt, thr);
 
 #if OMPT_TRACE
         // implicit task callback
         if (ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)) {
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)(
-                ompt_parallel_id, my_ompt_task_id);
+                ompt_parallel_data, &my_ompt_task_data);
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
 #endif
@@ -487,16 +490,29 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
 
 
 #if OMPT_SUPPORT
-    ompt_parallel_id_t parallel_id;
-    ompt_task_id_t serialized_task_id;
+    ompt_parallel_data_t parallel_data;
+    ompt_task_data_t serialized_task_data;
     ompt_frame_t *ompt_frame = NULL;
 
     if (ompt_enabled) {
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
-        parallel_id = team_info->parallel_id;
+        parallel_data = team_info->parallel_data;
 
         ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
-        serialized_task_id = task_info->task_id;
+        serialized_task_data = task_info->task_data;
+        // Record that we re-entered the runtime system in the implicit
+        // task frame representing the parallel region. 
+        ompt_frame = __ompt_get_task_frame_internal(0);
+        ompt_frame->reenter_runtime_frame = __builtin_frame_address(0);
+
+#if OMPT_TRACE
+        if (ompt_enabled &&
+            ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)) {
+            ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
+            ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)(
+                parallel_data, task_info->task_data);
+        }
+#endif
 
         // unlink if necessary. no-op if there is not a lightweight task.
         ompt_lw_taskteam_t *lwt = __ompt_lw_taskteam_unlink(thr);
@@ -532,7 +548,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)) {
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)(
-                parallel_id, serialized_task_id);
+                parallel_data, serialized_task_data);
         }
 #endif
 
@@ -546,7 +562,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
 
             if (ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
                 ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
-                    parallel_id, parent_task_info->task_id,
+                    parallel_data, parent_task_info->task_data, 
                     OMPT_INVOKER(fork_context_gnu));
             }
 

@@ -356,9 +356,9 @@ OMPT_API_ROUTINE int ompt_get_callback(ompt_event_t evid, ompt_callback_t *cb)
  * parallel regions
  ****************************************************************************/
 
-OMPT_API_ROUTINE ompt_parallel_id_t ompt_get_parallel_id(int ancestor_level)
+OMPT_API_ROUTINE ompt_parallel_data_t ompt_get_parallel_data(int ancestor_level)
 {
-    return __ompt_get_parallel_id_internal(ancestor_level);
+    return __ompt_get_parallel_data_internal(ancestor_level);
 }
 
 
@@ -409,9 +409,9 @@ OMPT_API_ROUTINE ompt_thread_id_t ompt_get_thread_id(void)
     return __ompt_get_thread_id_internal();
 }
 
-OMPT_API_ROUTINE ompt_task_id_t ompt_get_task_id(int depth)
+OMPT_API_ROUTINE ompt_task_data_t ompt_get_task_data(int depth)
 {
-    return __ompt_get_task_id_internal(depth);
+    return __ompt_get_task_data_internal(depth);
 }
 
 

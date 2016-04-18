@@ -236,8 +236,8 @@ __kmp_track_dependence ( kmp_depnode_t *source, kmp_depnode_t *sink,
         kmp_taskdata_t * task_sink = KMP_TASK_TO_TASKDATA(sink_task);
 
         ompt_callbacks.ompt_callback(ompt_event_task_dependence_pair)(
-          task_source->ompt_task_info.task_id,
-          task_sink->ompt_task_info.task_id);
+          task_source->ompt_task_info.task_data,
+          task_sink->ompt_task_info.task_data);
     }
 #endif /* OMPT_SUPPORT && OMPT_TRACE */
 }
@@ -487,7 +487,7 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
                   ompt_task_dependence_type_in;
         }
         ompt_callbacks.ompt_callback(ompt_event_task_dependences)(
-            new_taskdata->ompt_task_info.task_id,
+            new_taskdata->ompt_task_info.task_data,
             new_taskdata->ompt_task_info.deps,
             new_taskdata->ompt_task_info.ndeps
         );

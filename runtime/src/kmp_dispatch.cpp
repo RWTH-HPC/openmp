@@ -1258,7 +1258,7 @@ __kmp_dispatch_init(
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
         ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
         ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-            team_info->parallel_id, task_info->task_id, team_info->microtask);
+            team_info->parallel_data, task_info->task_data, team_info->microtask);
     }
 #endif
 }
@@ -1422,7 +1422,7 @@ __kmp_dispatch_finish_chunk( int gtid, ident_t *loc )
             ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);        \
             ompt_task_info_t *task_info = __ompt_get_taskinfo(0);              \
             ompt_callbacks.ompt_callback(ompt_event_loop_end)(                 \
-                team_info->parallel_id, task_info->task_id);                   \
+                team_info->parallel_data, task_info->task_data);               \
         }                                                                      \
     }
 #else

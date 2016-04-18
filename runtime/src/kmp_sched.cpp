@@ -155,7 +155,7 @@ __kmp_for_static_init(
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
             ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-                team_info->parallel_id, task_info->task_id,
+                team_info->parallel_data, task_info->task_data,
                 team_info->microtask);
         }
 #endif
@@ -204,7 +204,7 @@ __kmp_for_static_init(
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
             ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-                team_info->parallel_id, task_info->task_id,
+                team_info->parallel_data, task_info->task_data,
                 team_info->microtask);
         }
 #endif
@@ -232,7 +232,7 @@ __kmp_for_static_init(
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
             ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-                team_info->parallel_id, task_info->task_id,
+                team_info->parallel_data, task_info->task_data,
                 team_info->microtask);
         }
 #endif
@@ -386,7 +386,7 @@ __kmp_for_static_init(
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
         ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-            team_info->parallel_id, task_info->task_id, team_info->microtask);
+            team_info->parallel_data, task_info->task_data, team_info->microtask);
     }
 #endif
 
