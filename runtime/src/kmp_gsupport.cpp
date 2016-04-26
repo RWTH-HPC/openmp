@@ -423,7 +423,7 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
         ompt_lw_taskteam_t *lwt = (ompt_lw_taskteam_t *)
             __kmp_allocate(sizeof(ompt_lw_taskteam_t));
         __ompt_lw_taskteam_init(lwt, thr, gtid, (void *) task, ompt_parallel_data);
-        lwt->ompt_task_info.task_data = my_ompt_task_data;
+        lwt->ompt_task_info.task_data.value = __ompt_task_id_new(gtid);
         lwt->ompt_task_info.frame.exit_runtime_frame = 0;
         __ompt_lw_taskteam_link(lwt, thr);
 
@@ -431,7 +431,7 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
         // implicit task callback
         if (ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)) {
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)(
-                ompt_parallel_data, &my_ompt_task_data);
+                ompt_parallel_data, &(lwt->ompt_task_info.task_data));
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
 #endif
