@@ -132,11 +132,12 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
 
 #if OMPT_SUPPORT && OMPT_BLAME
     ompt_state_t ompt_state = this_thr->th.ompt_thread_info.state;
+    ompt_thread_data_t thread_data = this_thr->th.ompt_thread_info.thread_data;
     if (ompt_enabled &&
         ompt_state != ompt_state_undefined) {
         if (ompt_state == ompt_state_idle) {
             if (ompt_callbacks.ompt_callback(ompt_event_idle_begin)) {
-                ompt_callbacks.ompt_callback(ompt_event_idle_begin)(th_gtid + 1);
+                ompt_callbacks.ompt_callback(ompt_event_idle_begin)(thread_data);
             }
         } else if (ompt_callbacks.ompt_callback(ompt_event_wait_barrier_begin)) {
             KMP_DEBUG_ASSERT(ompt_state == ompt_state_wait_barrier ||
@@ -297,7 +298,7 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
         ompt_state != ompt_state_undefined) {
         if (ompt_state == ompt_state_idle) {
             if (ompt_callbacks.ompt_callback(ompt_event_idle_end)) {
-                ompt_callbacks.ompt_callback(ompt_event_idle_end)(th_gtid + 1);
+                ompt_callbacks.ompt_callback(ompt_event_idle_end)(thread_data);
             }
         } else if (ompt_callbacks.ompt_callback(ompt_event_wait_barrier_end)) {
             KMP_DEBUG_ASSERT(ompt_state == ompt_state_wait_barrier ||

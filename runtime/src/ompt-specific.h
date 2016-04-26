@@ -33,10 +33,6 @@ ompt_team_info_t *__ompt_get_teaminfo(int depth, int *size);
 
 ompt_task_info_t *__ompt_get_taskinfo(int depth);
 
-void __ompt_thread_begin(ompt_thread_type_t thread_type, int gtid);
-
-void __ompt_thread_end(ompt_thread_type_t thread_type, int gtid);
-
 int __ompt_get_parallel_team_size_internal(int ancestor_level);
 
 ompt_task_data_t __ompt_get_task_data_internal(int depth);

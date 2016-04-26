@@ -3685,6 +3685,9 @@ __kmp_register_root( int initial_thread )
             __kmp_print_thread_storage_map( root_thread, gtid );
         }
         root_thread->th.th_info .ds.ds_gtid = gtid;
+#if OMPT_SUPPORT
+        root_thread->th.ompt_thread_info.thread_data.value = gtid + 1;
+#endif
         root_thread->th.th_root =  root;
         if( __kmp_env_consistency_check ) {
             root_thread->th.th_cons = __kmp_allocate_cons_stack( gtid );
@@ -3862,8 +3865,9 @@ __kmp_reset_root(int gtid, kmp_root_t *root)
 #if OMPT_SUPPORT
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_event_thread_end)) {
-        int gtid = __kmp_get_gtid();
-        __ompt_thread_end(ompt_thread_initial, gtid);
+        ompt_thread_data_t thread_data = root->r.r_uber_thread->th.ompt_thread_info.thread_data;
+        ompt_callbacks.ompt_callback(ompt_event_thread_end)(
+            ompt_thread_initial, thread_data);
     }
 #endif
 
@@ -5435,12 +5439,17 @@ __kmp_launch_thread( kmp_info_t *this_thr )
     }
 
 #if OMPT_SUPPORT
+    ompt_thread_data_t *thread_data;
     if (ompt_enabled) {
+        thread_data = &(this_thr->th.ompt_thread_info.thread_data);
+        thread_data->value = gtid + 1;
+
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
         this_thr->th.ompt_thread_info.wait_id = 0;
         this_thr->th.ompt_thread_info.idle_frame = __builtin_frame_address(0);
         if (ompt_callbacks.ompt_callback(ompt_event_thread_begin)) {
-            __ompt_thread_begin(ompt_thread_worker, gtid);
+            ompt_callbacks.ompt_callback(ompt_event_thread_begin)(
+                ompt_thread_worker, thread_data);
         }
     }
 #endif
@@ -5537,7 +5546,8 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 #if OMPT_SUPPORT
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_event_thread_end)) {
-        __ompt_thread_end(ompt_thread_worker, gtid);
+        ompt_callbacks.ompt_callback(ompt_event_thread_end)(
+            ompt_thread_worker, *thread_data);
     }
 #endif
 

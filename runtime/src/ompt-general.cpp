@@ -85,7 +85,7 @@ static ompt_initialize_t  ompt_initialize_fn = NULL;
 
 static ompt_interface_fn_t ompt_fn_lookup(const char *s);
 
-OMPT_API_ROUTINE ompt_thread_id_t ompt_get_thread_id(void);
+OMPT_API_ROUTINE ompt_thread_data_t ompt_get_thread_data(void);
 
 
 /*****************************************************************************
@@ -255,8 +255,8 @@ void ompt_post_init()
         ompt_set_thread_state(root_thread, ompt_state_overhead);
 
         if (ompt_callbacks.ompt_callback(ompt_event_thread_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_thread_begin)
-                (ompt_thread_initial, ompt_get_thread_id());
+            ompt_callbacks.ompt_callback(ompt_event_thread_begin)(
+                ompt_thread_initial, __ompt_get_thread_data_internal());
         }
 
         ompt_set_thread_state(root_thread, ompt_state_work_serial);
@@ -404,9 +404,9 @@ OMPT_API_ROUTINE void *ompt_get_idle_frame()
  ****************************************************************************/
 
 
-OMPT_API_ROUTINE ompt_thread_id_t ompt_get_thread_id(void)
+OMPT_API_ROUTINE ompt_thread_data_t ompt_get_thread_data(void)
 {
-    return __ompt_get_thread_id_internal();
+    return *__ompt_get_thread_data_internal();
 }
 
 OMPT_API_ROUTINE ompt_task_data_t ompt_get_task_data(int depth)

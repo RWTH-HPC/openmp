@@ -10,8 +10,6 @@
 // macros
 //******************************************************************************
 
-#define GTID_TO_OMPT_THREAD_ID(id) ((ompt_id_t) (id >=0) ? id + 1: 0)
-
 #define LWT_FROM_TEAM(team) (team)->t.ompt_serialized_team_info;
 
 #define OMPT_THREAD_ID_BITS 16
@@ -141,33 +139,11 @@ __ompt_thread_id_new()
     return NEXT_ID(&ompt_thread_id, 0);
 }
 
-void
-__ompt_thread_begin(ompt_thread_type_t thread_type, int gtid)
+ompt_thread_data_t *
+__ompt_get_thread_data_internal()
 {
-    ompt_callbacks.ompt_callback(ompt_event_thread_begin)(
-        thread_type, GTID_TO_OMPT_THREAD_ID(gtid));
-}
-
-
-void
-__ompt_thread_end(ompt_thread_type_t thread_type, int gtid)
-{
-    ompt_callbacks.ompt_callback(ompt_event_thread_end)(
-        thread_type, GTID_TO_OMPT_THREAD_ID(gtid));
-}
-
-
-ompt_thread_id_t
-__ompt_get_thread_id_internal()
-{
-    // FIXME
-    // until we have a better way of assigning ids, use __kmp_get_gtid
-    // since the return value might be negative, we need to test that before
-    // assigning it to an ompt_thread_id_t, which is unsigned.
-    int id = __kmp_get_gtid();
-    assert(id >= 0);
-
-    return GTID_TO_OMPT_THREAD_ID(id);
+    kmp_info_t *thread = ompt_get_thread();
+    return &(thread->th.ompt_thread_info.thread_data);
 }
 
 //----------------------------------------------------------
@@ -177,8 +153,7 @@ __ompt_get_thread_id_internal()
 void
 __ompt_thread_assign_wait_id(void *variable)
 {
-    int gtid = __kmp_gtid_get_specific();
-    kmp_info_t *ti = ompt_get_thread_gtid(gtid);
+    kmp_info_t *ti = ompt_get_thread();
 
     ti->th.ompt_thread_info.wait_id = (ompt_wait_id_t) variable;
 }

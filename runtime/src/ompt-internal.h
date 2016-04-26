@@ -58,6 +58,7 @@ typedef struct ompt_lw_taskteam_s {
 
 
 typedef struct {
+    ompt_thread_data_t  thread_data;
     ompt_state_t        state;
     ompt_wait_id_t      wait_id;
     void                *idle_frame;
