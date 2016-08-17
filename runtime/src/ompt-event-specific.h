@@ -116,8 +116,13 @@
 #define ompt_event_taskwait_begin_implemented           ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_taskwait_end_implemented             ompt_event_MAY_ALWAYS_TRACE
 
-#define ompt_event_taskgroup_begin_implemented          ompt_event_UNIMPLEMENTED
-#define ompt_event_taskgroup_end_implemented            ompt_event_UNIMPLEMENTED
+#if OMP_40_ENABLED
+# define ompt_event_taskgroup_begin_implemented          ompt_event_MAY_ALWAYS_TRACE
+# define ompt_event_taskgroup_end_implemented            ompt_event_MAY_ALWAYS_TRACE
+#else
+# define ompt_event_taskgroup_begin_implemented          ompt_event_UNIMPLEMENTED
+# define ompt_event_taskgroup_end_implemented            ompt_event_UNIMPLEMENTED
+#endif
 
 #define ompt_event_release_nest_lock_prev_implemented   ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_wait_lock_implemented                ompt_event_MAY_ALWAYS_TRACE
