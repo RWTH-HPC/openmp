@@ -1102,18 +1102,6 @@ __kmp_task_alloc( ident_t *loc_ref, kmp_int32 gtid, kmp_tasking_flags_t *flags,
 #if OMPT_SUPPORT
     __kmp_task_init_ompt(taskdata, gtid, (void*) task_entry);
 #endif
-#if OMPT_SUPPORT
-    if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
-        kmp_taskdata_t *parent = taskdata->td_parent;
-        ompt_task_data_t task_data = ompt_task_id_none;
-        ompt_callbacks.ompt_callback(ompt_event_task_begin)(
-            parent ? parent->ompt_task_info.task_data : task_data,
-            parent ? &(parent->ompt_task_info.frame) : NULL,
-            &(taskdata->ompt_task_info.task_data),
-            taskdata->ompt_task_info.function);
-    }
-#endif
 
     return task;
 }
@@ -1338,6 +1326,23 @@ __kmpc_omp_task_parts( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
     KA_TRACE(10, ("__kmpc_omp_task_parts(enter): T#%d loc=%p task=%p\n",
                   gtid, loc_ref, new_taskdata ) );
 
+#if OMPT_SUPPORT
+    if (ompt_enabled) {
+        if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+            kmp_taskdata_t *parent = new_taskdata->td_parent;
+            ompt_task_data_t task_data = ompt_task_id_none;
+            ompt_callbacks.ompt_callback(ompt_event_task_begin)(
+                parent ? parent->ompt_task_info.task_data : task_data,
+                parent ? &(parent->ompt_task_info.frame) : NULL,
+                &(new_taskdata->ompt_task_info.task_data),
+                new_taskdata->ompt_task_info.function);
+        }
+
+        new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
+            __builtin_frame_address(0);
+    }
+#endif
+
     /* Should we execute the new task or queue it?   For now, let's just always try to
        queue it.  If the queue fills up, then we'll execute it.  */
 
@@ -1418,11 +1423,28 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
     kmp_int32 res;
     KMP_SET_THREAD_STATE_BLOCK(EXPLICIT_TASK);
 
-#if KMP_DEBUG
+#if KMP_DEBUG || OMPT_SUPPORT
     kmp_taskdata_t * new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
 #endif
     KA_TRACE(10, ("__kmpc_omp_task(enter): T#%d loc=%p task=%p\n",
                   gtid, loc_ref, new_taskdata ) );
+
+#if OMPT_SUPPORT
+    if (ompt_enabled) {
+        if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+            kmp_taskdata_t *parent = new_taskdata->td_parent;
+            ompt_task_data_t task_data = ompt_task_id_none;
+            ompt_callbacks.ompt_callback(ompt_event_task_begin)(
+                parent ? parent->ompt_task_info.task_data : task_data,
+                parent ? &(parent->ompt_task_info.frame) : NULL,
+                &(new_taskdata->ompt_task_info.task_data),
+                new_taskdata->ompt_task_info.function);
+        }
+
+        new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
+            __builtin_frame_address(0);
+    }
+#endif
 
     res =  __kmp_omp_task(gtid,new_task,true);
 

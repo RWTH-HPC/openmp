@@ -444,9 +444,25 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
     kmp_info_t *thread = __kmp_threads[ gtid ];
     kmp_taskdata_t * current_task = thread->th.th_current_task;
 
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT
+    if (ompt_enabled) {
+        if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+            kmp_taskdata_t *parent = new_taskdata->td_parent;
+            ompt_task_data_t task_data = ompt_task_id_none;
+            ompt_callbacks.ompt_callback(ompt_event_task_begin)(
+                parent ? parent->ompt_task_info.task_data : task_data,
+                parent ? &(parent->ompt_task_info.frame) : NULL,
+                &(new_taskdata->ompt_task_info.task_data),
+                new_taskdata->ompt_task_info.function);
+        }
+
+        new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
+            __builtin_frame_address(0);
+    }
+
+#if OMPT_TRACE
     /* OMPT grab all dependences if requested by the tool */
-    if (ompt_enabled && ndeps+ndeps_noalias > 0 &&
+    if (ndeps+ndeps_noalias > 0 &&
         ompt_callbacks.ompt_callback(ompt_event_task_dependences))
 	{
         kmp_int32 i;
@@ -497,7 +513,8 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
         new_taskdata->ompt_task_info.deps = NULL;
         new_taskdata->ompt_task_info.ndeps = 0;
     }
-#endif /* OMPT_SUPPORT && OMPT_TRACE */
+#endif /* OMPT_TRACE */
+#endif /* OMPT_SUPPORT */
 
     bool serial = current_task->td_flags.team_serial || current_task->td_flags.tasking_ser || current_task->td_flags.final;
 #if OMP_45_ENABLED
@@ -535,7 +552,7 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
                   "loc=%p task=%p, transferring to __kmpc_omp_task\n", gtid, loc_ref,
                   new_taskdata ) );
 
-    return __kmpc_omp_task(loc_ref,gtid,new_task);
+    return __kmp_omp_task(gtid,new_task,true);
 }
 
 /*!
