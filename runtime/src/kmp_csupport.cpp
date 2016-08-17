@@ -2301,14 +2301,20 @@ __kmpc_set_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
           ompt_callbacks.ompt_callback(ompt_event_wait_nest_lock)((uint64_t) user_lock);
     }
 #endif
-    KMP_D_LOCK_FUNC(user_lock, set)((kmp_dyna_lock_t *)user_lock, gtid);
+    int acquire_status = KMP_D_LOCK_FUNC(user_lock, set)((kmp_dyna_lock_t *)user_lock, gtid);
 # if USE_ITT_BUILD
     __kmp_itt_lock_acquired((kmp_user_lock_p)user_lock);
 #endif
 
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled) {
-        // missing support here: need to know whether acquired first or not
+        if (acquire_status == KMP_LOCK_ACQUIRED_FIRST) {
+           if(ompt_callbacks.ompt_callback(ompt_event_acquired_nest_lock_first))
+              ompt_callbacks.ompt_callback(ompt_event_acquired_nest_lock_first)((uint64_t) user_lock);
+        } else {
+           if(ompt_callbacks.ompt_callback(ompt_event_acquired_nest_lock_next))
+              ompt_callbacks.ompt_callback(ompt_event_acquired_nest_lock_next)((uint64_t) user_lock);
+        }
     }
 #endif
 
@@ -2384,6 +2390,13 @@ __kmpc_unset_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
         __kmp_direct_unset[tag]((kmp_dyna_lock_t *)user_lock, gtid);
     }
 
+#if OMPT_SUPPORT && OMPT_BLAME
+    if (ompt_enabled &&
+        ompt_callbacks.ompt_callback(ompt_event_release_lock)) {
+        ompt_callbacks.ompt_callback(ompt_event_release_lock)((uint64_t) user_lock);
+    }
+#endif
+
 #else // KMP_USE_DYNAMIC_LOCK
 
     kmp_user_lock_p lck;
@@ -2400,6 +2413,14 @@ __kmpc_unset_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 #endif /* USE_ITT_BUILD */
         TCW_4(((kmp_user_lock_p)user_lock)->tas.lk.poll, 0);
         KMP_MB();
+
+#if OMPT_SUPPORT && OMPT_BLAME
+        if (ompt_enabled &&
+            ompt_callbacks.ompt_callback(ompt_event_release_lock)) {
+            ompt_callbacks.ompt_callback(ompt_event_release_lock)((uint64_t) lck);
+        }
+#endif
+
         return;
 #else
         lck = (kmp_user_lock_p)user_lock;
@@ -2440,7 +2461,21 @@ __kmpc_unset_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 # if USE_ITT_BUILD
     __kmp_itt_lock_releasing((kmp_user_lock_p)user_lock);
 # endif
-    KMP_D_LOCK_FUNC(user_lock, unset)((kmp_dyna_lock_t *)user_lock, gtid);
+    int release_status = KMP_D_LOCK_FUNC(user_lock, unset)((kmp_dyna_lock_t *)user_lock, gtid);
+
+#if OMPT_SUPPORT && OMPT_BLAME
+    if (ompt_enabled) {
+        if (release_status == KMP_LOCK_RELEASED) {
+            if (ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_last)) {
+                ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_last)(
+                    (uint64_t) user_lock);
+            }
+        } else if (ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_prev)) {
+            ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_prev)(
+                (uint64_t) user_lock);
+        }
+    }
+#endif
 
 #else // KMP_USE_DYNAMIC_LOCK
 
@@ -2456,10 +2491,33 @@ __kmpc_unset_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 #if USE_ITT_BUILD
         __kmp_itt_lock_releasing( (kmp_user_lock_p)user_lock );
 #endif /* USE_ITT_BUILD */
+
+#if OMPT_SUPPORT && OMPT_BLAME
+        int release_status = KMP_LOCK_STILL_HELD;
+#endif
+
         if ( --(tl->lk.depth_locked) == 0 ) {
             TCW_4(tl->lk.poll, 0);
+#if OMPT_SUPPORT && OMPT_BLAME
+            release_status = KMP_LOCK_RELEASED;
+#endif
         }
         KMP_MB();
+
+#if OMPT_SUPPORT && OMPT_BLAME
+        if (ompt_enabled) {
+            if (release_status == KMP_LOCK_RELEASED) {
+                if (ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_last)) {
+                    ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_last)(
+                        (uint64_t) lck);
+                }
+            } else if (ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_prev)) {
+                ompt_callbacks.ompt_callback(ompt_event_release_nest_lock_prev)(
+                    (uint64_t) lck);
+            }
+        }
+#endif
+
         return;
 #else
         lck = (kmp_user_lock_p)user_lock;
