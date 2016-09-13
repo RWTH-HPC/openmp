@@ -53,6 +53,32 @@ on_ompt_event_implicit_task_end(
 }
 
 static void
+on_ompt_event_task_begin(
+    ompt_task_id_t parent_task_id,    /* id of parent task            */
+    ompt_frame_t *parent_task_frame,  /* frame data for parent task   */
+    ompt_task_id_t  new_task_id,      /* id of created task           */
+    void *task_function)               /* pointer to outlined function */
+{
+  printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", parallel_function=%p\n", ompt_get_thread_id(), parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, new_task_id, task_function);
+}
+
+static void
+on_ompt_event_task_switch(
+    ompt_task_id_t first_task_id,
+    ompt_task_id_t second_task_id)
+{
+  printf("%" PRIu64 ": ompt_event_task_schedule: first_task_id=%" PRIu64 ", second_task_id=%" PRIu64 "\n", ompt_get_thread_id(), first_task_id, second_task_id);
+}
+
+static void
+on_ompt_event_task_end(
+    ompt_task_id_t task_id)            /* id of task                   */
+{
+  printf("%" PRIu64 ": ompt_event_task_end: task_id=%" PRIu64 "\n", ompt_get_thread_id(), task_id);
+}
+
+
+static void
 on_ompt_event_loop_begin(
   ompt_parallel_id_t parallel_id,
   ompt_task_id_t parent_task_id,
@@ -106,6 +132,9 @@ void ompt_initialize(
   ompt_set_callback(ompt_event_barrier_end, (ompt_callback_t) &on_ompt_event_barrier_end);
   ompt_set_callback(ompt_event_implicit_task_begin, (ompt_callback_t) &on_ompt_event_implicit_task_begin);
   ompt_set_callback(ompt_event_implicit_task_end, (ompt_callback_t) &on_ompt_event_implicit_task_end);
+  ompt_set_callback(ompt_event_task_begin, (ompt_callback_t) &on_ompt_event_task_begin);
+  ompt_set_callback(ompt_event_task_switch, (ompt_callback_t) &on_ompt_event_task_switch);
+  ompt_set_callback(ompt_event_task_end, (ompt_callback_t) &on_ompt_event_task_end);
   ompt_set_callback(ompt_event_loop_begin, (ompt_callback_t) &on_ompt_event_loop_begin);
   ompt_set_callback(ompt_event_loop_end, (ompt_callback_t) &on_ompt_event_loop_end);
   ompt_set_callback(ompt_event_parallel_begin, (ompt_callback_t) &on_ompt_event_parallel_begin);

@@ -971,6 +971,15 @@ xexpand(KMP_API_NAME_GOMP_TASK)(void (*func)(void *), void *data, void (*copy_fu
         }
     }
 
+#if OMPT_SUPPORT
+    kmp_taskdata_t *current_task;
+    if (ompt_enabled) {
+        current_task = __kmp_threads[ gtid ] -> th.th_current_task;
+        current_task->ompt_task_info.frame.reenter_runtime_frame =
+            __builtin_frame_address(1);
+    }
+#endif
+
     if (if_cond) {
         __kmpc_omp_task(&loc, gtid, task);
     }
@@ -979,6 +988,7 @@ xexpand(KMP_API_NAME_GOMP_TASK)(void (*func)(void *), void *data, void (*copy_fu
         ompt_thread_info_t oldInfo;
         kmp_info_t *thread;
         kmp_taskdata_t *taskdata;
+        kmp_taskdata_t *current_task;
         if (ompt_enabled) {
             // Store the threads states and restore them after the task
             thread = __kmp_threads[ gtid ];
@@ -1002,6 +1012,11 @@ xexpand(KMP_API_NAME_GOMP_TASK)(void (*func)(void *), void *data, void (*copy_fu
         }
 #endif
     }
+#if OMPT_SUPPORT
+    if (ompt_enabled) {
+        current_task->ompt_task_info.frame.reenter_runtime_frame = NULL;
+    }
+#endif
 
     KA_TRACE(20, ("GOMP_task exit: T#%d\n", gtid));
 }
