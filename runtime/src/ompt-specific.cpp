@@ -190,8 +190,12 @@ __ompt_get_idle_frame_internal(void)
 ompt_id_t
 __ompt_parallel_id_new(int gtid)
 {
+#ifdef OMPT_INIT_IDS
     static uint64_t ompt_parallel_id = 1;
     return gtid >= 0 ? NEXT_ID(&ompt_parallel_id, gtid) : 0;
+#else
+    return 0;
+#endif
 }
 
 
@@ -269,8 +273,12 @@ __ompt_lw_taskteam_unlink(kmp_info_t *thr)
 ompt_id_t
 __ompt_task_id_new(int gtid)
 {
+#ifdef OMPT_INIT_IDS
     static uint64_t ompt_task_id = 1;
     return NEXT_ID(&ompt_task_id, gtid);
+#else
+    return 0;
+#endif
 }
 
 
