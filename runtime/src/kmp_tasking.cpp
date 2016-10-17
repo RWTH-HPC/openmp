@@ -1249,7 +1249,7 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
 #endif // KMP_STATS_ENABLED
 #endif // OMP_40_ENABLED
 
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT
         /* let OMPT know that we're about to run this task */
         if (ompt_enabled &&
              ompt_callbacks.ompt_callback(ompt_event_task_switch))
@@ -1271,7 +1271,7 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
         }
         KMP_POP_PARTITIONED_TIMER();
 
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT
         /* let OMPT know that we're returning to the callee task */
         if (ompt_enabled &&
              ompt_callbacks.ompt_callback(ompt_event_task_switch))

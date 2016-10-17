@@ -373,7 +373,6 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-#if OMPT_TRACE
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
         ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
 
@@ -382,7 +381,6 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)(
                 team_info->parallel_data, &(task_info->task_data));
         }
-#endif
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
     }
 #endif
@@ -427,14 +425,12 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
         lwt->ompt_task_info.frame.exit_runtime_frame = 0;
         __ompt_lw_taskteam_link(lwt, thr);
 
-#if OMPT_TRACE
         // implicit task callback
         if (ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)) {
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)(
                 ompt_parallel_data, &(lwt->ompt_task_info.task_data));
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
-#endif
     }
 #endif
 }
@@ -505,14 +501,12 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         ompt_frame = __ompt_get_task_frame_internal(0);
         ompt_frame->reenter_runtime_frame = __builtin_frame_address(0);
 
-#if OMPT_TRACE
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)) {
             ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)(
                 parallel_data, task_info->task_data);
         }
-#endif
 
         // unlink if necessary. no-op if there is not a lightweight task.
         ompt_lw_taskteam_t *lwt = __ompt_lw_taskteam_unlink(thr);
@@ -544,7 +538,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         );
     }
     else {
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)) {
             ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)(

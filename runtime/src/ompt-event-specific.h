@@ -49,6 +49,8 @@
 
 #define ompt_event_task_begin_implemented               ompt_event_MAY_ALWAYS
 #define ompt_event_task_end_implemented                 ompt_event_MAY_ALWAYS
+#define ompt_event_task_switch_implemented              ompt_event_MAY_ALWAYS
+
 
 #define ompt_event_thread_begin_implemented             ompt_event_MAY_ALWAYS
 #define ompt_event_thread_end_implemented               ompt_event_MAY_ALWAYS
@@ -56,6 +58,9 @@
 #define ompt_event_control_implemented                  ompt_event_MAY_ALWAYS
 
 #define ompt_event_runtime_shutdown_implemented         ompt_event_MAY_ALWAYS
+
+#define ompt_event_implicit_task_begin_implemented      ompt_event_MAY_ALWAYS
+#define ompt_event_implicit_task_end_implemented        ompt_event_MAY_ALWAYS
 
 
 /*----------------------------------------------------------------------------
@@ -85,13 +90,8 @@
  | Optional Events (synchronous events)
  +--------------------------------------------------------------------------*/
 
-#define ompt_event_implicit_task_begin_implemented      ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_implicit_task_end_implemented        ompt_event_MAY_ALWAYS_TRACE
-
 #define ompt_event_initial_task_begin_implemented       ompt_event_UNIMPLEMENTED
 #define ompt_event_initial_task_end_implemented         ompt_event_UNIMPLEMENTED
-
-#define ompt_event_task_switch_implemented              ompt_event_MAY_ALWAYS_TRACE
 
 #define ompt_event_loop_begin_implemented               ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_loop_end_implemented                 ompt_event_MAY_ALWAYS_TRACE
