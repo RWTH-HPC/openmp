@@ -24,11 +24,13 @@ typedef struct ompt_callbacks_s {
 } ompt_callbacks_t;
 
 
-
+typedef struct kmp_taskdata  kmp_taskdata_t;
+                
 typedef struct {
     ompt_frame_t            frame;
     void*                   function;
     ompt_task_data_t        task_data;
+    kmp_taskdata_t *        scheduling_parent;
 #if OMP_40_ENABLED
     int                     ndeps;
     ompt_task_dependence_t  *deps;

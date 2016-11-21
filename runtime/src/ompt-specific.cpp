@@ -122,6 +122,32 @@ __ompt_get_taskinfo(int depth)
     return info;
 }
 
+ompt_task_info_t *
+__ompt_get_scheduling_taskinfo(int depth)
+{
+    ompt_task_info_t *info = NULL;
+    kmp_info_t *thr = ompt_get_thread();
+
+    if (thr) {
+        kmp_taskdata_t  *taskdata = thr->th.th_current_task;
+//        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
+
+        while (depth > 0) {
+
+            if (taskdata) {
+                taskdata = taskdata->ompt_task_info.scheduling_parent;
+            }else{
+                return NULL;
+            }
+            depth--;
+        }
+
+        info = &taskdata->ompt_task_info;
+    }
+
+    return info;
+}
+
 
 
 //******************************************************************************
@@ -285,7 +311,7 @@ __ompt_task_id_new(int gtid)
 ompt_task_data_t
 __ompt_get_task_data_internal(int depth)
 {
-    ompt_task_info_t *info = __ompt_get_taskinfo(depth);
+    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
     ompt_task_data_t task_data = ompt_task_id_none;
     return info ?  info->task_data : task_data;
 }
@@ -294,20 +320,21 @@ __ompt_get_task_data_internal(int depth)
 void *
 __ompt_get_task_function_internal(int depth)
 {
-    ompt_task_info_t *info = __ompt_get_taskinfo(depth);
+    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
     void *function = info ? info->function : NULL;
     return function;
 }
 
 
+// OpenMP spec asks for the scheduling task to be returned.
+
 ompt_frame_t *
 __ompt_get_task_frame_internal(int depth)
 {
-    ompt_task_info_t *info = __ompt_get_taskinfo(depth);
+    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
     ompt_frame_t *frame = info ? frame = &info->frame : NULL;
     return frame;
 }
-
 
 //----------------------------------------------------------
 // team support

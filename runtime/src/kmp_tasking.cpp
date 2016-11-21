@@ -1258,6 +1258,8 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
             current_task->ompt_task_info.task_data,
             taskdata->ompt_task_info.task_data);
         }
+        if (ompt_enabled)
+            taskdata->ompt_task_info.scheduling_parent = current_task;
 #endif
 
 #ifdef KMP_GOMP_COMPAT
