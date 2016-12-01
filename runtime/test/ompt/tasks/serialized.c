@@ -2,6 +2,7 @@
 // REQUIRES: ompt
 #include "callback.h"
 #include <omp.h>   
+#include <math.h>
 
 int main()
 {
@@ -16,7 +17,8 @@ int main()
     #pragma omp single
     {
       print_ids(0);
-      #pragma omp task if(0)
+      int t = (int)sin(0.1);
+      #pragma omp task if(t)
       {
         print_frame(1);
         print_ids(0);
