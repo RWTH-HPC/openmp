@@ -130,6 +130,47 @@ __ompt_get_scheduling_taskinfo(int depth)
 
     if (thr) {
         kmp_taskdata_t  *taskdata = thr->th.th_current_task;
+        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
+
+        while (depth > 0) {
+            // next lightweight team (if any)
+            if (lwt) lwt = lwt->parent;
+
+            // next heavyweight team (if any) after
+            // lightweight teams are exhausted
+            if (!lwt && taskdata) {
+                // first try scheduling parent (for explicit task scheduling)
+                if (taskdata->ompt_task_info.scheduling_parent) {
+                    taskdata = taskdata->ompt_task_info.scheduling_parent;
+                // then go for implicit tasks
+                } else {
+                    taskdata = taskdata->td_parent;
+                }
+                if (taskdata) {
+                    lwt = LWT_FROM_TEAM(taskdata->td_team);
+                }
+            }
+            depth--;
+        }
+
+        if (lwt) {
+            info = &lwt->ompt_task_info;
+        } else if (taskdata) {
+            info = &taskdata->ompt_task_info;
+        }
+    }
+
+    return info;
+}
+
+/*ompt_task_info_t *
+__ompt_get_scheduling_taskinfo(int depth)
+{
+    ompt_task_info_t *info = NULL;
+    kmp_info_t *thr = ompt_get_thread();
+
+    if (thr) {
+        kmp_taskdata_t  *taskdata = thr->th.th_current_task;
 //        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
 
         while (depth > 0) {
@@ -141,12 +182,13 @@ __ompt_get_scheduling_taskinfo(int depth)
             }
             depth--;
         }
-
-        info = &taskdata->ompt_task_info;
+        if (taskdata) {
+            info = &taskdata->ompt_task_info;
+        }
     }
 
     return info;
-}
+}*/
 
 
 
