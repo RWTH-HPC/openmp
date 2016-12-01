@@ -21,7 +21,6 @@ static void print_ids(int level)
     printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data().value, level, ompt_get_parallel_data(level).value, ompt_get_task_data(level).value, frame->exit_runtime_frame, frame->reenter_runtime_frame);
   else
     printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", frame=%p\n", ompt_get_thread_data().value, level, ompt_get_parallel_data(level).value, ompt_get_task_data(level).value,               frame);
-  //printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data().value, level, ompt_get_parallel_data(level).value, ompt_get_task_data(level).value, frame->exit_runtime_frame, frame->reenter_runtime_frame);
 }
 
 #define print_frame(level)\

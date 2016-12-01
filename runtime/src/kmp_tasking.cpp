@@ -490,6 +490,11 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
     }
 
 #if OMPT_SUPPORT
+    if (ompt_enabled && current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
+        current_task->ompt_task_info.frame.reenter_runtime_frame =
+        taskdata->ompt_task_info.frame.exit_runtime_frame =
+            __builtin_frame_address(1);
+    }
     if (ompt_enabled) {
         if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
             kmp_taskdata_t *parent = taskdata->td_parent;
@@ -502,12 +507,7 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
         }
 
     }
-    if (ompt_enabled && current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
-        current_task->ompt_task_info.frame.reenter_runtime_frame =
-        taskdata->ompt_task_info.frame.exit_runtime_frame =
-            __builtin_frame_address(1);
-    }
-#endif
+ #endif
 
     taskdata -> td_flags.task_serial = 1;  // Execute this task immediately, not deferred.
     __kmp_task_start( gtid, task, current_task );
@@ -1349,9 +1349,12 @@ __kmpc_omp_task_parts( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
                   gtid, loc_ref, new_taskdata ) );
 
 #if OMPT_SUPPORT
+    kmp_taskdata_t *parent;
     if (ompt_enabled) {
+        parent = new_taskdata->td_parent;
+        parent->ompt_task_info.frame.reenter_runtime_frame =
+            __builtin_frame_address(1);
         if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
-            kmp_taskdata_t *parent = new_taskdata->td_parent;
             ompt_task_data_t task_data = ompt_task_id_none;
             ompt_callbacks.ompt_callback(ompt_event_task_begin)(
                 parent ? parent->ompt_task_info.task_data : task_data,
@@ -1359,9 +1362,6 @@ __kmpc_omp_task_parts( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
                 &(new_taskdata->ompt_task_info.task_data),
                 new_taskdata->ompt_task_info.function);
         }
-
-        new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
-            __builtin_frame_address(0);
     }
 #endif
 
@@ -1380,6 +1380,13 @@ __kmpc_omp_task_parts( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
                   new_taskdata ) );
 
     ANNOTATE_HAPPENS_BEFORE(new_task);
+#if OMPT_SUPPORT
+    if (ompt_enabled) {
+        parent->ompt_task_info.frame.reenter_runtime_frame =
+            NULL;
+
+    }
+#endif
     return TASK_CURRENT_NOT_QUEUED;
 }
 
@@ -1452,9 +1459,12 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
                   gtid, loc_ref, new_taskdata ) );
 
 #if OMPT_SUPPORT
+    kmp_taskdata_t *parent;
     if (ompt_enabled) {
+        parent = new_taskdata->td_parent;
+        parent->ompt_task_info.frame.reenter_runtime_frame =
+            __builtin_frame_address(1);
         if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
-            kmp_taskdata_t *parent = new_taskdata->td_parent;
             ompt_task_data_t task_data = ompt_task_id_none;
             ompt_callbacks.ompt_callback(ompt_event_task_begin)(
                 parent ? parent->ompt_task_info.task_data : task_data,
@@ -1463,8 +1473,6 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
                 new_taskdata->ompt_task_info.function);
         }
 
-        new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
-            __builtin_frame_address(0);
     }
 #endif
 
@@ -1472,6 +1480,12 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
 
     KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning TASK_CURRENT_NOT_QUEUED: loc=%p task=%p\n",
                   gtid, loc_ref, new_taskdata ) );
+#if OMPT_SUPPORT
+    if (ompt_enabled) {
+        parent->ompt_task_info.frame.reenter_runtime_frame =
+            NULL;
+    }
+#endif
     return res;
 }
 
