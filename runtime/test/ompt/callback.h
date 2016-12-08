@@ -546,7 +546,7 @@ void ompt_initialize(
   ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
   ompt_get_parallel_data = (ompt_get_parallel_data_t) lookup("ompt_get_parallel_data");
 
-    register_callback(ompt_event_wait_atomic);
+  register_callback(ompt_event_wait_atomic);
   register_callback(ompt_event_acquired_atomic);
   register_callback(ompt_event_release_atomic);
   register_callback(ompt_event_wait_barrier_begin);

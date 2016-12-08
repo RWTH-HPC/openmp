@@ -30,6 +30,21 @@ int main()
     print_ids(0);
   }
 
+
+  // Check if libomp supports the callbacks for this test.
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_parallel_begin'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_parallel_end'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_begin'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_end'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_barrier_begin'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_barrier_end'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_wait_barrier_begin'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_wait_barrier_end'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_task_begin'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_task_switch'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_task_end'
+
+  
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: __builtin_frame_address(0)=[[MAIN_REENTER:0x[0-f]+]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_parallel_begin: parent_task_id=[[PARENT_TASK_ID:[0-9]+]], parent_task_frame.exit=[[NULL]], parent_task_frame.reenter=[[MAIN_REENTER]], parallel_id=[[PARALLEL_ID:[0-9]+]], requested_team_size=2, parallel_function=0x{{[0-f]+}}, invoker=[[PARALLEL_INVOKER:.+]]
@@ -41,11 +56,13 @@ int main()
   // CHECK: {{^}}[[MASTER_ID]]: __builtin_frame_address(0)=[[REENTER:0x[0-f]+]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_create: parent_task_id=[[IMPLICIT_TASK_ID]], parent_task_frame.exit=[[EXIT]], parent_task_frame.reenter=[[REENTER]], new_task_id=[[TASK_ID:[0-9]+]], parallel_function=[[TASK_FUNCTION:0x[0-f]+]]
   // <- ompt_event_task_schedule ([[IMPLICIT_TASK_ID]], [[TASK_ID]]) would be expected here
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_schedule: first_task_id=[[IMPLICIT_TASK_ID]], second_task_id=[[TASK_ID]]
   // CHECK: {{^}}[[MASTER_ID]]: __builtin_frame_address(1)=[[TASK_EXIT:0x[0-f]+]]
   // CHECK: {{^}}[[MASTER_ID]]: level 0: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], exit_frame=[[TASK_EXIT]], reenter_frame=[[NULL]]
   // CHECK: {{^}}[[MASTER_ID]]: level 1: parallel_id=0, task_id=[[IMPLICIT_TASK_ID]], exit_frame=[[EXIT]], reenter_frame=[[REENTER]]
   // CHECK: {{^}}[[MASTER_ID]]: level 2: parallel_id=0, task_id=[[PARENT_TASK_ID]], exit_frame=[[NULL]], reenter_frame=[[MAIN_REENTER]]
   // <- ompt_event_task_schedule ([[TASK_ID]], [[IMPLICIT_TASK_ID]]) would be expected here
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_schedule: first_task_id=[[TASK_ID]], second_task_id=[[IMPLICIT_TASK_ID]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_end: task_id=[[TASK_ID]]
   // CHECK: {{^}}[[MASTER_ID]]: level 0: parallel_id=[[PARALLEL_ID]], task_id=[[IMPLICIT_TASK_ID]], exit_frame=[[EXIT]], reenter_frame=[[NULL]]
 
