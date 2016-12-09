@@ -158,13 +158,6 @@
     macro (ompt_event_wait_atomic,              ompt_wait_callback_t,          49) /* atomic wait */            \
     macro (ompt_event_wait_ordered,             ompt_wait_callback_t,          50) /* ordered wait */           \
                                                                                                                 \
-    macro (ompt_event_acquired_lock,            ompt_wait_callback_t,          51) /* lock acquired */          \
-    macro (ompt_event_acquired_nest_lock_first, ompt_wait_callback_t,          52) /* 1st nest lock acquired */ \
-    macro (ompt_event_acquired_nest_lock_next,  ompt_wait_callback_t,          53) /* next nest lock acquired*/ \
-    macro (ompt_event_acquired_critical,        ompt_wait_callback_t,          54) /* critical acquired */      \
-    macro (ompt_event_acquired_atomic,          ompt_wait_callback_t,          55) /* atomic acquired */        \
-    macro (ompt_event_acquired_ordered,         ompt_wait_callback_t,          56) /* ordered acquired */       \
-                                                                                                                \
     macro (ompt_event_init_lock,                ompt_wait_callback_t,          57) /* lock init */              \
     macro (ompt_event_init_nest_lock,           ompt_wait_callback_t,          58) /* nest lock init */         \
                                                                                                                 \
@@ -174,7 +167,9 @@
     macro (ompt_event_flush,                    ompt_callback_t,               61) /* after executing flush */  \
                                                                                                                 \
     macro (ompt_event_task_dependences,         ompt_task_dependences_callback_t, 69) /* report task dependences  */\
-    macro (ompt_event_task_dependence_pair,     ompt_task_pair_callback_t,     70) /* report task dependence pair */
+    macro (ompt_event_task_dependence_pair,     ompt_task_pair_callback_t,     70) /* report task dependence pair */\
+                                                                                                                    \
+    macro (ompt_callback_mutex_acquire,         ompt_callback_mutex_acquire_t,  71) /* mutex acquire */
 
 
 
@@ -206,6 +201,14 @@ typedef ompt_data_t ompt_parallel_data_t;
 typedef uint64_t ompt_wait_id_t;
 #define ompt_wait_id_none ((ompt_wait_id_t) 0)         /* non-standard */
 
+typedef enum ompt_mutex_kind_e {
+    ompt_mutex = 0x10,
+    ompt_mutex_lock = 0x11,
+    ompt_mutex_nest_lock = 0x12,
+    ompt_mutex_critical = 0x13,
+    ompt_mutex_atomic = 0x14,
+    ompt_mutex_ordered = 0x20
+} ompt_mutex_kind_t;
 
 /*---------------------
  * ompt_frame_t
@@ -378,6 +381,14 @@ typedef void (*ompt_control_callback_t) (
 );
 
 typedef void (*ompt_callback_t)(void);
+
+typedef void (*ompt_callback_mutex_acquire_t) (
+    ompt_mutex_kind_t kind,
+    unsigned int hint,
+    unsigned int impl,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra
+);
 
 
 /****************************************************************************
