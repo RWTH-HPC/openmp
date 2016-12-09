@@ -395,7 +395,7 @@ __kmp_acquire_atomic_lock( kmp_atomic_lock_t *lck, kmp_int32 gtid )
             0, //should be omp_lock_hint_none, but cannot include omp.h
             0,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 }

@@ -851,7 +851,7 @@ __kmpc_ordered( ident_t * loc, kmp_int32 gtid )
                 omp_lock_hint_none,
                 0,
                 (ompt_wait_id_t) lck,
-                __builtin_return_address(0));
+                __builtin_return_address(1));
         }
     }
 #endif
@@ -1172,7 +1172,7 @@ __kmpc_critical( ident_t * loc, kmp_int32 global_tid, kmp_critical_name * crit )
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
         }
     }
 #endif
@@ -1343,7 +1343,7 @@ __kmpc_critical_with_hint( ident_t * loc, kmp_int32 global_tid, kmp_critical_nam
             (unsigned int)hint,
             0,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
         }
     }
 #endif
@@ -2039,7 +2039,7 @@ __kmpc_init_lock( ident_t * loc, kmp_int32 gtid,  void ** user_lock ) {
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 
@@ -2101,7 +2101,7 @@ __kmpc_init_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 
@@ -2149,7 +2149,7 @@ __kmpc_destroy_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
         ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)(
             ompt_mutex_lock,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 
@@ -2210,7 +2210,7 @@ __kmpc_destroy_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
         ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)(
             ompt_mutex_nest_lock,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 
@@ -2274,7 +2274,7 @@ __kmpc_set_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) user_lock,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 
@@ -2320,7 +2320,7 @@ __kmpc_set_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 
@@ -2355,7 +2355,7 @@ __kmpc_set_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) user_lock,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         } else {
             //lock_next
@@ -2365,7 +2365,7 @@ __kmpc_set_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) user_lock,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         }
     }
@@ -2416,7 +2416,7 @@ __kmpc_set_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) lck,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         } else {
             //lock_next
@@ -2426,7 +2426,7 @@ __kmpc_set_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) lck,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         }
     }
@@ -2660,7 +2660,7 @@ __kmpc_test_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) user_lock,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
         return FTN_TRUE;
@@ -2710,7 +2710,7 @@ __kmpc_test_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lck,
-            __builtin_return_address(0));
+            __builtin_return_address(1));
     }
 #endif
 
@@ -2748,7 +2748,7 @@ __kmpc_test_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) user_lock,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         } else {
             //lock_next
@@ -2758,7 +2758,7 @@ __kmpc_test_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) user_lock,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         }
     }
@@ -2807,7 +2807,7 @@ __kmpc_test_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) lck,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         } else {
             //lock_next
@@ -2817,7 +2817,7 @@ __kmpc_test_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
                     omp_lock_hint_none,
                     0,
                     (ompt_wait_id_t) lck,
-                    __builtin_return_address(0));
+                    __builtin_return_address(1));
             }
         }
     }
