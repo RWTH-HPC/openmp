@@ -133,11 +133,8 @@
 
 #define ompt_callback_mutex_acquire_implemented         ompt_event_MAY_ALWAYS_TRACE
 
-#define ompt_event_init_lock_implemented                ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_init_nest_lock_implemented           ompt_event_MAY_ALWAYS_TRACE
-
-#define ompt_event_destroy_lock_implemented             ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_destroy_nest_lock_implemented        ompt_event_MAY_ALWAYS_TRACE
+#define ompt_callback_lock_init_implemented             ompt_event_MAY_ALWAYS_TRACE
+#define ompt_callback_lock_destroy_implemented          ompt_event_MAY_ALWAYS_TRACE
 
 #define ompt_event_flush_implemented                    ompt_event_UNIMPLEMENTED
 

@@ -192,10 +192,22 @@ on_ompt_event_initial_task_end(
 }
 
 static void
-on_ompt_event_init_lock(
-  ompt_wait_id_t wait_id)
+on_ompt_callback_lock_init(
+  ompt_mutex_kind_t kind,
+  unsigned int hint,
+  unsigned int impl,
+  ompt_wait_id_t wait_id,
+  const void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_init_lock: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
+  switch(kind)
+  {
+    case ompt_mutex_lock:
+      printf("%" PRIu64 ": ompt_event_init_lock: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      break;
+    case ompt_mutex_nest_lock:
+      printf("%" PRIu64 ": ompt_event_init_nest_lock: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+     break;
+  }
 }
 
 static void
@@ -213,17 +225,20 @@ on_ompt_event_release_lock(
 }
 
 static void
-on_ompt_event_destroy_lock(
-  ompt_wait_id_t wait_id)
+on_ompt_callback_lock_destroy(
+  ompt_mutex_kind_t kind,
+  ompt_wait_id_t wait_id,
+  const void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_destroy_lock: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
-}
-
-static void
-on_ompt_event_init_nest_lock(
-  ompt_wait_id_t wait_id)
-{
-  printf("%" PRIu64 ": ompt_event_init_nest_lock: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
+  switch(kind)
+  {
+    case ompt_mutex_lock:
+      printf("%" PRIu64 ": ompt_event_destroy_lock: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
+      break;
+    case ompt_mutex_nest_lock:
+      printf("%" PRIu64 ": ompt_event_destroy_nest_lock: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
+     break;
+  }
 }
 
 static void
@@ -245,13 +260,6 @@ on_ompt_event_release_nest_lock_last(
   ompt_wait_id_t wait_id)
 {
   printf("%" PRIu64 ": ompt_event_release_nest_lock_last: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
-}
-
-static void
-on_ompt_event_destroy_nest_lock(
-  ompt_wait_id_t wait_id)
-{
-  printf("%" PRIu64 ": ompt_event_destroy_nest_lock: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
 }
 
 static void
@@ -554,15 +562,13 @@ void ompt_initialize(
   register_callback(ompt_event_implicit_task_end);
   register_callback(ompt_event_initial_task_begin);
   register_callback(ompt_event_initial_task_end);
-  register_callback(ompt_event_init_lock);
+  register_callback(ompt_callback_lock_init);
   register_callback(ompt_event_wait_lock);
   register_callback(ompt_event_release_lock);
-  register_callback(ompt_event_destroy_lock);
-  register_callback(ompt_event_init_nest_lock);
+  register_callback(ompt_callback_lock_destroy);
   register_callback(ompt_event_wait_nest_lock);
   register_callback(ompt_event_release_nest_lock_last);
   register_callback(ompt_event_release_nest_lock_prev);
-  register_callback(ompt_event_destroy_nest_lock);
   register_callback(ompt_event_loop_begin);
   register_callback(ompt_event_loop_end);
   register_callback(ompt_event_master_begin);

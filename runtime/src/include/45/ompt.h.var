@@ -158,18 +158,15 @@
     macro (ompt_event_wait_atomic,              ompt_wait_callback_t,          49) /* atomic wait */            \
     macro (ompt_event_wait_ordered,             ompt_wait_callback_t,          50) /* ordered wait */           \
                                                                                                                 \
-    macro (ompt_event_init_lock,                ompt_wait_callback_t,          57) /* lock init */              \
-    macro (ompt_event_init_nest_lock,           ompt_wait_callback_t,          58) /* nest lock init */         \
-                                                                                                                \
-    macro (ompt_event_destroy_lock,             ompt_wait_callback_t,          59) /* lock destruction */       \
-    macro (ompt_event_destroy_nest_lock,        ompt_wait_callback_t,          60) /* nest lock destruction */  \
-                                                                                                                \
     macro (ompt_event_flush,                    ompt_callback_t,               61) /* after executing flush */  \
                                                                                                                 \
     macro (ompt_event_task_dependences,         ompt_task_dependences_callback_t, 69) /* report task dependences  */\
     macro (ompt_event_task_dependence_pair,     ompt_task_pair_callback_t,     70) /* report task dependence pair */\
                                                                                                                     \
-    macro (ompt_callback_mutex_acquire,         ompt_callback_mutex_acquire_t,  71) /* mutex acquire */
+    macro (ompt_callback_mutex_acquire,         ompt_callback_mutex_acquire_t, 71) /* mutex acquire */          \
+                                                                                                                \
+    macro (ompt_callback_lock_init,             ompt_callback_lock_init_t,     72) /* lock init */              \
+    macro (ompt_callback_lock_destroy,          ompt_callback_lock_destroy_t,  73) /* lock destroy */
 
 
 
@@ -390,6 +387,19 @@ typedef void (*ompt_callback_mutex_acquire_t) (
     const void *codeptr_ra
 );
 
+typedef void (*ompt_callback_lock_init_t) (
+    ompt_mutex_kind_t kind,
+    unsigned int hint,
+    unsigned int impl,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra
+);
+
+typedef void (*ompt_callback_lock_destroy_t) (
+    ompt_mutex_kind_t kind,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra
+);
 
 /****************************************************************************
  * ompt API
