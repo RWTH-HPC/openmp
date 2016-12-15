@@ -106,14 +106,6 @@
     macro (ompt_event_wait_taskgroup_begin,     ompt_parallel_callback_t,      15) /* begin wait at taskgroup */\
     macro (ompt_event_wait_taskgroup_end,       ompt_parallel_callback_t,      16) /* end wait at taskgroup */  \
                                                                                                                 \
-    macro (ompt_event_release_lock,             ompt_wait_callback_t,          17) /* lock release */           \
-    macro (ompt_event_release_nest_lock_last,   ompt_wait_callback_t,          18) /* last nest lock release */ \
-    macro (ompt_event_release_critical,         ompt_wait_callback_t,          19) /* critical release */       \
-                                                                                                                \
-    macro (ompt_event_release_atomic,           ompt_wait_callback_t,          20) /* atomic release */         \
-                                                                                                                \
-    macro (ompt_event_release_ordered,          ompt_wait_callback_t,          21) /* ordered release */        \
-                                                                                                                \
     /*--- Optional Events (synchronous events, ompt_event_unimplemented) --- */                                 \
     macro (ompt_event_implicit_task_begin,      ompt_new_implicit_task_callback_t,      22) /* implicit task begin   */  \
     macro (ompt_event_implicit_task_end,        ompt_parallel_callback_t,      23) /* implicit task end  */     \
@@ -150,8 +142,6 @@
     macro (ompt_event_taskgroup_begin,          ompt_parallel_callback_t,      43) /* task at taskgroup begin */\
     macro (ompt_event_taskgroup_end,            ompt_parallel_callback_t,      44) /* task at taskgroup end */  \
                                                                                                                 \
-    macro (ompt_event_release_nest_lock_prev,   ompt_wait_callback_t,          45) /* prev nest lock release */ \
-                                                                                                                \
     macro (ompt_event_flush,                    ompt_callback_t,               61) /* after executing flush */  \
                                                                                                                 \
     macro (ompt_event_task_dependences,         ompt_task_dependences_callback_t, 69) /* report task dependences  */\
@@ -159,9 +149,10 @@
                                                                                                                     \
     macro (ompt_callback_mutex_acquire,         ompt_callback_mutex_acquire_t, 71) /* mutex acquire */          \
     macro (ompt_callback_mutex_acquired,        ompt_callback_mutex_t,         72) /* mutex acquired */         \
+    macro (ompt_callback_mutex_released,        ompt_callback_mutex_t,         73) /* mutex released */         \
                                                                                                                 \
-    macro (ompt_callback_lock_init,             ompt_callback_lock_init_t,     73) /* lock init */              \
-    macro (ompt_callback_lock_destroy,          ompt_callback_lock_destroy_t,  74) /* lock destroy */
+    macro (ompt_callback_lock_init,             ompt_callback_lock_init_t,     74) /* lock init */              \
+    macro (ompt_callback_lock_destroy,          ompt_callback_lock_destroy_t,  75) /* lock destroy */
 
 
 

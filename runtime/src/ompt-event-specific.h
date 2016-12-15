@@ -79,11 +79,7 @@
 #define ompt_event_wait_taskgroup_begin_implemented     ompt_event_UNIMPLEMENTED
 #define ompt_event_wait_taskgroup_end_implemented       ompt_event_UNIMPLEMENTED
 
-#define ompt_event_release_lock_implemented             ompt_event_MAY_ALWAYS_BLAME
-#define ompt_event_release_nest_lock_last_implemented   ompt_event_MAY_ALWAYS_BLAME
-#define ompt_event_release_critical_implemented         ompt_event_MAY_ALWAYS_BLAME
-#define ompt_event_release_atomic_implemented           ompt_event_MAY_ALWAYS_BLAME
-#define ompt_event_release_ordered_implemented          ompt_event_MAY_ALWAYS_BLAME
+#define ompt_callback_mutex_released_implemented        ompt_event_MAY_ALWAYS_BLAME
 
 
 /*----------------------------------------------------------------------------
@@ -123,8 +119,6 @@
 # define ompt_event_taskgroup_begin_implemented          ompt_event_UNIMPLEMENTED
 # define ompt_event_taskgroup_end_implemented            ompt_event_UNIMPLEMENTED
 #endif
-
-#define ompt_event_release_nest_lock_prev_implemented   ompt_event_MAY_ALWAYS_TRACE
 
 #define ompt_callback_mutex_acquire_implemented         ompt_event_MAY_ALWAYS_TRACE
 #define ompt_callback_mutex_acquired_implemented        ompt_event_MAY_ALWAYS_TRACE

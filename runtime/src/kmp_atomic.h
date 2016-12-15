@@ -414,10 +414,12 @@ __kmp_release_atomic_lock( kmp_atomic_lock_t *lck, kmp_int32 gtid )
     __kmp_release_queuing_lock( lck, gtid );
 #if OMPT_SUPPORT && OMPT_BLAME
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_release_atomic)) {
-        ompt_callbacks.ompt_callback(ompt_event_release_atomic)(
-            (ompt_wait_id_t) lck);
-  }
+        ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
+        ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
+            ompt_mutex_atomic,
+            (ompt_wait_id_t) lck,
+            __builtin_return_address(1));
+    }
 #endif
 }
 

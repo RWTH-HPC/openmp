@@ -55,8 +55,9 @@ int main()
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_critical: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
 
   // atomic cannot be tested because it is implemented with atomic hardware instructions 
-  // disabled_CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_atomic: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
-  
+  // disabled_CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_atomic: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
+  // disabled_CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_atomic: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
+
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_ordered: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_ordered: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
 
