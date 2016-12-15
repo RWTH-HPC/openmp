@@ -37,13 +37,6 @@ do {\
 } while(0)
 
 static void
-on_ompt_event_wait_atomic(
-  ompt_wait_id_t wait_id)
-{
-  printf("%" PRIu64 ": ompt_event_wait_atomic: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
-}
-
-static void
 on_ompt_callback_mutex_acquire(
   ompt_mutex_kind_t kind,
   unsigned int hint,
@@ -54,21 +47,47 @@ on_ompt_callback_mutex_acquire(
   switch(kind)
   {
     case ompt_mutex_lock:
-      printf("%" PRIu64 ": ompt_event_acquired_lock: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      printf("%" PRIu64 ": ompt_event_wait_lock: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      break;
+    case ompt_mutex_nest_lock:
+      printf("%" PRIu64 ": ompt_event_wait_nest_lock: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      break;
+    case ompt_mutex_critical:
+      printf("%" PRIu64 ": ompt_event_wait_critical: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      break;
+    case ompt_mutex_atomic:
+      printf("%" PRIu64 ": ompt_event_wait_atomic: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      break;
+    case ompt_mutex_ordered:
+      printf("%" PRIu64 ": ompt_event_wait_ordered: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      break;
+  }
+}
+
+static void
+on_ompt_callback_mutex_acquired(
+  ompt_mutex_kind_t kind,
+  ompt_wait_id_t wait_id,
+  const void *codeptr_ra)
+{
+  switch(kind)
+  {
+    case ompt_mutex_lock:
+      printf("%" PRIu64 ": ompt_event_acquired_lock: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_nest_lock:
       //TODO: implement correct output
-      printf("%" PRIu64 ": ompt_event_acquired_nest_lock_first: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
-      //printf("%" PRIu64 ": ompt_event_acquired_nest_lock_next: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      printf("%" PRIu64 ": ompt_event_acquired_nest_lock_first: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
+      //printf("%" PRIu64 ": ompt_event_acquired_nest_lock_next: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_critical:
-      printf("%" PRIu64 ": ompt_event_acquired_critical: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      printf("%" PRIu64 ": ompt_event_acquired_critical: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_atomic:
-      printf("%" PRIu64 ": ompt_event_acquired_atomic: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      printf("%" PRIu64 ": ompt_event_acquired_atomic: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_ordered:
-      printf("%" PRIu64 ": ompt_event_acquired_ordered: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
+      printf("%" PRIu64 ": ompt_event_acquired_ordered: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
   }
 }
@@ -119,13 +138,6 @@ on_ompt_event_control(
   uint64_t modifier)
 {
   printf("%" PRIu64 ": ompt_event_control: command=%" PRIu64 ", modifier=%" PRIu64 "\n", ompt_get_thread_data().value, command, modifier);
-}
-
-static void
-on_ompt_event_wait_critical(
-  ompt_wait_id_t wait_id)
-{
-  printf("%" PRIu64 ": ompt_event_wait_critical: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
 }
 
 static void
@@ -208,13 +220,6 @@ on_ompt_callback_lock_init(
 }
 
 static void
-on_ompt_event_wait_lock(
-  ompt_wait_id_t wait_id)
-{
-  printf("%" PRIu64 ": ompt_event_wait_lock: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
-}
-
-static void
 on_ompt_event_release_lock(
   ompt_wait_id_t wait_id)
 {
@@ -236,13 +241,6 @@ on_ompt_callback_lock_destroy(
       printf("%" PRIu64 ": ompt_event_destroy_nest_lock: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
      break;
   }
-}
-
-static void
-on_ompt_event_wait_nest_lock(
-  ompt_wait_id_t wait_id)
-{
-  printf("%" PRIu64 ": ompt_event_wait_nest_lock: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
 }
 
 static void
@@ -312,13 +310,6 @@ on_ompt_event_parallel_end(
   ompt_invoker_t invoker)
 {
   printf("%" PRIu64 ": ompt_event_parallel_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", invoker=%d\n", ompt_get_thread_data().value, parallel_data.value, task_data.value, invoker);
-}
-
-static void
-on_ompt_event_wait_ordered(
-  ompt_wait_id_t wait_id)
-{
-  printf("%" PRIu64 ": ompt_event_wait_ordered: wait_id=%" PRIu64 "\n", ompt_get_thread_data().value, wait_id);
 }
 
 static void
@@ -542,15 +533,14 @@ void ompt_initialize(
   ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
   ompt_get_parallel_data = (ompt_get_parallel_data_t) lookup("ompt_get_parallel_data");
 
-  register_callback(ompt_event_wait_atomic);
   register_callback(ompt_callback_mutex_acquire);
+  register_callback(ompt_callback_mutex_acquired);
   register_callback(ompt_event_release_atomic);
   register_callback(ompt_event_wait_barrier_begin);
   register_callback(ompt_event_barrier_begin);
   register_callback(ompt_event_wait_barrier_end);
   register_callback(ompt_event_barrier_end);
   register_callback(ompt_event_control);
-  register_callback(ompt_event_wait_critical);
   register_callback(ompt_event_release_critical);
   register_callback(ompt_event_flush);
   register_callback(ompt_event_idle_begin);
@@ -560,10 +550,8 @@ void ompt_initialize(
   register_callback(ompt_event_initial_task_begin);
   register_callback(ompt_event_initial_task_end);
   register_callback(ompt_callback_lock_init);
-  register_callback(ompt_event_wait_lock);
   register_callback(ompt_event_release_lock);
   register_callback(ompt_callback_lock_destroy);
-  register_callback(ompt_event_wait_nest_lock);
   register_callback(ompt_event_release_nest_lock_last);
   register_callback(ompt_event_release_nest_lock_prev);
   register_callback(ompt_event_loop_begin);
@@ -572,7 +560,6 @@ void ompt_initialize(
   register_callback(ompt_event_master_end);
   register_callback(ompt_event_parallel_begin);
   register_callback(ompt_event_parallel_end);
-  register_callback(ompt_event_wait_ordered);
   register_callback(ompt_event_release_ordered);
   register_callback(ompt_event_runtime_shutdown);
   register_callback(ompt_event_sections_begin);

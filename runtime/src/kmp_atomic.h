@@ -379,9 +379,13 @@ __kmp_acquire_atomic_lock( kmp_atomic_lock_t *lck, kmp_int32 gtid )
 {
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_wait_atomic)) {
-        ompt_callbacks.ompt_callback(ompt_event_wait_atomic)(
-            (ompt_wait_id_t) lck);
+        ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)) {
+        ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
+            ompt_mutex_atomic,
+            0,
+            0,
+            (ompt_wait_id_t) lck,
+            __builtin_return_address(1));
     }
 #endif
 
@@ -389,11 +393,9 @@ __kmp_acquire_atomic_lock( kmp_atomic_lock_t *lck, kmp_int32 gtid )
 
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)) {
-        ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
+        ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
+        ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
             ompt_mutex_atomic,
-            0,
-            0,
             (ompt_wait_id_t) lck,
             __builtin_return_address(1));
     }
