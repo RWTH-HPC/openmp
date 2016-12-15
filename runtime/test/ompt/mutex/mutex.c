@@ -46,7 +46,7 @@ int main()
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_lock: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_release_lock: wait_id=[[WAIT_ID:[0-9]+]]
 
-  // disabled_CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_init_nest_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_init_nest_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_nest_lock_first: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID:[0-9]+]]
@@ -56,6 +56,7 @@ int main()
 
   // atomic cannot be tested because it is implemented with atomic hardware instructions 
   // disabled_CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_atomic: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
+  
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_ordered: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_ordered: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
 
