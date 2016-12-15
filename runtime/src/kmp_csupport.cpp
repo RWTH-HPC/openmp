@@ -1919,11 +1919,34 @@ __kmp_init_lock_with_hint(ident_t *loc, void **lock, kmp_dyna_lockseq_t seq)
 #if USE_ITT_BUILD
         __kmp_itt_lock_creating((kmp_user_lock_p)lock, NULL);
 #endif
+#if OMPT_SUPPORT && OMPT_TRACE
+    if (ompt_enabled &&
+        ompt_callbacks.ompt_callback(ompt_callback_lock_init)) {
+        ompt_callbacks.ompt_callback(ompt_callback_lock_init)(
+            ompt_mutex_lock,
+            omp_lock_hint_none,
+            0,
+            (ompt_wait_id_t) lock,
+            __builtin_return_address(1));
+    }
+#endif
     } else {
         KMP_INIT_I_LOCK(lock, seq);
 #if USE_ITT_BUILD
         kmp_indirect_lock_t *ilk = KMP_LOOKUP_I_LOCK(lock);
         __kmp_itt_lock_creating(ilk->lock, loc);
+#endif
+#if OMPT_SUPPORT && OMPT_TRACE
+    if (ompt_enabled &&
+        ompt_callbacks.ompt_callback(ompt_callback_lock_init)) {
+        kmp_indirect_lock_t *ilk = KMP_LOOKUP_I_LOCK(lock);
+        ompt_callbacks.ompt_callback(ompt_callback_lock_init)(
+            ompt_mutex_lock,
+            omp_lock_hint_none,
+            0,
+            (ompt_wait_id_t) ilk->lock,
+            __builtin_return_address(1));
+    }
 #endif
     }
 }

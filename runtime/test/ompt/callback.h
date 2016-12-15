@@ -53,9 +53,6 @@ on_ompt_callback_mutex_acquire(
 {
   switch(kind)
   {
-    case ompt_mutex:
-      //TODO
-      break;
     case ompt_mutex_lock:
       printf("%" PRIu64 ": ompt_event_acquired_lock: wait_id=%" PRIu64 ", hint=%" PRIu32 ", impl=%" PRIu32 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, hint, impl, codeptr_ra);
       break;
