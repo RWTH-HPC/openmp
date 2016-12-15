@@ -15,6 +15,8 @@ int main()
   omp_nest_lock_t nest_lock;
   omp_init_nest_lock(&nest_lock);
   omp_set_nest_lock(&nest_lock);
+  omp_set_nest_lock(&nest_lock);
+  omp_unset_nest_lock(&nest_lock);
   omp_unset_nest_lock(&nest_lock);
   omp_destroy_nest_lock(&nest_lock);
 
@@ -44,12 +46,15 @@ int main()
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_init_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_lock: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
-  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_release_lock: wait_id=[[WAIT_ID:[0-9]+]]
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_release_lock: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
 
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_init_nest_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_nest_lock_first: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
-  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID:[0-9]+]]
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_nest_lock_next: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_release_nest_lock_prev: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}
 
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_critical: wait_id=[[WAIT_ID:[0-9]+]], hint={{.*}}, impl={{.*}}, return_address={{.*}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_critical: wait_id=[[WAIT_ID:[0-9]+]], return_address={{.*}}

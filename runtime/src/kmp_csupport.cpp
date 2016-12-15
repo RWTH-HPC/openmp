@@ -2434,18 +2434,18 @@ __kmpc_set_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled) {
         if (acquire_status == KMP_LOCK_ACQUIRED_FIRST) {
-            //lock_first
             if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
+                //lock_first
                 ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
                     ompt_mutex_nest_lock,
                     (ompt_wait_id_t) user_lock,
                     __builtin_return_address(1));
             }
         } else {
-            //lock_next
-            if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
-                ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
-                    ompt_mutex_nest_lock,
+            if (ompt_callbacks.ompt_callback(ompt_callback_nest_lock)) {
+                //lock_next
+                ompt_callbacks.ompt_callback(ompt_callback_nest_lock)(
+                    ompt_scope_begin,
                     (ompt_wait_id_t) user_lock,
                     __builtin_return_address(1));
             }
@@ -2497,18 +2497,18 @@ __kmpc_set_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled) {
         if (acquire_status == KMP_LOCK_ACQUIRED_FIRST) {
-            //lock_first
             if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
+                //lock_first
                 ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
                     ompt_mutex_nest_lock,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
             }
         } else {
-            //lock_next
-            if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
-                ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
-                    ompt_mutex_nest_lock,
+            if (ompt_callbacks.ompt_callback(ompt_callback_nest_lock)) {
+                //lock_next
+                ompt_callbacks.ompt_callback(ompt_callback_nest_lock)(
+                    ompt_scope_begin,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
             }
@@ -2626,17 +2626,17 @@ __kmpc_unset_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 #if OMPT_SUPPORT && OMPT_BLAME
     if (ompt_enabled) {
         if (release_status == KMP_LOCK_RELEASED) {
-            //release_lock_last
             if (ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
+                //release_lock_last
                 ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
                     ompt_mutex_nest_lock,
                     (ompt_wait_id_t) user_lock,
                     __builtin_return_address(1));
             }
-        } else if (ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
-            //release_lock_previous
-                ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
-                    ompt_mutex_nest_lock,
+        } else if (ompt_callbacks.ompt_callback(ompt_callback_nest_lock)) {
+                //release_lock_prev
+                ompt_callbacks.ompt_callback(ompt_callback_nest_lock)(
+                    ompt_scope_end,
                     (ompt_wait_id_t) user_lock,
                     __builtin_return_address(1));
         }
@@ -2673,17 +2673,17 @@ __kmpc_unset_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 #if OMPT_SUPPORT && OMPT_BLAME
     if (ompt_enabled) {
         if (release_status == KMP_LOCK_RELEASED) {
-            //release_lock_last
             if (ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
+                //release_lock_last
                 ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
                     ompt_mutex_nest_lock,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
             }
-        } else if (ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
-            //release_lock_previous
-                ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
-                    ompt_mutex_nest_lock,
+        } else if (ompt_callbacks.ompt_callback(ompt_callback_nest_lock)) {
+                //release_lock_previous
+                ompt_callbacks.ompt_callback(ompt_callback_nest_lock)(
+                    ompt_mutex_scope_end,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
         }
@@ -2715,17 +2715,17 @@ __kmpc_unset_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 #if OMPT_SUPPORT && OMPT_BLAME
     if (ompt_enabled) {
         if (release_status == KMP_LOCK_RELEASED) {
-            //release_lock_last
             if (ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
+                //release_lock_last
                 ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
                     ompt_mutex_nest_lock,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
             }
-        } else if (ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
-            //release_lock_previous
-                ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
-                    ompt_mutex_nest_lock,
+        } else if (ompt_callbacks.ompt_callback(ompt_callback_nest_lock)) {
+                //release_lock_previous
+                ompt_callbacks.ompt_callback(ompt_callback_nest_lock)(
+                    ompt_mutex_scope_end,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
         }
@@ -2881,18 +2881,18 @@ __kmpc_test_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled && rc) {
         if (rc == 1) {
-        //lock_first
             if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
+                //lock_first
                 ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
                     ompt_mutex_nest_lock,
                     (ompt_wait_id_t) user_lock,
                     __builtin_return_address(1));
             }
         } else {
-            //lock_next
-            if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
-                ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
-                    ompt_mutex_nest_lock,
+            if (ompt_callbacks.ompt_callback(ompt_callback_nest_lock)) {
+                //lock_next
+                ompt_callbacks.ompt_callback(ompt_callback_nest_lock)(
+                    ompt_scope_begin,
                     (ompt_wait_id_t) user_lock,
                     __builtin_return_address(1));
             }
@@ -2948,18 +2948,18 @@ __kmpc_test_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled && rc) {
         if (rc == 1) {
-            //lock_first
             if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
+                //lock_first
                 ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
                     ompt_mutex_nest_lock,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
             }
         } else {
-            //lock_next
-            if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
-                ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
-                    ompt_mutex_nest_lock,
+            if (ompt_callbacks.ompt_callback(ompt_callback_nest_lock)) {
+                //lock_next
+                ompt_callbacks.ompt_callback(ompt_callback_nest_lock)(
+                    ompt_mutex_scope_begin,
                     (ompt_wait_id_t) lck,
                     __builtin_return_address(1));
             }

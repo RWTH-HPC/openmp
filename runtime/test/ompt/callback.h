@@ -76,9 +76,7 @@ on_ompt_callback_mutex_acquired(
       printf("%" PRIu64 ": ompt_event_acquired_lock: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_nest_lock:
-      //TODO: implement correct output
       printf("%" PRIu64 ": ompt_event_acquired_nest_lock_first: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
-      //printf("%" PRIu64 ": ompt_event_acquired_nest_lock_next: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_critical:
       printf("%" PRIu64 ": ompt_event_acquired_critical: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
@@ -104,9 +102,7 @@ on_ompt_callback_mutex_released(
       printf("%" PRIu64 ": ompt_event_release_lock: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_nest_lock:
-      //TODO: implement correct output
       printf("%" PRIu64 ": ompt_event_release_nest_lock_last: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
-      //printf("%" PRIu64 ": ompt_event_acquired_nest_lock_prev: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
     case ompt_mutex_critical:
       printf("%" PRIu64 ": ompt_event_release_critical: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
@@ -116,6 +112,23 @@ on_ompt_callback_mutex_released(
       break;
     case ompt_mutex_ordered:
       printf("%" PRIu64 ": ompt_event_release_ordered: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
+      break;
+  }
+}
+
+static void
+on_ompt_callback_nest_lock(
+    ompt_scope_endpoint_t endpoint,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra)
+{
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      printf("%" PRIu64 ": ompt_event_acquired_nest_lock_next: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
+      break;
+    case ompt_scope_end:
+      printf("%" PRIu64 ": ompt_event_release_nest_lock_prev: wait_id=%" PRIu64 ", return_address=%p \n", ompt_get_thread_data().value, wait_id, codeptr_ra);
       break;
   }
 }
@@ -522,6 +535,7 @@ void ompt_initialize(
   register_callback(ompt_callback_mutex_acquire);
   register_callback(ompt_callback_mutex_acquired);
   register_callback(ompt_callback_mutex_released);
+  register_callback(ompt_callback_nest_lock);
   register_callback(ompt_event_wait_barrier_begin);
   register_callback(ompt_event_barrier_begin);
   register_callback(ompt_event_wait_barrier_end);

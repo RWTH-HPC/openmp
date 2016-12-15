@@ -152,7 +152,8 @@
     macro (ompt_callback_mutex_released,        ompt_callback_mutex_t,         73) /* mutex released */         \
                                                                                                                 \
     macro (ompt_callback_lock_init,             ompt_callback_lock_init_t,     74) /* lock init */              \
-    macro (ompt_callback_lock_destroy,          ompt_callback_lock_destroy_t,  75) /* lock destroy */
+    macro (ompt_callback_lock_destroy,          ompt_callback_lock_destroy_t,  75) /* lock destroy */           \
+    macro (ompt_callback_nest_lock,             ompt_callback_nest_lock_t,     76) /* nest lock */
 
 
 
@@ -192,6 +193,11 @@ typedef enum ompt_mutex_kind_e {
     ompt_mutex_atomic = 0x14,
     ompt_mutex_ordered = 0x20
 } ompt_mutex_kind_t;
+
+typedef enum ompt_scope_endpoint_e {
+    ompt_scope_begin = 1,
+    ompt_scope_end = 2
+} ompt_scope_endpoint_t;
 
 /*---------------------
  * ompt_frame_t
@@ -389,6 +395,12 @@ typedef void (*ompt_callback_lock_init_t) (
 
 typedef void (*ompt_callback_lock_destroy_t) (
     ompt_mutex_kind_t kind,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra
+);
+
+typedef void (*ompt_callback_nest_lock_t) (
+    ompt_scope_endpoint_t endpoint,
     ompt_wait_id_t wait_id,
     const void *codeptr_ra
 );
