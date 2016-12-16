@@ -446,13 +446,15 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+        if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             kmp_taskdata_t *parent = new_taskdata->td_parent;
             ompt_task_data_t task_data = ompt_task_id_none;
-            ompt_callbacks.ompt_callback(ompt_event_task_begin)(
-                parent ? parent->ompt_task_info.task_data : task_data,
+            ompt_callbacks.ompt_callback(ompt_callback_task_create)(
+                parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
                 &(new_taskdata->ompt_task_info.task_data),
+                ompt_task_explicit,
+                1,
                 new_taskdata->ompt_task_info.function);
         }
 

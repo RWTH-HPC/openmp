@@ -453,11 +453,12 @@ __kmp_task_start( kmp_int32 gtid, kmp_task_t * task, kmp_taskdata_t * current_ta
 #if OMPT_SUPPORT
         /* let OMPT know that we're about to run this task */
         if (ompt_enabled &&
-             ompt_callbacks.ompt_callback(ompt_event_task_switch))
+             ompt_callbacks.ompt_callback(ompt_callback_task_schedule))
         {
-          ompt_callbacks.ompt_callback(ompt_event_task_switch)(
-            current_task->ompt_task_info.task_data,
-            taskdata->ompt_task_info.task_data);
+          ompt_callbacks.ompt_callback(ompt_callback_task_schedule)(
+            &(current_task->ompt_task_info.task_data),
+            ompt_task_yield, //TODO: correct status?
+            &(taskdata->ompt_task_info.task_data));
         }
         if (ompt_enabled)
             taskdata->ompt_task_info.scheduling_parent = current_task;
@@ -496,17 +497,20 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
             __builtin_frame_address(1);
     }
     if (ompt_enabled) {
-        if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+        if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             kmp_taskdata_t *parent = taskdata->td_parent;
             ompt_task_data_t task_data = ompt_task_id_none;
-            ompt_callbacks.ompt_callback(ompt_event_task_begin)(
-                parent ? parent->ompt_task_info.task_data : task_data,
+            ompt_callbacks.ompt_callback(ompt_callback_task_create)(
+                parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
                 &(taskdata->ompt_task_info.task_data),
+                ompt_task_explicit,
+                0,
                 taskdata->ompt_task_info.function);
         }
 
     }
+
  #endif
 
     taskdata -> td_flags.task_serial = 1;  // Execute this task immediately, not deferred.
@@ -642,20 +646,15 @@ __kmp_task_finish( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t *resumed_tas
 #if OMPT_SUPPORT
     /* let OMPT know that we're returning to the callee task */
     if (ompt_enabled &&
-         ompt_callbacks.ompt_callback(ompt_event_task_switch))
+        ompt_callbacks.ompt_callback(ompt_callback_task_schedule))
     {
-      ompt_callbacks.ompt_callback(ompt_event_task_switch)(
-        taskdata->ompt_task_info.task_data,
-        (resumed_task?resumed_task:
+      ompt_callbacks.ompt_callback(ompt_callback_task_schedule)(
+        &(taskdata->ompt_task_info.task_data),
+        ompt_task_complete,
+        &((resumed_task?resumed_task:
             (taskdata->ompt_task_info.scheduling_parent?taskdata->ompt_task_info.scheduling_parent:
                 taskdata->td_parent))
-                    ->ompt_task_info.task_data);
-    }
-    if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_task_end)) {
-        kmp_taskdata_t *parent = taskdata->td_parent;
-        ompt_callbacks.ompt_callback(ompt_event_task_end)(
-            taskdata->ompt_task_info.task_data);
+                    ->ompt_task_info.task_data));
     }
 #endif
 
@@ -1357,12 +1356,14 @@ __kmpc_omp_task_parts( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
         parent = new_taskdata->td_parent;
         parent->ompt_task_info.frame.reenter_runtime_frame =
             __builtin_frame_address(1);
-        if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+        if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             ompt_task_data_t task_data = ompt_task_id_none;
-            ompt_callbacks.ompt_callback(ompt_event_task_begin)(
-                parent ? parent->ompt_task_info.task_data : task_data,
+            ompt_callbacks.ompt_callback(ompt_callback_task_create)(
+                parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
                 &(new_taskdata->ompt_task_info.task_data),
+                ompt_task_explicit,
+                0,
                 new_taskdata->ompt_task_info.function);
         }
     }
@@ -1467,15 +1468,16 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
         parent = new_taskdata->td_parent;
         parent->ompt_task_info.frame.reenter_runtime_frame =
             __builtin_frame_address(1);
-        if (ompt_callbacks.ompt_callback(ompt_event_task_begin)) {
+        if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             ompt_task_data_t task_data = ompt_task_id_none;
-            ompt_callbacks.ompt_callback(ompt_event_task_begin)(
-                parent ? parent->ompt_task_info.task_data : task_data,
+            ompt_callbacks.ompt_callback(ompt_callback_task_create)(
+                parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
                 &(new_taskdata->ompt_task_info.task_data),
+                ompt_task_explicit,
+                0,
                 new_taskdata->ompt_task_info.function);
         }
-
     }
 #endif
 

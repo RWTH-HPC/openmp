@@ -47,10 +47,8 @@
 #define ompt_callback_parallel_begin_implemented           ompt_event_MAY_ALWAYS
 #define ompt_callback_parallel_end_implemented             ompt_event_MAY_ALWAYS
 
-#define ompt_event_task_begin_implemented               ompt_event_MAY_ALWAYS
-#define ompt_event_task_end_implemented                 ompt_event_MAY_ALWAYS
-#define ompt_event_task_switch_implemented              ompt_event_MAY_ALWAYS
-
+#define ompt_callback_task_create_implemented           ompt_event_MAY_ALWAYS
+#define ompt_callback_task_schedule_implemented         ompt_event_MAY_ALWAYS
 
 #define ompt_callback_thread_begin_implemented          ompt_event_MAY_ALWAYS
 #define ompt_callback_thread_end_implemented            ompt_event_MAY_ALWAYS
