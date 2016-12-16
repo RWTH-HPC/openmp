@@ -52,8 +52,8 @@
 #define ompt_event_task_switch_implemented              ompt_event_MAY_ALWAYS
 
 
-#define ompt_event_thread_begin_implemented             ompt_event_MAY_ALWAYS
-#define ompt_event_thread_end_implemented               ompt_event_MAY_ALWAYS
+#define ompt_callback_thread_begin_implemented          ompt_event_MAY_ALWAYS
+#define ompt_callback_thread_end_implemented            ompt_event_MAY_ALWAYS
 
 #define ompt_event_control_implemented                  ompt_event_MAY_ALWAYS
 

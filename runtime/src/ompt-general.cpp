@@ -254,8 +254,8 @@ void ompt_post_init()
 
         ompt_set_thread_state(root_thread, ompt_state_overhead);
 
-        if (ompt_callbacks.ompt_callback(ompt_event_thread_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_thread_begin)(
+        if (ompt_callbacks.ompt_callback(ompt_callback_thread_begin)) {
+            ompt_callbacks.ompt_callback(ompt_callback_thread_begin)(
                 ompt_thread_initial, __ompt_get_thread_data_internal());
         }
 

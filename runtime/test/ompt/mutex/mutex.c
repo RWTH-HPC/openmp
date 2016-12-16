@@ -40,6 +40,9 @@ int main()
 
   // Check if libomp supports the callbacks for this test.
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_mutex_acquire'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_mutex_acquired'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_mutex_released'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_nest_lock'
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
 

@@ -86,8 +86,8 @@
     macro (ompt_event_task_begin,               ompt_new_task_callback_t,       3) /* task begin */             \
     macro (ompt_event_task_end,                 ompt_task_callback_t,           4) /* task destroy */           \
                                                                                                                 \
-    macro (ompt_event_thread_begin,             ompt_new_thread_callback_t,     5) /* thread begin */           \
-    macro (ompt_event_thread_end,               ompt_thread_type_callback_t,    6) /* thread end */             \
+    macro (ompt_callback_thread_begin,          ompt_callback_thread_begin_t,   5) /* thread begin */           \
+    macro (ompt_callback_thread_end,            ompt_callback_thread_end_t,     6) /* thread end */             \
                                                                                                                 \
     macro (ompt_event_control,                  ompt_control_callback_t,        7) /* support control calls */  \
                                                                                                                 \
@@ -292,9 +292,13 @@ typedef enum {
     ompt_invoker_runtime = 1          /* runtime invokes master task  */
 } ompt_invoker_t;
 
-typedef void (*ompt_new_thread_callback_t) (
+typedef void (*ompt_callback_thread_begin_t) (
     ompt_thread_type_t thread_type,   /* type of thread               */
-    ompt_thread_data_t *thread_data   /* data of thread               */
+    ompt_data_t *thread_data          /* data of thread               */
+);
+
+typedef void (*ompt_callback_thread_end_t) (
+    ompt_data_t *thread_data          /* data of thread               */
 );
 
 typedef void (*ompt_thread_type_callback_t) (

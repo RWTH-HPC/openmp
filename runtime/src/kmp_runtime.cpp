@@ -3852,10 +3852,8 @@ __kmp_reset_root(int gtid, kmp_root_t *root)
 
 #if OMPT_SUPPORT
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_thread_end)) {
-        ompt_thread_data_t thread_data = root->r.r_uber_thread->th.ompt_thread_info.thread_data;
-        ompt_callbacks.ompt_callback(ompt_event_thread_end)(
-            ompt_thread_initial, thread_data);
+        ompt_callbacks.ompt_callback(ompt_callback_thread_end)) {
+        ompt_callbacks.ompt_callback(ompt_callback_thread_end)(&(root->r.r_uber_thread->th.ompt_thread_info.thread_data));
     }
 #endif
 
@@ -5435,8 +5433,8 @@ __kmp_launch_thread( kmp_info_t *this_thr )
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
         this_thr->th.ompt_thread_info.wait_id = 0;
         this_thr->th.ompt_thread_info.idle_frame = __builtin_frame_address(0);
-        if (ompt_callbacks.ompt_callback(ompt_event_thread_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_thread_begin)(
+        if (ompt_callbacks.ompt_callback(ompt_callback_thread_begin)) {
+            ompt_callbacks.ompt_callback(ompt_callback_thread_begin)(
                 ompt_thread_worker, thread_data);
         }
     }
@@ -5533,9 +5531,8 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 
 #if OMPT_SUPPORT
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_thread_end)) {
-        ompt_callbacks.ompt_callback(ompt_event_thread_end)(
-            ompt_thread_worker, *thread_data);
+        ompt_callbacks.ompt_callback(ompt_callback_thread_end)) {
+        ompt_callbacks.ompt_callback(ompt_callback_thread_end)(thread_data);
     }
 #endif
 
