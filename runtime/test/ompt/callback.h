@@ -297,25 +297,27 @@ on_ompt_event_master_end(
 }
 
 static void
-on_ompt_event_parallel_begin(
-  ompt_task_data_t parent_task_data,
+on_ompt_callback_parallel_begin(
+  ompt_data_t *parent_task_data,
   ompt_frame_t *parent_task_frame,
-  ompt_parallel_data_t* parallel_data,
+  ompt_data_t* parallel_data,
   uint32_t requested_team_size,
-  void *parallel_function,
-  ompt_invoker_t invoker)
+  uint32_t actual_team_size,
+  ompt_invoker_t invoker,
+  void *codeptr_ra)
 {
-        parallel_data->value = my_next_id();
-  printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", parallel_function=%p, invoker=%d\n", ompt_get_thread_data().value, parent_task_data.value, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_data->value, requested_team_size, parallel_function, invoker);
+  parallel_data->value = my_next_id();
+  printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", parallel_function=%p, invoker=%d, actual_team_size=%" PRIu32 "\n", ompt_get_thread_data().value, parent_task_data->value, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_data->value, requested_team_size, codeptr_ra, invoker, actual_team_size);
 }
 
 static void
-on_ompt_event_parallel_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data,
-  ompt_invoker_t invoker)
+on_ompt_callback_parallel_end(
+  ompt_data_t *parallel_data,
+  ompt_task_data_t *task_data,
+  ompt_invoker_t invoker,
+  void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_parallel_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", invoker=%d\n", ompt_get_thread_data().value, parallel_data.value, task_data.value, invoker);
+  printf("%" PRIu64 ": ompt_event_parallel_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", invoker=%d\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, invoker);
 }
 
 static void
@@ -554,8 +556,8 @@ void ompt_initialize(
   register_callback(ompt_event_loop_end);
   register_callback(ompt_event_master_begin);
   register_callback(ompt_event_master_end);
-  register_callback(ompt_event_parallel_begin);
-  register_callback(ompt_event_parallel_end);
+  register_callback(ompt_callback_parallel_begin);
+  register_callback(ompt_callback_parallel_end);
   register_callback(ompt_event_runtime_shutdown);
   register_callback(ompt_event_sections_begin);
   register_callback(ompt_event_sections_end);

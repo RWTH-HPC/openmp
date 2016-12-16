@@ -80,8 +80,8 @@
 #define FOREACH_OMPT_EVENT(macro)                                                                               \
                                                                                                                 \
     /*--- Mandatory Events ---*/                                                                                \
-    macro (ompt_event_parallel_begin,           ompt_new_parallel_callback_t,   1) /* parallel begin */         \
-    macro (ompt_event_parallel_end,             ompt_end_parallel_callback_t,   2) /* parallel end */           \
+    macro (ompt_callback_parallel_begin,        ompt_callback_parallel_begin_t, 1) /* parallel begin */         \
+    macro (ompt_callback_parallel_end,          ompt_callback_parallel_end_t,   2) /* parallel end */           \
                                                                                                                 \
     macro (ompt_event_task_begin,               ompt_new_task_callback_t,       3) /* task begin */             \
     macro (ompt_event_task_end,                 ompt_task_callback_t,           4) /* task destroy */           \
@@ -328,19 +328,21 @@ typedef void (*ompt_new_workshare_callback_t) (
     void *workshare_function          /* pointer to outlined function */
 );
 
-typedef void (*ompt_new_parallel_callback_t) (
-    ompt_task_data_t parent_task_data, /* data of parent task         */
-    ompt_frame_t *parent_task_frame,  /* frame data of parent task    */
-    ompt_parallel_data_t *parallel_data, /* data of parallel region   */
-    uint32_t requested_team_size,     /* number of threads in team    */
-    void *parallel_function,          /* pointer to outlined function */
-    ompt_invoker_t invoker            /* who invokes master task?     */
+typedef void (*ompt_callback_parallel_begin_t) (
+    ompt_data_t *parent_task_data,    /* data of parent task         */
+    const ompt_frame_t *parent_frame, /* frame data of parent task    */
+    ompt_data_t *parallel_data,       /* data of parallel region   */
+    unsigned int requested_team_size, /* requested number of threads in team    */
+    unsigned int actual_team_size,    /* actual number of threads in team    */
+    ompt_invoker_t invoker,           /* who invokes master task?     */
+    const void *codeptr_ra            
 );
 
-typedef void (*ompt_end_parallel_callback_t) (
-    ompt_parallel_data_t parallel_data, /* data of parallel region    */
-    ompt_task_data_t task_data,       /* data of task                 */
-    ompt_invoker_t invoker            /* who invokes master task?     */ 
+typedef void (*ompt_callback_parallel_end_t) (
+    ompt_data_t *parallel_data,        /* data of parallel region    */
+    ompt_task_data_t *task_data,       /* data of task                 */
+    ompt_invoker_t invoker,            /* who invokes master task?     */ 
+    const void *codeptr_ra             
 );
 
 /* tasks */

@@ -1465,12 +1465,15 @@ __kmp_fork_call(
 
 #if OMPT_SUPPORT
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_parallel_begin)) {
+        ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
         int team_size = master_set_numthreads;
 
-        ompt_callbacks.ompt_callback(ompt_event_parallel_begin)(
-            parent_task_data, ompt_frame, &ompt_parallel_data,
-            team_size, unwrapped_task, OMPT_INVOKER(call_context));
+        ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
+            &parent_task_data, ompt_frame, &ompt_parallel_data,
+            team_size,
+            master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
+            OMPT_INVOKER(call_context),
+            __builtin_return_address(1));
     }
 #endif
 
@@ -1553,10 +1556,11 @@ __kmp_fork_call(
                 // reset clear the task id only after unlinking the task
                 lw_taskteam.ompt_task_info.task_data = ompt_task_id_none;
 
-                if (ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
-                    ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
-                        ompt_parallel_data, parent_task_data,
-                        OMPT_INVOKER(call_context));
+                if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
+                    ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
+                        &ompt_parallel_data, &parent_task_data,
+                        OMPT_INVOKER(call_context),
+                        __builtin_return_address(1));
                 }
                 master_th->th.ompt_thread_info.state = ompt_state_overhead;
             }
@@ -1746,11 +1750,11 @@ __kmp_fork_call(
                     __ompt_lw_taskteam_unlink(master_th);
                     // reset clear the task id only after unlinking the task
                     lw_taskteam.ompt_task_info.task_data = ompt_task_id_none;
-
-                    if (ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
-                            ompt_parallel_data, parent_task_data,
-                            OMPT_INVOKER(call_context));
+                    if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
+                        ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
+                            &ompt_parallel_data, &parent_task_data,
+                            OMPT_INVOKER(call_context),
+                            __builtin_return_address(1));
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }
@@ -1848,11 +1852,11 @@ __kmp_fork_call(
                     __ompt_lw_taskteam_unlink(master_th);
                     // reset clear the task id only after unlinking the task
                     lw_taskteam.ompt_task_info.task_data = ompt_task_id_none;
-
-                    if (ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
-                        ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
-                            ompt_parallel_data, parent_task_data,
-                            OMPT_INVOKER(call_context));
+                    if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
+                        ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
+                            &ompt_parallel_data, &parent_task_data,
+                            OMPT_INVOKER(call_context),
+                            __builtin_return_address(1));
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }
@@ -2212,9 +2216,11 @@ __kmp_join_ompt(
     fork_context_e fork_context)
 {
     ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
-    if (ompt_callbacks.ompt_callback(ompt_event_parallel_end)) {
-        ompt_callbacks.ompt_callback(ompt_event_parallel_end)(
-            parallel_data, task_info->task_data, OMPT_INVOKER(fork_context));
+    if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
+        ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
+            &parallel_data, &(task_info->task_data),
+            OMPT_INVOKER(fork_context),
+            __builtin_return_address(1));
     }
 
     task_info->frame.reenter_runtime_frame = NULL;

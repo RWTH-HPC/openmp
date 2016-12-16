@@ -44,8 +44,8 @@
  | Mandatory Events
  +--------------------------------------------------------------------------*/
 
-#define ompt_event_parallel_begin_implemented           ompt_event_MAY_ALWAYS
-#define ompt_event_parallel_end_implemented             ompt_event_MAY_ALWAYS
+#define ompt_callback_parallel_begin_implemented           ompt_event_MAY_ALWAYS
+#define ompt_callback_parallel_end_implemented             ompt_event_MAY_ALWAYS
 
 #define ompt_event_task_begin_implemented               ompt_event_MAY_ALWAYS
 #define ompt_event_task_end_implemented                 ompt_event_MAY_ALWAYS
