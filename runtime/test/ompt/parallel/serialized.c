@@ -11,8 +11,8 @@ int main()
   }
 
   // Check if libomp supports the callbacks for this test.
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_parallel_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_parallel_end'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_parallel_begin'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_parallel_end'
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_begin'
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_end'
 
