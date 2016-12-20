@@ -3680,7 +3680,7 @@ __kmp_register_root( int initial_thread )
         }
         root_thread->th.th_info .ds.ds_gtid = gtid;
 #if OMPT_SUPPORT
-        root_thread->th.ompt_thread_info.thread_data.value = gtid + 1;
+        root_thread->th.ompt_thread_info.thread_data.ptr = NULL;
 #endif
         root_thread->th.th_root =  root;
         if( __kmp_env_consistency_check ) {
@@ -5434,7 +5434,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
     ompt_thread_data_t *thread_data;
     if (ompt_enabled) {
         thread_data = &(this_thr->th.ompt_thread_info.thread_data);
-        thread_data->value = gtid + 1;
+        thread_data->ptr = NULL;
 
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
         this_thr->th.ompt_thread_info.wait_id = 0;
