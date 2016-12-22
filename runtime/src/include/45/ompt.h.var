@@ -128,8 +128,7 @@
     macro (ompt_event_workshare_begin,          ompt_new_workshare_callback_t, 35) /* task at workshare begin */\
     macro (ompt_event_workshare_end,            ompt_parallel_callback_t,      36) /* task at workshare end */  \
                                                                                                                 \
-    macro (ompt_event_master_begin,             ompt_parallel_callback_t,      37) /* task at master begin */   \
-    macro (ompt_event_master_end,               ompt_parallel_callback_t,      38) /* task at master end */     \
+    macro (ompt_callback_master,                ompt_callback_master_t,        37) /* task at master begin or end */   \
                                                                                                                 \
     macro (ompt_event_barrier_begin,            ompt_parallel_callback_t,      39) /* task at barrier begin  */ \
     macro (ompt_event_barrier_end,              ompt_parallel_callback_t,      40) /* task at barrier end */    \
@@ -428,6 +427,13 @@ typedef void (*ompt_callback_lock_destroy_t) (
 typedef void (*ompt_callback_nest_lock_t) (
     ompt_scope_endpoint_t endpoint,
     ompt_wait_id_t wait_id,
+    const void *codeptr_ra
+);
+
+typedef void (*ompt_callback_master_t) (
+    ompt_scope_endpoint_t endpoint,
+    ompt_data_t *parallel_data,
+    ompt_data_t *task_data,
     const void *codeptr_ra
 );
 

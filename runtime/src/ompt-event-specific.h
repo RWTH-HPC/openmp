@@ -100,8 +100,7 @@
 #define ompt_event_workshare_begin_implemented          ompt_event_UNIMPLEMENTED
 #define ompt_event_workshare_end_implemented            ompt_event_UNIMPLEMENTED
 
-#define ompt_event_master_begin_implemented             ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_master_end_implemented               ompt_event_MAY_ALWAYS_TRACE
+#define ompt_callback_master_implemented                ompt_event_MAY_ALWAYS_TRACE
 
 #define ompt_event_barrier_begin_implemented            ompt_event_MAY_ALWAYS_TRACE
 #define ompt_event_barrier_end_implemented              ompt_event_MAY_ALWAYS_TRACE

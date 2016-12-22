@@ -46,6 +46,7 @@ int main()
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
 
+  // TODO: check wait ids  
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_init_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{[0-9]+}}, impl={{[0-9]+}}, return_address={{0x[0-f]+}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_wait_lock: wait_id=[[WAIT_ID:[0-9]+]], hint={{[0-9]+}}, impl={{[0-9]+}}, return_address={{0x[0-f]+}}
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_acquired_lock: wait_id=[[WAIT_ID:[0-9]+]], return_address={{0x[0-f]+}}

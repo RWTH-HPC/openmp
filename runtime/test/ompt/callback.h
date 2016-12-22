@@ -305,6 +305,24 @@ on_ompt_event_master_end(
 }
 
 static void
+on_ompt_callback_master(
+  ompt_scope_endpoint_t endpoint,
+  ompt_parallel_data_t *parallel_data,
+  ompt_task_data_t *task_data,
+  const void *codeptr_ra)
+{
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      printf("%" PRIu64 ": ompt_event_master_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", codeptr_ra=%p\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra);
+      break;
+    case ompt_scope_end:
+      printf("%" PRIu64 ": ompt_event_master_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", codeptr_ra=%p\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra);
+      break;
+  }
+}
+
+static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *parent_task_data,
   ompt_frame_t *parent_task_frame,
@@ -562,8 +580,7 @@ void ompt_initialize(
   register_callback(ompt_callback_lock_destroy);
   register_callback(ompt_event_loop_begin);
   register_callback(ompt_event_loop_end);
-  register_callback(ompt_event_master_begin);
-  register_callback(ompt_event_master_end);
+  register_callback(ompt_callback_master);
   register_callback(ompt_callback_parallel_begin);
   register_callback(ompt_callback_parallel_end);
   register_callback(ompt_event_runtime_shutdown);
