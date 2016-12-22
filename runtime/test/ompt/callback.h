@@ -289,36 +289,33 @@ on_ompt_callback_lock_destroy(
 }
 
 static void
-on_ompt_event_loop_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t parent_task_data,
-  void *workshare_function)
+on_ompt_callback_work(
+  ompt_work_type_t wstype,
+  ompt_scope_endpoint_t endpoint,
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
+  uint64_t count,
+  const void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_loop_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p\n", ompt_get_thread_data().value, parallel_data.value, parent_task_data.value, workshare_function);
-}
-
-static void
-on_ompt_event_loop_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_loop_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_master_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_master_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_master_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_master_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      switch(wstype)
+      {
+        case ompt_work_loop:
+          printf("%" PRIu64 ": ompt_event_loop_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra);
+          break;
+      }
+      break;
+    case ompt_scope_end:
+      switch(wstype)
+      {
+        case ompt_work_loop:
+          printf("%" PRIu64 ": ompt_event_loop_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value);
+          break;
+      }
+      break;
+  }
 }
 
 static void
@@ -594,8 +591,7 @@ void ompt_initialize(
   register_callback(ompt_event_initial_task_end);
   register_callback(ompt_callback_lock_init);
   register_callback(ompt_callback_lock_destroy);
-  register_callback(ompt_event_loop_begin);
-  register_callback(ompt_event_loop_end);
+  register_callback(ompt_callback_work);
   register_callback(ompt_callback_master);
   register_callback(ompt_callback_parallel_begin);
   register_callback(ompt_callback_parallel_end);

@@ -153,9 +153,13 @@ __kmp_for_static_init(
 
 #if OMPT_SUPPORT && OMPT_TRACE
         if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-                team_info->parallel_data, task_info->task_data,
+            ompt_callbacks.ompt_callback(ompt_callback_work)) {
+            ompt_callbacks.ompt_callback(ompt_callback_work)(
+                ompt_work_loop,
+                ompt_scope_begin,
+                &(team_info->parallel_data),
+                &(task_info->task_data),
+                0, //TODO: implement
                 team_info->microtask);
         }
 #endif
@@ -202,9 +206,13 @@ __kmp_for_static_init(
 
 #if OMPT_SUPPORT && OMPT_TRACE
         if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-                team_info->parallel_data, task_info->task_data,
+            ompt_callbacks.ompt_callback(ompt_callback_work)) {
+            ompt_callbacks.ompt_callback(ompt_callback_work)(
+                ompt_work_loop,
+                ompt_scope_begin,
+                &(team_info->parallel_data),
+                &(task_info->task_data),
+                0, //TODO: implement
                 team_info->microtask);
         }
 #endif
@@ -230,9 +238,13 @@ __kmp_for_static_init(
 
 #if OMPT_SUPPORT && OMPT_TRACE
         if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-                team_info->parallel_data, task_info->task_data,
+            ompt_callbacks.ompt_callback(ompt_callback_work)) {
+            ompt_callbacks.ompt_callback(ompt_callback_work)(
+                ompt_work_loop,
+                ompt_scope_begin,
+                &(team_info->parallel_data),
+                &(task_info->task_data),
+                0, //TODO: implement
                 team_info->microtask);
         }
 #endif
@@ -384,9 +396,14 @@ __kmp_for_static_init(
 
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_loop_begin)) {
-        ompt_callbacks.ompt_callback(ompt_event_loop_begin)(
-            team_info->parallel_data, task_info->task_data, team_info->microtask);
+        ompt_callbacks.ompt_callback(ompt_callback_work)) {
+        ompt_callbacks.ompt_callback(ompt_callback_work)(
+            ompt_work_loop,
+            ompt_scope_begin,
+            &(team_info->parallel_data),
+            &(task_info->task_data),
+            0, //TODO implement
+            team_info->microtask);
     }
 #endif
 
