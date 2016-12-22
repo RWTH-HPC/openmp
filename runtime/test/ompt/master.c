@@ -6,7 +6,7 @@
 int main()
 {
   int x = 0;
-  #pragma omp parallel numthreads(2)
+  #pragma omp parallel num_threads(2)
   {
     #pragma omp master
     {
@@ -14,7 +14,7 @@ int main()
     }
   }
 
-  printf("x=%d", x);
+  printf("x=%d\n", x);
 
   // Check if libomp supports the callbacks for this test.
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_master'
