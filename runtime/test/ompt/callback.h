@@ -201,6 +201,23 @@ on_ompt_event_idle_end(
 }
 
 static void
+on_ompt_callback_idle(
+  ompt_scope_endpoint_t endpoint)
+{
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      printf("%" PRIu64 ": ompt_event_idle_begin:\n", ompt_get_thread_data().value);
+      //printf("%" PRIu64 ": ompt_event_idle_begin: thread_id=%" PRIu64 "\n", ompt_get_thread_data().value, thread_data.value);
+      break;
+    case ompt_scope_end:
+      printf("%" PRIu64 ": ompt_event_idle_end:\n", ompt_get_thread_data().value);
+      //printf("%" PRIu64 ": ompt_event_idle_end: thread_id=%" PRIu64 "\n", ompt_get_thread_data().value, thread_data.value);
+      break;
+  }
+}
+
+static void
 on_ompt_callback_implicit_task(
     ompt_scope_endpoint_t endpoint,
     ompt_data_t *parallel_data,
@@ -571,8 +588,7 @@ void ompt_initialize(
   register_callback(ompt_event_barrier_end);
   register_callback(ompt_event_control);
   register_callback(ompt_event_flush);
-  register_callback(ompt_event_idle_begin);
-  register_callback(ompt_event_idle_end);
+  register_callback(ompt_callback_idle);
   register_callback(ompt_callback_implicit_task);
   register_callback(ompt_event_initial_task_begin);
   register_callback(ompt_event_initial_task_end);

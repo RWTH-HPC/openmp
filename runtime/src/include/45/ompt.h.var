@@ -93,8 +93,7 @@
     macro (ompt_event_runtime_shutdown,         ompt_callback_t,                8) /* runtime shutdown */       \
                                                                                                                 \
     /*--- Optional Events (blame shifting, ompt_event_unimplemented) ---*/                                      \
-    macro (ompt_event_idle_begin,               ompt_thread_callback_t,         9) /* begin idle state */       \
-    macro (ompt_event_idle_end,                 ompt_thread_callback_t,        10) /* end idle state */         \
+    macro (ompt_callback_idle,                  ompt_callback_idle_t,           9) /* begin or end idle state */\
                                                                                                                 \
     macro (ompt_event_wait_barrier_begin,       ompt_parallel_callback_t,      11) /* begin wait at barrier */  \
     macro (ompt_event_wait_barrier_end,         ompt_parallel_callback_t,      12) /* end wait at barrier */    \
@@ -128,7 +127,7 @@
     macro (ompt_event_workshare_begin,          ompt_new_workshare_callback_t, 35) /* task at workshare begin */\
     macro (ompt_event_workshare_end,            ompt_parallel_callback_t,      36) /* task at workshare end */  \
                                                                                                                 \
-    macro (ompt_callback_master,                ompt_callback_master_t,        37) /* task at master begin or end */   \
+    macro (ompt_callback_master,                ompt_callback_master_t,        37) /* task at master begin or end */\
                                                                                                                 \
     macro (ompt_event_barrier_begin,            ompt_parallel_callback_t,      39) /* task at barrier begin  */ \
     macro (ompt_event_barrier_end,              ompt_parallel_callback_t,      40) /* task at barrier end */    \
@@ -435,6 +434,10 @@ typedef void (*ompt_callback_master_t) (
     ompt_data_t *parallel_data,
     ompt_data_t *task_data,
     const void *codeptr_ra
+);
+
+typedef void (*ompt_callback_idle_t) (
+    ompt_scope_endpoint_t endpoint
 );
 
 /****************************************************************************

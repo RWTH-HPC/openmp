@@ -44,8 +44,8 @@
  | Mandatory Events
  +--------------------------------------------------------------------------*/
 
-#define ompt_callback_parallel_begin_implemented           ompt_event_MAY_ALWAYS
-#define ompt_callback_parallel_end_implemented             ompt_event_MAY_ALWAYS
+#define ompt_callback_parallel_begin_implemented        ompt_event_MAY_ALWAYS
+#define ompt_callback_parallel_end_implemented          ompt_event_MAY_ALWAYS
 
 #define ompt_callback_task_create_implemented           ompt_event_MAY_ALWAYS
 #define ompt_callback_task_schedule_implemented         ompt_event_MAY_ALWAYS
@@ -57,15 +57,14 @@
 
 #define ompt_event_runtime_shutdown_implemented         ompt_event_MAY_ALWAYS
 
-#define ompt_callback_implicit_task_implemented      ompt_event_MAY_ALWAYS
+#define ompt_callback_implicit_task_implemented         ompt_event_MAY_ALWAYS
 
 
 /*----------------------------------------------------------------------------
  | Optional Events (blame shifting)
  +--------------------------------------------------------------------------*/
 
-#define ompt_event_idle_begin_implemented               ompt_event_MAY_ALWAYS_BLAME
-#define ompt_event_idle_end_implemented                 ompt_event_MAY_ALWAYS_BLAME
+#define ompt_callback_idle_implemented                  ompt_event_MAY_ALWAYS_BLAME
 
 #define ompt_event_wait_barrier_begin_implemented       ompt_event_MAY_ALWAYS_BLAME
 #define ompt_event_wait_barrier_end_implemented         ompt_event_MAY_ALWAYS_BLAME
