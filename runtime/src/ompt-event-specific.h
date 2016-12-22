@@ -90,11 +90,6 @@
 #define ompt_event_sections_begin_implemented           ompt_event_UNIMPLEMENTED
 #define ompt_event_sections_end_implemented             ompt_event_UNIMPLEMENTED
 
-#define ompt_event_single_in_block_begin_implemented    ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_single_in_block_end_implemented      ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_single_others_begin_implemented      ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_single_others_end_implemented        ompt_event_MAY_ALWAYS_TRACE
-
 #define ompt_event_workshare_begin_implemented          ompt_event_UNIMPLEMENTED
 #define ompt_event_workshare_end_implemented            ompt_event_UNIMPLEMENTED
 

@@ -1594,17 +1594,24 @@ __kmpc_single(ident_t *loc, kmp_int32 global_tid)
 
     if (ompt_enabled) {
         if (rc) {
-            if (ompt_callbacks.ompt_callback(ompt_event_single_in_block_begin)) {
-                ompt_callbacks.ompt_callback(ompt_event_single_in_block_begin)(
-                    team->t.ompt_team_info.parallel_data,
-                    team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data,
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_executor,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
                     team->t.ompt_team_info.microtask);
             }
         } else {
-            if (ompt_callbacks.ompt_callback(ompt_event_single_others_begin)) {
-                ompt_callbacks.ompt_callback(ompt_event_single_others_begin)(
-                    team->t.ompt_team_info.parallel_data,
-                    team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data);
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    __builtin_return_address(1));
             }
             this_thr->th.ompt_thread_info.state = ompt_state_wait_single;
         }
@@ -1635,10 +1642,14 @@ __kmpc_end_single(ident_t *loc, kmp_int32 global_tid)
     int tid = __kmp_tid_from_gtid( global_tid );
 
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_single_in_block_end)) {
-        ompt_callbacks.ompt_callback(ompt_event_single_in_block_end)(
-            team->t.ompt_team_info.parallel_data,
-            team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data);
+        ompt_callbacks.ompt_callback(ompt_callback_work)) {
+        ompt_callbacks.ompt_callback(ompt_callback_work)(
+            ompt_work_single_executor,
+            ompt_scope_end,
+            &(team->t.ompt_team_info.parallel_data),
+            &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+            1,
+            __builtin_return_address(1));
     }
 #endif
 }

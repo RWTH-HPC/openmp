@@ -1090,9 +1090,14 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
         my_parallel_data = team->t.ompt_team_info.parallel_data;
 
         if (this_thr->th.ompt_thread_info.state == ompt_state_wait_single) {
-            if (ompt_callbacks.ompt_callback(ompt_event_single_others_end)) {
-                ompt_callbacks.ompt_callback(ompt_event_single_others_end)(
-                    my_parallel_data, my_task_data);
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_end,
+                    &(my_parallel_data),
+                    &(my_task_data),
+                    1,
+                    __builtin_return_address(1));
             }
         }
         if (ompt_callbacks.ompt_callback(ompt_event_barrier_begin)) {
