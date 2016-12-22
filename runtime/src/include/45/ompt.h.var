@@ -106,8 +106,7 @@
     macro (ompt_event_wait_taskgroup_end,       ompt_parallel_callback_t,      16) /* end wait at taskgroup */  \
                                                                                                                 \
     /*--- Optional Events (synchronous events, ompt_event_unimplemented) --- */                                 \
-    macro (ompt_event_implicit_task_begin,      ompt_new_implicit_task_callback_t,      22) /* implicit task begin   */  \
-    macro (ompt_event_implicit_task_end,        ompt_parallel_callback_t,      23) /* implicit task end  */     \
+    macro (ompt_callback_implicit_task,         ompt_callback_implicit_task_t, 22) /* implicit task   */  \
                                                                                                                 \
     macro (ompt_event_initial_task_begin,       ompt_parallel_callback_t,      24) /* initial task begin   */   \
     macro (ompt_event_initial_task_end,         ompt_parallel_callback_t,      25) /* initial task end  */      \
@@ -302,10 +301,18 @@ typedef void (*ompt_parallel_callback_t) (
     ompt_task_data_t task_data        /* data of task                 */
 );
 
-/* implicit task begin */
-typedef void (*ompt_new_implicit_task_callback_t) (
-    ompt_parallel_data_t parallel_data, /* data of parallel region    */
-    ompt_task_data_t *task_data        /* data of task                 */
+typedef enum ompt_scope_endpoint_e {
+    ompt_scope_begin = 1,
+    ompt_scope_end = 2
+} ompt_scope_endpoint_t;
+
+
+/* implicit task */
+typedef void (*ompt_callback_implicit_task_t) (
+    ompt_scope_endpoint_t endpoint,
+    ompt_data_t *parallel_data,
+    ompt_data_t *task_data,
+    unsigned int thread_num
 );
 
 typedef void (*ompt_new_workshare_callback_t) (
@@ -417,11 +424,6 @@ typedef void (*ompt_callback_lock_destroy_t) (
     ompt_wait_id_t wait_id,
     const void *codeptr_ra
 );
-
-typedef enum ompt_scope_endpoint_e {
-    ompt_scope_begin = 1,
-    ompt_scope_end = 2
-} ompt_scope_endpoint_t;
 
 typedef void (*ompt_callback_nest_lock_t) (
     ompt_scope_endpoint_t endpoint,

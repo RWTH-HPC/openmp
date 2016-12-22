@@ -377,9 +377,12 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
         ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
 
         // implicit task callback
-        if (ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)(
-                team_info->parallel_data, &(task_info->task_data));
+        if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
+                ompt_scope_begin,
+                &(team_info->parallel_data),
+                &(task_info->task_data),
+                __kmp_get_gtid());
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
     }
@@ -427,9 +430,12 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
         __ompt_lw_taskteam_link(lwt, thr);
 
         // implicit task callback
-        if (ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)) {
-            ompt_callbacks.ompt_callback(ompt_event_implicit_task_begin)(
-                ompt_parallel_data, &(lwt->ompt_task_info.task_data));
+        if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
+                ompt_scope_begin,
+                &(ompt_parallel_data),
+                &(lwt->ompt_task_info.task_data),
+                __kmp_get_gtid());
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
     }
@@ -503,10 +509,13 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         ompt_frame->reenter_runtime_frame = __builtin_frame_address(0);
 
         if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)) {
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
             ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
-            ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)(
-                parallel_data, task_info->task_data);
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
+                ompt_scope_end,
+                &(parallel_data),
+                &(task_info->task_data),
+                __kmp_get_gtid());
         }
 
         // unlink if necessary. no-op if there is not a lightweight task.
@@ -541,9 +550,12 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
     else {
 #if OMPT_SUPPORT
         if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)) {
-            ompt_callbacks.ompt_callback(ompt_event_implicit_task_end)(
-                parallel_data, serialized_task_data);
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
+                ompt_scope_end,
+                &(parallel_data),
+                &(serialized_task_data),
+                __kmp_get_gtid());
         }
 #endif
 
