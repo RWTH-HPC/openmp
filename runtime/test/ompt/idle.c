@@ -5,32 +5,6 @@
 
 int main()
 {
-  /*
-  int x = 0;
-  #pragma omp parallel num_threads(3)
-  {
-    int i;
-    #pragma omp for reduction(+:x)
-    for(i = 0; i < 100; i++)
-    {
-      x += 1;
-    }
-  }
-  printf("x=%d\n", x);
-
-  x = 0;
-  #pragma omp parallel num_threads(2)
-  {
-    int i;
-    #pragma omp for reduction(+:x)
-    for(i = 0; i < 100; i++)
-    {
-      x += 1;
-    }
-  }
-  printf("x=%d\n", x);
-  */
-
   int x = 0;
   #pragma omp parallel num_threads(3)
   {
