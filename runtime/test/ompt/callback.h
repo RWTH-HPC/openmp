@@ -17,7 +17,7 @@ static ompt_get_parallel_data_t ompt_get_parallel_data;
 
 static int my_next_id()
 {
-//TODO: make sure this is thread-safe!
+  //TODO: make sure this is thread-safe!
   static int ID=1;
   return __sync_fetch_and_add(&ID,1);
 }
@@ -35,6 +35,12 @@ static void print_ids(int level)
 do {\
   printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data().value, level, __builtin_frame_address(level));\
 } while(0)
+
+static void print_retadd()
+{
+  printf("%" PRIu64 ": __builtin_return_address()=%p\n", ompt_get_thread_data().value, __builtin_frame_address(0));
+}
+
 
 static void
 on_ompt_callback_mutex_acquire(
@@ -199,8 +205,8 @@ on_ompt_event_implicit_task_begin(
 	ompt_parallel_data_t parallel_data,
 	ompt_task_data_t* task_data)
 {
-        task_data->value = my_next_id();
-	printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data->value);
+  task_data->value = my_next_id();
+  printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data->value);
 }
 
 static void
@@ -488,6 +494,7 @@ on_ompt_callback_thread_begin(
   ompt_thread_type_t thread_type,
   ompt_data_t *thread_data)
 {
+  thread_data->value = my_next_id();
   printf("%" PRIu64 ": ompt_event_thread_begin: thread_type=%s=%d, thread_id=%" PRIu64 "\n", ompt_get_thread_data().value, ompt_thread_type_t_values[thread_type], thread_type, thread_data->value);
 }
 

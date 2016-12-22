@@ -20,7 +20,7 @@ int main()
   omp_unset_nest_lock(&nest_lock);
   omp_destroy_nest_lock(&nest_lock);
 
-
+  //print_retadd();
   #pragma omp critical
   {
     print_ids(0);
