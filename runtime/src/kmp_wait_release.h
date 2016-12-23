@@ -139,7 +139,7 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
             if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
                 ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_begin);
             }
-        } else if (ompt_callbacks.ompt_callback(ompt_event_wait_barrier_begin)) {
+        } else if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             KMP_DEBUG_ASSERT(ompt_state == ompt_state_wait_barrier ||
                              ompt_state == ompt_state_wait_barrier_implicit ||
                              ompt_state == ompt_state_wait_barrier_explicit);
@@ -154,7 +154,12 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
                 pId = this_thr->th.th_team->t.ompt_team_info.parallel_data;
                 tId = this_thr->th.th_current_task->ompt_task_info.task_data;
             }
-            ompt_callbacks.ompt_callback(ompt_event_wait_barrier_begin)(pId, tId);
+            ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+                ompt_sync_region_barrier,
+                ompt_scope_begin,
+                &(pId),
+                &(tId),
+                __builtin_return_address(1));
         }
     }
 #endif
@@ -300,7 +305,7 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
             if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
                 ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_end);
             }
-        } else if (ompt_callbacks.ompt_callback(ompt_event_wait_barrier_end)) {
+        } else if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             KMP_DEBUG_ASSERT(ompt_state == ompt_state_wait_barrier ||
                              ompt_state == ompt_state_wait_barrier_implicit ||
                              ompt_state == ompt_state_wait_barrier_explicit);
@@ -315,7 +320,12 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
                 pId = this_thr->th.th_team->t.ompt_team_info.parallel_data;
                 tId = this_thr->th.th_current_task->ompt_task_info.task_data;
             }
-            ompt_callbacks.ompt_callback(ompt_event_wait_barrier_end)(pId, tId);
+            ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+                ompt_sync_region_barrier,
+                ompt_scope_end,
+                &(pId),
+                &(tId),
+                __builtin_return_address(1));
         }
     }
 #endif

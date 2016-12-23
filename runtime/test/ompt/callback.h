@@ -140,36 +140,77 @@ on_ompt_callback_nest_lock(
 }
 
 static void
-on_ompt_event_wait_barrier_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
+on_ompt_callback_sync_region(
+  ompt_sync_region_kind_t kind,
+  ompt_scope_endpoint_t endpoint,
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
+  const void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_wait_barrier_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      switch(kind)
+      {
+        case ompt_sync_region_barrier:
+          printf("%" PRIu64 ": ompt_event_barrier_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", return_address=%p\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra);
+          break;
+        case ompt_work_region_taskwait:
+          break;
+        case ompt_work_region_taskgroup:
+          break;
+      }
+      break;
+    case ompt_scope_end:
+      switch(kind)
+      {
+        case ompt_sync_region_barrier:
+          printf("%" PRIu64 ": ompt_event_barrier_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", return_address=%p\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra);
+          break;
+        case ompt_work_region_taskwait:
+          break;
+        case ompt_work_region_taskgroup:
+          break;
+      }
+      break;
+  }
 }
 
 static void
-on_ompt_event_barrier_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
+on_ompt_callback_sync_region_wait(
+  ompt_sync_region_kind_t kind,
+  ompt_scope_endpoint_t endpoint,
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
+  const void *codeptr_ra)
 {
-	printf("%" PRIu64 ": ompt_event_barrier_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
-  print_ids(0);
-}
-
-static void
-on_ompt_event_wait_barrier_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_wait_barrier_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_barrier_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_barrier_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      switch(kind)
+      {
+        case ompt_sync_region_barrier:
+          printf("%" PRIu64 ": ompt_event_wait_barrier_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
+          break;
+        case ompt_work_region_taskwait:
+          break;
+        case ompt_work_region_taskgroup:
+          break;
+      }
+      break;
+    case ompt_scope_end:
+      switch(kind)
+      {
+        case ompt_sync_region_barrier:
+          printf("%" PRIu64 ": ompt_event_wait_barrier_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data.value, task_data.value);
+          break;
+        case ompt_work_region_taskwait:
+          break;
+        case ompt_work_region_taskgroup:
+          break;
+      }
+      break;
+  }
 }
 
 static void
@@ -544,10 +585,8 @@ void ompt_initialize(
   register_callback(ompt_callback_mutex_acquired);
   register_callback(ompt_callback_mutex_released);
   register_callback(ompt_callback_nest_lock);
-  register_callback(ompt_event_wait_barrier_begin);
-  register_callback(ompt_event_barrier_begin);
-  register_callback(ompt_event_wait_barrier_end);
-  register_callback(ompt_event_barrier_end);
+  register_callback(ompt_callback_sync_region);
+  register_callback(ompt_callback_sync_region_wait);
   register_callback(ompt_event_control);
   register_callback(ompt_event_flush);
   register_callback(ompt_callback_idle);
@@ -568,13 +607,9 @@ void ompt_initialize(
   register_callback(ompt_callback_task_dependences);
   register_callback(ompt_callback_task_dependence);
   register_callback(ompt_event_wait_taskgroup_begin);
-  register_callback(ompt_event_taskgroup_begin);
   register_callback(ompt_event_wait_taskgroup_end);
-  register_callback(ompt_event_taskgroup_end);
   register_callback(ompt_event_wait_taskwait_begin);
-  register_callback(ompt_event_taskwait_begin);
   register_callback(ompt_event_wait_taskwait_end);
-  register_callback(ompt_event_taskwait_end);
   register_callback(ompt_callback_thread_begin);
   register_callback(ompt_callback_thread_end);
   register_callback(ompt_event_workshare_begin);

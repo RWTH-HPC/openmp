@@ -1523,9 +1523,13 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
             my_parallel_data = team->t.ompt_team_info.parallel_data;
             
             taskdata->ompt_task_info.frame.reenter_runtime_frame = __builtin_frame_address(0);
-            if (ompt_callbacks.ompt_callback(ompt_event_taskwait_begin)) {
-                ompt_callbacks.ompt_callback(ompt_event_taskwait_begin)(
-                                my_parallel_data, my_task_data);
+            if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+                ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+                ompt_sync_region_taskwait,
+                ompt_scope_begin,
+                &(my_parallel_data),
+                &(my_task_data),
+                __builtin_return_address(1));
             }
         }
 #endif
@@ -1568,9 +1572,13 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
 
 #if OMPT_SUPPORT && OMPT_TRACE
         if (ompt_enabled) {
-            if (ompt_callbacks.ompt_callback(ompt_event_taskwait_end)) {
-                ompt_callbacks.ompt_callback(ompt_event_taskwait_end)(
-                                my_parallel_data, my_task_data);
+            if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+                ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+                ompt_sync_region_taskwait,
+                ompt_scope_end,
+                &(my_parallel_data),
+                &(my_task_data),
+                __builtin_return_address(1));
             }
             taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
         }
@@ -1665,14 +1673,18 @@ __kmpc_taskgroup( ident_t* loc, int gtid )
 
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_taskgroup_begin)) {
+        ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
         kmp_team_t *team = thread->th.th_team;
         ompt_task_data_t my_task_data = taskdata->ompt_task_info.task_data;
         // FIXME: I think this is wrong for lwt!
         ompt_parallel_data_t my_parallel_data = team->t.ompt_team_info.parallel_data;
 
-        ompt_callbacks.ompt_callback(ompt_event_taskgroup_begin)(
-            my_parallel_data, my_task_data);
+        ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+        ompt_sync_region_taskgroup,
+        ompt_scope_begin,
+        &(my_parallel_data),
+        &(my_task_data),
+        __builtin_return_address(1));
     }
 #endif
 }
@@ -1731,14 +1743,18 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
 
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_taskgroup_end)) {
+        ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
         kmp_team_t *team = thread->th.th_team;
         ompt_task_data_t my_task_data = taskdata->ompt_task_info.task_data;
         // FIXME: I think this is wrong for lwt!
         ompt_parallel_data_t my_parallel_data = team->t.ompt_team_info.parallel_data;
 
-        ompt_callbacks.ompt_callback(ompt_event_taskgroup_end)(
-            my_parallel_data, my_task_data);
+        ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+        ompt_sync_region_taskgroup,
+        ompt_scope_end,
+        &(my_parallel_data),
+        &(my_task_data),
+        __builtin_return_address(1));
     }
 #endif
 }

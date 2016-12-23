@@ -66,8 +66,7 @@
 
 #define ompt_callback_idle_implemented                  ompt_event_MAY_ALWAYS_BLAME
 
-#define ompt_event_wait_barrier_begin_implemented       ompt_event_MAY_ALWAYS_BLAME
-#define ompt_event_wait_barrier_end_implemented         ompt_event_MAY_ALWAYS_BLAME
+#define ompt_callback_sync_region_wait_implemented      ompt_event_MAY_ALWAYS_BLAME
 
 #define ompt_event_wait_taskwait_begin_implemented      ompt_event_UNIMPLEMENTED
 #define ompt_event_wait_taskwait_end_implemented        ompt_event_UNIMPLEMENTED
@@ -95,19 +94,7 @@
 
 #define ompt_callback_master_implemented                ompt_event_MAY_ALWAYS_TRACE
 
-#define ompt_event_barrier_begin_implemented            ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_barrier_end_implemented              ompt_event_MAY_ALWAYS_TRACE
-
-#define ompt_event_taskwait_begin_implemented           ompt_event_MAY_ALWAYS_TRACE
-#define ompt_event_taskwait_end_implemented             ompt_event_MAY_ALWAYS_TRACE
-
-#if OMP_40_ENABLED
-# define ompt_event_taskgroup_begin_implemented          ompt_event_MAY_ALWAYS_TRACE
-# define ompt_event_taskgroup_end_implemented            ompt_event_MAY_ALWAYS_TRACE
-#else
-# define ompt_event_taskgroup_begin_implemented          ompt_event_UNIMPLEMENTED
-# define ompt_event_taskgroup_end_implemented            ompt_event_UNIMPLEMENTED
-#endif
+#define ompt_callback_sync_region_implemented           ompt_event_MAY_ALWAYS_BLAME
 
 #define ompt_callback_mutex_acquire_implemented         ompt_event_MAY_ALWAYS_TRACE
 #define ompt_callback_mutex_acquired_implemented        ompt_event_MAY_ALWAYS_TRACE
