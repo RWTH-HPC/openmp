@@ -105,7 +105,7 @@
     macro (ompt_event_wait_taskgroup_end,       ompt_parallel_callback_t,      16) /* end wait at taskgroup */  \
                                                                                                                 \
     /*--- Optional Events (synchronous events, ompt_event_unimplemented) --- */                                 \
-    macro (ompt_callback_implicit_task,         ompt_callback_implicit_task_t, 22) /* implicit task   */  \
+    macro (ompt_callback_implicit_task,         ompt_callback_implicit_task_t, 22) /* implicit task   */        \
                                                                                                                 \
     macro (ompt_event_initial_task_begin,       ompt_parallel_callback_t,      24) /* initial task begin   */   \
     macro (ompt_event_initial_task_end,         ompt_parallel_callback_t,      25) /* initial task end  */      \
@@ -133,9 +133,9 @@
                                                                                                                 \
     macro (ompt_event_flush,                    ompt_callback_t,               61) /* after executing flush */  \
                                                                                                                 \
-    macro (ompt_event_task_dependences,         ompt_task_dependences_callback_t, 69) /* report task dependences  */\
-    macro (ompt_event_task_dependence_pair,     ompt_task_pair_callback_t,     70) /* report task dependence pair */\
-                                                                                                                    \
+    macro (ompt_callback_task_dependences,      ompt_callback_task_dependences_t, 69) /* report task dependences  */\
+    macro (ompt_callback_task_dependence,       ompt_callback_task_dependence_t, 70) /* report task dependence  */\
+                                                                                                                \
     macro (ompt_callback_mutex_acquire,         ompt_callback_mutex_acquire_t, 71) /* mutex acquire */          \
     macro (ompt_callback_mutex_acquired,        ompt_callback_mutex_t,         72) /* mutex acquired */         \
     macro (ompt_callback_mutex_released,        ompt_callback_mutex_t,         73) /* mutex released */         \
@@ -344,11 +344,6 @@ typedef enum ompt_task_status_e {
     ompt_task_others = 4
 } ompt_task_status_t;
 
-typedef void (*ompt_task_pair_callback_t) (
-    ompt_task_data_t first_task_data,
-    ompt_task_data_t second_task_data
-);
-
 typedef void (*ompt_callback_task_schedule_t) (
     ompt_task_data_t *first_task_data,
     ompt_task_status_t prior_task_status,
@@ -365,10 +360,15 @@ typedef void (*ompt_callback_task_create_t) (
 );
 
 /* task dependences */
-typedef void (*ompt_task_dependences_callback_t) (
-    ompt_task_data_t task_data,       /* data of task with dependences*/
-    const ompt_task_dependence_t *deps, /* vector of task dependences */
-    int ndeps                         /* number of dependences        */
+typedef void (*ompt_callback_task_dependences_t) (
+    ompt_data_t *task_data,
+    const ompt_task_dependence_t *deps,
+    int ndeps
+);
+
+typedef void (*ompt_callback_task_dependence_t) (
+    ompt_data_t *src_task_data,
+    ompt_data_t *sink_task_data
 );
 
 /* program */

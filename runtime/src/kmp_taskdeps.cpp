@@ -230,14 +230,14 @@ __kmp_track_dependence ( kmp_depnode_t *source, kmp_depnode_t *sink,
     /* OMPT tracks dependences between task (a=source, b=sink) in which
        task a blocks the execution of b through the ompt_new_dependence_callback */
     if (ompt_enabled &&
-        ompt_callbacks.ompt_callback(ompt_event_task_dependence_pair))
+        ompt_callbacks.ompt_callback(ompt_callback_task_dependence))
     {
         kmp_taskdata_t * task_source = KMP_TASK_TO_TASKDATA(source->dn.task);
         kmp_taskdata_t * task_sink = KMP_TASK_TO_TASKDATA(sink_task);
 
-        ompt_callbacks.ompt_callback(ompt_event_task_dependence_pair)(
-          task_source->ompt_task_info.task_data,
-          task_sink->ompt_task_info.task_data);
+        ompt_callbacks.ompt_callback(ompt_callback_task_dependence)(
+          &(task_source->ompt_task_info.task_data),
+          &(task_sink->ompt_task_info.task_data));
     }
 #endif /* OMPT_SUPPORT && OMPT_TRACE */
 }
@@ -465,7 +465,7 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
 #if OMPT_TRACE
     /* OMPT grab all dependences if requested by the tool */
     if (ndeps+ndeps_noalias > 0 &&
-        ompt_callbacks.ompt_callback(ompt_event_task_dependences))
+        ompt_callbacks.ompt_callback(ompt_callback_task_dependences))
 	{
         kmp_int32 i;
 
@@ -504,8 +504,8 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
                 new_taskdata->ompt_task_info.deps[ndeps+i].dependence_flags =
                   ompt_task_dependence_type_in;
         }
-        ompt_callbacks.ompt_callback(ompt_event_task_dependences)(
-            new_taskdata->ompt_task_info.task_data,
+        ompt_callbacks.ompt_callback(ompt_callback_task_dependences)(
+            &(new_taskdata->ompt_task_info.task_data),
             new_taskdata->ompt_task_info.deps,
             new_taskdata->ompt_task_info.ndeps
         );

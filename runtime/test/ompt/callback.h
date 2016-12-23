@@ -408,20 +408,20 @@ on_ompt_callback_task_schedule(
 }
 
 static void
-on_ompt_event_task_dependences(
-  ompt_task_data_t task_data,
+on_ompt_callback_task_dependences(
+  ompt_task_data_t *task_data,
   const ompt_task_dependence_t *deps,
   int ndeps)
 {
-  printf("%" PRIu64 ": ompt_event_task_dependences: task_id=%" PRIu64 ", deps=%p, ndeps=%d\n", ompt_get_thread_data().value, task_data.value, (void *)deps, ndeps);
+  printf("%" PRIu64 ": ompt_event_task_dependences: task_id=%" PRIu64 ", deps=%p, ndeps=%d\n", ompt_get_thread_data().value, task_data->value, (void *)deps, ndeps);
 }
 
 static void
-on_ompt_event_task_dependence_pair(
-  ompt_task_data_t first_task_data,
-  ompt_task_data_t second_task_data)
+on_ompt_callback_task_dependence(
+  ompt_task_data_t *first_task_data,
+  ompt_task_data_t *second_task_data)
 {
-  printf("%" PRIu64 ": ompt_event_task_dependence_pair: first_task_id=%" PRIu64 ", second_task_id=%" PRIu64 "\n", ompt_get_thread_data().value, first_task_data.value, second_task_data.value);
+  printf("%" PRIu64 ": ompt_event_task_dependence_pair: first_task_id=%" PRIu64 ", second_task_id=%" PRIu64 "\n", ompt_get_thread_data().value, first_task_data->value, second_task_data->value);
 }
 
 static void
@@ -565,8 +565,8 @@ void ompt_initialize(
   register_callback(ompt_event_sections_end);
   register_callback(ompt_callback_task_create);
   register_callback(ompt_callback_task_schedule);
-  register_callback(ompt_event_task_dependences);
-  register_callback(ompt_event_task_dependence_pair);
+  register_callback(ompt_callback_task_dependences);
+  register_callback(ompt_callback_task_dependence);
   register_callback(ompt_event_wait_taskgroup_begin);
   register_callback(ompt_event_taskgroup_begin);
   register_callback(ompt_event_wait_taskgroup_end);
