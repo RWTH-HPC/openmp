@@ -12,11 +12,13 @@ int main()
   {
     print_ids(0);
     print_ids(1);
+    #pragma omp barrier
     #pragma omp parallel num_threads(1)
     {
       print_ids(0);
       print_ids(1);
       print_ids(2);
+      #pragma omp barrier
       #pragma omp parallel num_threads(4)
       {
         print_ids(0);

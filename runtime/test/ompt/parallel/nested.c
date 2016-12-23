@@ -15,6 +15,7 @@ int main()
     print_ids(0);
     print_ids(1);
     print_frame(0);
+    #pragma omp barrier
     #pragma omp parallel num_threads(4)
     {
       print_frame(1);

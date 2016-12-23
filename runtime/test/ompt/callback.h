@@ -187,20 +187,6 @@ on_ompt_event_flush(void)
 }
 
 static void
-on_ompt_event_idle_begin(
-  ompt_thread_data_t thread_data)
-{
-  printf("%" PRIu64 ": ompt_event_idle_begin: thread_id=%" PRIu64 "\n", ompt_get_thread_data().value, thread_data.value);
-}
-
-static void
-on_ompt_event_idle_end(
-  ompt_thread_data_t thread_data)
-{
-  printf("%" PRIu64 ": ompt_event_idle_end: thread_id=%" PRIu64 "\n", ompt_get_thread_data().value, thread_data.value);
-}
-
-static void
 on_ompt_callback_idle(
   ompt_scope_endpoint_t endpoint)
 {
@@ -303,13 +289,13 @@ on_ompt_callback_work(
       switch(wstype)
       {
         case ompt_work_loop:
-          printf("%" PRIu64 ": ompt_event_loop_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p, count=" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
+          printf("%" PRIu64 ": ompt_event_loop_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p, count=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
           break;
         case ompt_work_single_executor:
-          printf("%" PRIu64 ": ompt_event_single_in_block_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p, count=" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
+          printf("%" PRIu64 ": ompt_event_single_in_block_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p, count=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
           break;
         case ompt_work_single_other:
-          printf("%" PRIu64 ": ompt_event_single_others_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
+          printf("%" PRIu64 ": ompt_event_single_others_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
           break;
       }
       break;
@@ -317,13 +303,13 @@ on_ompt_callback_work(
       switch(wstype)
       {
         case ompt_work_loop:
-          printf("%" PRIu64 ": ompt_event_loop_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
+          printf("%" PRIu64 ": ompt_event_loop_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
           break;
         case ompt_work_single_executor:
-          printf("%" PRIu64 ": ompt_event_single_in_block_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
+          printf("%" PRIu64 ": ompt_event_single_in_block_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
           break;
         case ompt_work_single_other:
-          printf("%" PRIu64 ": ompt_event_single_others_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
+          printf("%" PRIu64 ": ompt_event_single_others_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", workshare_function=%p, count=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra, count);
           break;
       }
       break;
