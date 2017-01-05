@@ -36,11 +36,19 @@ do {\
   printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data().value, level, __builtin_frame_address(level));\
 } while(0)
 
-static void print_retadd()
+static void* get_return_address(int level)
 {
-  printf("%" PRIu64 ": __builtin_return_address()=%p\n", ompt_get_thread_data().value, __builtin_frame_address(0));
-}
+  //printf("%" PRIu64 ": __builtin_return_address()=%p\n", ompt_get_thread_data().value, __builtin_frame_address(0));
+  int real_level = level + 3;
+  void *array[real_level];
+  size_t size;
 
+  size = backtrace (array, real_level);
+  if(size == real_level)
+    return array[real_level-1];
+  else
+    return NULL;
+}
 
 static void
 on_ompt_callback_mutex_acquire(

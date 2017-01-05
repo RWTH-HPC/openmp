@@ -733,7 +733,7 @@ __kmpc_master(ident_t *loc, kmp_int32 global_tid)
                 ompt_scope_begin,
                 &(team->t.ompt_team_info.parallel_data),
                 &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
-                __builtin_return_address(1));
+                ompt_get_return_address(4));
         }
     }
 #endif
@@ -781,7 +781,7 @@ __kmpc_end_master(ident_t *loc, kmp_int32 global_tid)
             ompt_scope_end,
             &(team->t.ompt_team_info.parallel_data),
             &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
-            __builtin_return_address(1));
+            ompt_get_return_address(4));
     }
 #endif
 
