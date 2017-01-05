@@ -154,6 +154,7 @@ on_ompt_callback_sync_region(
       {
         case ompt_sync_region_barrier:
           printf("%" PRIu64 ": ompt_event_barrier_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", return_address=%p\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, codeptr_ra);
+          print_ids(0);
           break;
         case ompt_sync_region_taskwait:
           break;
