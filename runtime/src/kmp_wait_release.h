@@ -145,21 +145,21 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
                              ompt_state == ompt_state_wait_barrier_explicit);
 
             ompt_lw_taskteam_t* team = this_thr->th.th_team->t.ompt_serialized_team_info;
-            ompt_parallel_data_t pId;
-            ompt_task_data_t tId;
+            ompt_parallel_data_t* pId;
+            ompt_task_data_t* tId;
             if (team){
-                pId = team->ompt_team_info.parallel_data;
-                tId = team->ompt_task_info.task_data;
+                pId = &(team->ompt_team_info.parallel_data);
+                tId = &(team->ompt_task_info.task_data);
             } else {
-                pId = this_thr->th.th_team->t.ompt_team_info.parallel_data;
-                tId = this_thr->th.th_current_task->ompt_task_info.task_data;
+                pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
+                tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
             }
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
                 ompt_scope_begin,
-                &(pId),
-                &(tId),
-                __builtin_return_address(1));
+                pId,
+                tId,
+                __builtin_return_address(0)); //TODO: fix return_address (level1 causes segfault!)
         }
     }
 #endif
@@ -311,21 +311,21 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
                              ompt_state == ompt_state_wait_barrier_explicit);
 
             ompt_lw_taskteam_t* team = this_thr->th.th_team->t.ompt_serialized_team_info;
-            ompt_parallel_data_t pId;
-            ompt_task_data_t tId;
+            ompt_parallel_data_t* pId;
+            ompt_task_data_t* tId;
             if (team){
-                pId = team->ompt_team_info.parallel_data;
-                tId = team->ompt_task_info.task_data;
+                pId = &(team->ompt_team_info.parallel_data);
+                tId = &(team->ompt_task_info.task_data);
             } else {
-                pId = this_thr->th.th_team->t.ompt_team_info.parallel_data;
-                tId = this_thr->th.th_current_task->ompt_task_info.task_data;
+                pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
+                tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
             }
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
-                &(pId),
-                &(tId),
-                __builtin_return_address(1));
+                pId,
+                tId,
+                __builtin_return_address(0));
         }
     }
 #endif
