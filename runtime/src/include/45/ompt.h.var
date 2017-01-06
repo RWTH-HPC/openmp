@@ -10,6 +10,7 @@
  *****************************************************************************/
 
 #include <stdint.h>
+
 #include <execinfo.h>
 
 
@@ -613,7 +614,7 @@ OMPT_API_FUNCTION(int, ompt_enumerate_state, (
 
 static void* ompt_get_return_address(int level)
 {
-  int real_level = level + 3;
+  int real_level = level + 2;
   void *array[real_level];
   size_t size;
 
@@ -623,4 +624,3 @@ static void* ompt_get_return_address(int level)
   else
     return NULL;
 }
-
