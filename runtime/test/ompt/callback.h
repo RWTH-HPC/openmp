@@ -10,6 +10,14 @@ static const char* ompt_thread_type_t_values[] = {
   "ompt_thread_other"
 };
 
+static const char* ompt_task_type_t_values[] = {
+  NULL,
+  "ompt_task_initial",
+  "ompt_task_implicit",
+  "ompt_task_explicit",
+  "ompt_task_target"
+};
+
 static ompt_get_task_data_t ompt_get_task_data;
 static ompt_get_task_frame_t ompt_get_task_frame;
 static ompt_get_thread_data_t ompt_get_thread_data;
@@ -466,7 +474,7 @@ on_ompt_callback_task_create(
     void *codeptr_ra)               /* pointer to outlined function */
 {
   new_task_data->value = my_next_id();
-  printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", parallel_function=%p, task_type=%d, has_dependences=%s\n", ompt_get_thread_data().value, parent_task_data->value, parent_frame->exit_runtime_frame, parent_frame->reenter_runtime_frame, new_task_data->value, codeptr_ra, type, has_dependences ? "yes" : "no");
+  printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", parallel_function=%p, task_type=%s=%d, has_dependences=%s\n", ompt_get_thread_data().value, parent_task_data->value, parent_frame->exit_runtime_frame, parent_frame->reenter_runtime_frame, new_task_data->value, codeptr_ra, ompt_task_type_t_values[type], type, has_dependences ? "yes" : "no");
 }
 
 static void
