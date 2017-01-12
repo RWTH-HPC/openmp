@@ -3,6 +3,7 @@
 // REQUIRES: ompt
 #include "callback.h"
 #include <omp.h>
+#include <unistd.h>
 
 int main()
 {
@@ -15,7 +16,10 @@ int main()
     print_ids(0);
     print_ids(1);
     print_frame(0);
+
+    //get all implicit task events before starting nested:
     #pragma omp barrier
+    
     #pragma omp parallel num_threads(4)
     {
       print_frame(1);
@@ -23,6 +27,7 @@ int main()
       print_ids(1);
       print_ids(2);
       print_frame(0);
+      sleep(1);
       #pragma omp barrier
       print_ids(0);
     }
