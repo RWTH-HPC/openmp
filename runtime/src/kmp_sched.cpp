@@ -159,7 +159,7 @@ __kmp_for_static_init(
                 ompt_scope_begin,
                 &(team_info->parallel_data),
                 &(task_info->task_data),
-                0, //TODO: implement
+                *pupper - *plower, //TODO: implement correctly
                 team_info->microtask);
         }
 #endif
