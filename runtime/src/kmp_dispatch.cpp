@@ -1252,6 +1252,8 @@ __kmp_dispatch_init(
       }
     #endif // ( KMP_STATIC_STEAL_ENABLED )
 
+
+//TODO for intel: need to be able to distinguish between sections and loops for ompt callback
 #if OMPT_SUPPORT && OMPT_TRACE
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_work)) {
