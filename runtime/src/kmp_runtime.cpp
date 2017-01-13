@@ -1473,7 +1473,7 @@ __kmp_fork_call(
             team_size,
             master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
             OMPT_INVOKER(call_context),
-            __builtin_return_address(1));
+            ompt_get_return_address(1));
     }
 #endif
 
@@ -1565,7 +1565,7 @@ __kmp_fork_call(
                     ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
                         &ompt_parallel_data, &parent_task_data,
                         OMPT_INVOKER(call_context),
-                        __builtin_return_address(1));
+                        ompt_get_return_address(1));
                 }
                 master_th->th.ompt_thread_info.state = ompt_state_overhead;
             }
@@ -1764,7 +1764,7 @@ __kmp_fork_call(
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
                             &ompt_parallel_data, &parent_task_data,
                             OMPT_INVOKER(call_context),
-                            __builtin_return_address(1));
+                            ompt_get_return_address(1));
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }
@@ -1872,7 +1872,7 @@ __kmp_fork_call(
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
                             &ompt_parallel_data, &parent_task_data,
                             OMPT_INVOKER(call_context),
-                            __builtin_return_address(1));
+                            ompt_get_return_address(1));
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }
@@ -2236,7 +2236,8 @@ __kmp_join_ompt(
         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
             &parallel_data, &(task_info->task_data),
             OMPT_INVOKER(fork_context),
-            __builtin_return_address(1));
+            ompt_get_return_address(1));
+        printf("%p\n", __builtin_return_address(1));
     }
 
     task_info->frame.reenter_runtime_frame = NULL;

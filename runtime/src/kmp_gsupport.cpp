@@ -410,7 +410,7 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
                 &ompt_task_data, ompt_frame, &ompt_parallel_data,
                 team_size, team_size,
                 OMPT_INVOKER(fork_context_gnu),
-                __builtin_return_address(1));
+                ompt_get_return_address(1));
         }
     }
 #endif
@@ -571,7 +571,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
                 ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
                     &parallel_data, &(parent_task_info->task_data), 
                     OMPT_INVOKER(fork_context_gnu),
-                    __builtin_return_address(1));
+                    ompt_get_return_address(1));
             }
 
             parent_task_info->frame.reenter_runtime_frame = NULL;

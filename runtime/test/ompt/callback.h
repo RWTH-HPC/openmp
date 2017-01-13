@@ -438,7 +438,7 @@ on_ompt_callback_parallel_end(
   ompt_invoker_t invoker,
   void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_parallel_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", invoker=%d\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, invoker);
+  printf("%" PRIu64 ": ompt_event_parallel_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", invoker=%d, codeptr_ra=%p\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, invoker, codeptr_ra);
 }
 
 static void
