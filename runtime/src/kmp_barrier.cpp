@@ -1097,7 +1097,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
                     &(my_parallel_data),
                     &(my_task_data),
                     1,
-                    __builtin_return_address(1));
+                    ompt_get_return_address(1));
             }
         }
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {

@@ -1601,7 +1601,8 @@ __kmpc_single(ident_t *loc, kmp_int32 global_tid)
                     &(team->t.ompt_team_info.parallel_data),
                     &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
                     1,
-                    team->t.ompt_team_info.microtask);
+                    ompt_get_return_address(0));
+                    //team->t.ompt_team_info.microtask);
             }
         } else {
             if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
@@ -1611,7 +1612,7 @@ __kmpc_single(ident_t *loc, kmp_int32 global_tid)
                     &(team->t.ompt_team_info.parallel_data),
                     &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
                     1,
-                    __builtin_return_address(1));
+                    ompt_get_return_address(0));
             }
             this_thr->th.ompt_thread_info.state = ompt_state_wait_single;
         }
@@ -1649,7 +1650,7 @@ __kmpc_end_single(ident_t *loc, kmp_int32 global_tid)
             &(team->t.ompt_team_info.parallel_data),
             &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
             1,
-            __builtin_return_address(1));
+            ompt_get_return_address(0));
     }
 #endif
 }
@@ -1677,7 +1678,7 @@ __kmpc_for_static_fini( ident_t *loc, kmp_int32 global_tid )
             &(team_info->parallel_data),
             &(task_info->task_data),
             0,
-            __builtin_return_address(1));
+            ompt_get_return_address(1));
     }
 #endif
 
