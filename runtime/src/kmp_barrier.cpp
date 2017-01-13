@@ -1106,7 +1106,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
                 ompt_scope_begin,
                 &(my_parallel_data),
                 &(my_task_data),
-                __builtin_return_address(1));
+                ompt_get_return_address(1));
         }
 #endif
         // It is OK to report the barrier state after the barrier begin callback.
@@ -1328,7 +1328,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
                 ompt_scope_end,
                 &(my_parallel_data),
                 &(my_task_data),
-                __builtin_return_address(1));
+                ompt_get_return_address(1));
         }
 #endif
         this_thr->th.ompt_thread_info.state = ompt_state_work_parallel;
@@ -1447,7 +1447,7 @@ __kmp_join_barrier(int gtid)
                 ompt_scope_begin,
                 &(my_parallel_data),
                 &(my_task_data),
-                __builtin_return_address(1));
+                ompt_get_return_address(1));
         }
 #endif
         this_thr->th.ompt_thread_info.state = ompt_state_wait_barrier;
@@ -1599,7 +1599,7 @@ __kmp_join_barrier(int gtid)
                 ompt_scope_end,
                 &(my_parallel_data),
                 &(my_task_data),
-                __builtin_return_address(1));
+                ompt_get_return_address(1));
         }
 #endif
 
