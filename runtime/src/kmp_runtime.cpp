@@ -1525,7 +1525,8 @@ __kmp_fork_call(
                         ompt_scope_begin,
                         &(ompt_parallel_data),
                         implicit_task_data,
-                        __kmp_get_gtid());
+                        __kmp_team_from_gtid(gtid)->t.t_nproc,
+                        __kmp_tid_from_gtid(gtid));
                 }
 
                 /* OMPT state */
@@ -1554,7 +1555,8 @@ __kmp_fork_call(
                         ompt_scope_end,
                         &(ompt_parallel_data),
                         implicit_task_data,
-                        __kmp_get_gtid());
+                        __kmp_team_from_gtid(gtid)->t.t_nproc,
+                        __kmp_tid_from_gtid(gtid));
                 }
 
                 __ompt_lw_taskteam_unlink(master_th);
@@ -1725,7 +1727,8 @@ __kmp_fork_call(
                             ompt_scope_begin,
                             &(ompt_parallel_data),
                             implicit_task_data,
-                            __kmp_get_gtid());
+                            __kmp_team_from_gtid(gtid)->t.t_nproc,
+                            __kmp_tid_from_gtid(gtid));
                     }
 
                     /* OMPT state */
@@ -1754,7 +1757,8 @@ __kmp_fork_call(
                             ompt_scope_end,
                             &(ompt_parallel_data),
                             implicit_task_data,
-                            __kmp_get_gtid());
+                            __kmp_team_from_gtid(gtid)->t.t_nproc,
+                            __kmp_tid_from_gtid(gtid));
                     }
 
                     __ompt_lw_taskteam_unlink(master_th);
@@ -1832,7 +1836,8 @@ __kmp_fork_call(
                             ompt_scope_begin,
                             &(ompt_parallel_data),
                             implicit_task_data,
-                            __kmp_get_gtid());
+                            __kmp_team_from_gtid(gtid)->t.t_nproc,
+                            __kmp_tid_from_gtid(gtid));
                     }
 
 
@@ -1862,7 +1867,8 @@ __kmp_fork_call(
                             ompt_scope_end,
                             &(ompt_parallel_data),
                             implicit_task_data,
-                            __kmp_get_gtid());
+                            __kmp_team_from_gtid(gtid)->t.t_nproc,
+                            __kmp_tid_from_gtid(gtid));
                     }
 
                     __ompt_lw_taskteam_unlink(master_th);
@@ -2237,7 +2243,6 @@ __kmp_join_ompt(
             &parallel_data, &(task_info->task_data),
             OMPT_INVOKER(fork_context),
             ompt_get_return_address(1));
-        printf("%p\n", __builtin_return_address(1));
     }
 
     task_info->frame.reenter_runtime_frame = NULL;
@@ -2442,7 +2447,8 @@ __kmp_join_call(ident_t *loc, int gtid
                 ompt_scope_end,
                 &(parallel_data),
                 &(task_info->task_data),
-                __kmp_get_gtid());
+                __kmp_team_from_gtid(gtid)->t.t_nproc,
+                __kmp_tid_from_gtid(gtid));
         }
 
         task_info->frame.exit_runtime_frame = NULL;
@@ -5549,7 +5555,8 @@ __kmp_launch_thread( kmp_info_t *this_thr )
                         ompt_scope_end,
                         &(my_parallel_data),
                         &(task_info->task_data),
-                        __kmp_get_gtid());
+                        __kmp_team_from_gtid(gtid)->t.t_nproc,
+                        __kmp_tid_from_gtid(gtid));
                 }
                 task_info->frame.exit_runtime_frame = NULL;
                 task_info->task_data.value = 0;
@@ -6867,7 +6874,8 @@ __kmp_invoke_task_func( int gtid )
             ompt_scope_begin,
             &(my_parallel_data),
             my_task_data,
-            __kmp_get_gtid());
+            __kmp_team_from_gtid(gtid)->t.t_nproc,
+            __kmp_tid_from_gtid(gtid));
     }
 #endif
 

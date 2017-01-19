@@ -297,6 +297,7 @@ typedef void (*ompt_callback_implicit_task_t) (
     ompt_scope_endpoint_t endpoint,
     ompt_data_t *parallel_data,
     ompt_data_t *task_data,
+    unsigned int team_size,
     unsigned int thread_num
 );
 

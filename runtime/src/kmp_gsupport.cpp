@@ -382,7 +382,8 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
                 ompt_scope_begin,
                 &(team_info->parallel_data),
                 &(task_info->task_data),
-                __kmp_get_gtid());
+                __kmp_team_from_gtid(gtid)->t.t_nproc,
+                __kmp_tid_from_gtid(gtid));
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
     }
@@ -435,7 +436,8 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
                 ompt_scope_begin,
                 &(ompt_parallel_data),
                 &(lwt->ompt_task_info.task_data),
-                __kmp_get_gtid());
+                __kmp_team_from_gtid(gtid)->t.t_nproc,
+                __kmp_tid_from_gtid(gtid));
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
     }
@@ -515,7 +517,8 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
                 ompt_scope_end,
                 &(parallel_data),
                 &(task_info->task_data),
-                __kmp_get_gtid());
+                __kmp_team_from_gtid(gtid)->t.t_nproc,
+                __kmp_tid_from_gtid(gtid));
         }
 
         // unlink if necessary. no-op if there is not a lightweight task.
@@ -555,7 +558,8 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
                 ompt_scope_end,
                 &(parallel_data),
                 &(serialized_task_data),
-                __kmp_get_gtid());
+                __kmp_team_from_gtid(gtid)->t.t_nproc,
+                __kmp_tid_from_gtid(gtid));
         }
 #endif
 
