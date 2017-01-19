@@ -1264,7 +1264,7 @@ __kmp_dispatch_init(
             ompt_scope_begin,
             &(team_info->parallel_data),
             &(task_info->task_data),
-            0, //TODO: implement
+            tc, //TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18)
             team_info->microtask);
     }
 #endif

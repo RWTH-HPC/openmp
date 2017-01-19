@@ -272,10 +272,10 @@ on_ompt_callback_implicit_task(
   {
     case ompt_scope_begin:
       task_data->value = my_next_id();
-      printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, team_size);
+      printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu32 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, team_size);
       break;
     case ompt_scope_end:
-      printf("%" PRIu64 ": ompt_event_implicit_task_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu64 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, team_size);
+      printf("%" PRIu64 ": ompt_event_implicit_task_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu32 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, team_size);
       break;
   }
 }
