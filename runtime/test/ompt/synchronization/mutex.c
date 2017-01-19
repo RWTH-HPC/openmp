@@ -13,6 +13,7 @@ int main()
 
 
   omp_nest_lock_t nest_lock;
+  printf("&nest_lock: %lli\n", &nest_lock );
   omp_init_nest_lock(&nest_lock);
   omp_set_nest_lock(&nest_lock);
   omp_set_nest_lock(&nest_lock);

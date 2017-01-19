@@ -3,6 +3,7 @@
 #include "callback.h"
 #include <omp.h>   
 #include <math.h>
+#include <unistd.h>
 
 int main()
 {
@@ -14,6 +15,7 @@ int main()
       #pragma omp task depend(out:x)
       {
         x++;
+        sleep(1);
       }
     
       #pragma omp task depend(in:x)

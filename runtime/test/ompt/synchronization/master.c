@@ -23,8 +23,8 @@ int main()
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
 
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_master_begin: parallel_id=[[PARALLEL_ID:[0-9]+]], task_id=[[TASK_ID:[0-9]+]], codeptr_ra=[[RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_master_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], codeptr_ra=[[RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_master_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], codeptr_ra=[[RETURN_ADDRESS:0x[0-f]+]]
+  // CHECK: {{^}}[[MASTER_ID]]: current_address=[[RETURN_ADDRESS]]
 
 
   return 0;
