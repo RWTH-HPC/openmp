@@ -1602,7 +1602,7 @@ __kmpc_single(ident_t *loc, kmp_int32 global_tid)
                     &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
                     1,
                     ompt_get_return_address(0));
-                    //team->t.ompt_team_info.microtask);
+                    //team->t.ompt_team_info.microtask); is the workshare function in tr2
             }
         } else {
             if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
@@ -2029,7 +2029,7 @@ __kmp_init_nest_lock_with_hint(ident_t *loc, void **lock, kmp_dyna_lockseq_t seq
             ompt_mutex_nest_lock,
             omp_lock_hint_none,
             0,
-            (ompt_wait_id_t) ilk->lock,
+            (ompt_wait_id_t) lock,
             ompt_get_return_address(1));
     }
 #endif
@@ -2170,7 +2170,7 @@ __kmpc_init_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
             ompt_mutex_nest_lock,
             omp_lock_hint_none,
             0,
-            (ompt_wait_id_t) lck,
+            (ompt_wait_id_t) user_lock,
             ompt_get_return_address(0));
     }
 #endif
@@ -2952,7 +2952,7 @@ __kmpc_test_nest_lock( ident_t *loc, kmp_int32 gtid, void **user_lock )
             ompt_mutex_nest_lock,
             omp_lock_hint_none,
             0, //TODO for intel: specify impl
-            (ompt_wait_id_t) user_lock,
+            (ompt_wait_id_t) lck,
             ompt_get_return_address(0));
     }
 #endif
