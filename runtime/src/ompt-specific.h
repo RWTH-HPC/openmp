@@ -39,7 +39,7 @@ ompt_task_data_t __ompt_get_task_data_internal(int depth);
 
 ompt_frame_t *__ompt_get_task_frame_internal(int depth);
 
-
+ompt_thread_data_t *__ompt_get_thread_data_internal();
 
 /*****************************************************************************
  * macros

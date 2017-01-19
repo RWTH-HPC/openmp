@@ -114,7 +114,9 @@
     macro (ompt_callback_task_schedule,         ompt_callback_task_schedule_t, 26) /* task schedule */          \
                                                                                                                 \
     macro (ompt_callback_work,                  ompt_callback_work_t,          27) /* task at work begin or end*/\
-                                                                                                                \
+    														\
+    /*macro (ompt_callback_cancel, 		ompt_callback_cancel_t,        28) cancel innermost binding region*/\
+                                                                                                            \
     macro (ompt_event_sections_begin,           ompt_new_workshare_callback_t, 29) /* task at sections begin  */\
     macro (ompt_event_sections_end,             ompt_parallel_callback_t,      30) /* task at sections end */   \
                                                                                                                 \
@@ -125,7 +127,7 @@
                                                                                                                 \
     macro (ompt_callback_sync_region,           ompt_callback_sync_region_t,   39) /* sync region begin or end */ \
                                                                                                                 \
-    macro (ompt_event_flush,                    ompt_callback_t,               61) /* after executing flush */  \
+    macro (ompt_callback_flush,                 ompt_callback_flush_t,         61) /* after executing flush */  \
                                                                                                                 \
     macro (ompt_callback_task_dependences,      ompt_callback_task_dependences_t, 69) /* report task dependences  */\
     macro (ompt_callback_task_dependence,       ompt_callback_task_dependence_t, 70) /* report task dependence  */\
@@ -458,6 +460,26 @@ typedef void (*ompt_callback_sync_region_t) (
     ompt_scope_endpoint_t endpoint,
     ompt_data_t *parallel_data,
     ompt_data_t *task_data,
+    const void *codeptr_ra
+);
+
+typedef enum ompt_cancel_flag_e {
+    ompt_cancel_parallel    = 0x1,
+    ompt_cancel_sections    = 0x2,
+    ompt_cancel_do	    = 0x4,
+    ompt_cancel_taskgroup   = 0x8,
+    ompt_cancel_activated   = 0x10,
+    ompt_cancel_detected    = 0x20
+} ompt_cancel_flag_t;
+
+typedef void (*ompt_callback_cancel_t) (
+    ompt_data_t *task_data,
+    int flags,
+    const void *codeptr_ra
+);
+
+typedef void (*ompt_callback_flush_t) (
+    ompt_data_t *thread_data,
     const void *codeptr_ra
 );
 

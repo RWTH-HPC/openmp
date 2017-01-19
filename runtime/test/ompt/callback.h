@@ -236,9 +236,11 @@ on_ompt_event_control(
 }
 
 static void
-on_ompt_event_flush(void)
+on_ompt_callback_flush(
+    ompt_data_t *thread_data,
+    const void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_flush\n", ompt_get_thread_data().value);
+  printf("%" PRIu64 ": ompt_event_flush: codeptr_ra=%p\n", thread_data->value, codeptr_ra);
 }
 
 static void
@@ -631,7 +633,7 @@ void ompt_initialize(
   register_callback(ompt_callback_sync_region);
   register_callback(ompt_callback_sync_region_wait);
   register_callback(ompt_event_control);
-  register_callback(ompt_event_flush);
+  register_callback(ompt_callback_flush);
   register_callback(ompt_callback_idle);
   register_callback(ompt_callback_implicit_task);
   register_callback(ompt_event_initial_task_begin);

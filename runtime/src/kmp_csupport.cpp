@@ -644,6 +644,14 @@ __kmpc_flush(ident_t *loc)
         #error Unknown or unsupported architecture
     #endif
 
+    #if OMPT_SUPPORT
+	if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_flush)) { 
+	        ompt_callbacks.ompt_callback(ompt_callback_flush)(
+	            __ompt_get_thread_data_internal(), 
+		    ompt_get_return_address(0));
+	}
+    #endif
+
 }
 
 /* -------------------------------------------------------------------------- */
