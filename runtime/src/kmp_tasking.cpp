@@ -457,7 +457,7 @@ __kmp_task_start( kmp_int32 gtid, kmp_task_t * task, kmp_taskdata_t * current_ta
         {
           ompt_callbacks.ompt_callback(ompt_callback_task_schedule)(
             &(current_task->ompt_task_info.task_data),
-            ompt_task_yield, //TODO: correct status?
+            ompt_task_others,
             &(taskdata->ompt_task_info.task_data));
         }
         if (ompt_enabled)
