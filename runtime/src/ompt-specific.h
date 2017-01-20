@@ -41,6 +41,8 @@ ompt_frame_t *__ompt_get_task_frame_internal(int depth);
 
 ompt_thread_data_t *__ompt_get_thread_data_internal();
 
+static uint64_t __ompt_get_get_unique_id_internal();
+
 /*****************************************************************************
  * macros
  ****************************************************************************/

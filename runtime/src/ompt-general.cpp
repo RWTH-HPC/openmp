@@ -498,7 +498,6 @@ OMPT_API_ROUTINE int ompt_get_ompt_version()
 }
 
 
-
 /*****************************************************************************
  * application-facing API
  ****************************************************************************/
@@ -513,6 +512,16 @@ _OMP_EXTERN void ompt_control(uint64_t command, uint64_t modifier)
     if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_event_control)) {
         ompt_callbacks.ompt_callback(ompt_event_control)(command, modifier);
     }
+}
+
+/*****************************************************************************
+ * misc
+ ****************************************************************************/
+
+
+OMPT_API_ROUTINE uint64_t ompt_get_unique_id(void)
+{
+    return __ompt_get_unique_id_internal();
 }
 
 
@@ -533,3 +542,4 @@ static ompt_interface_fn_t ompt_fn_lookup(const char *s)
 
     return (ompt_interface_fn_t) 0;
 }
+

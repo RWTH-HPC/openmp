@@ -33,7 +33,8 @@
     macro (ompt_get_parallel_data)      \
     macro (ompt_get_parallel_team_size) \
     macro (ompt_get_task_data)          \
-    macro (ompt_get_thread_data)
+    macro (ompt_get_thread_data)        \
+    macro (ompt_get_unique_id)
 
 #define FOREACH_OMPT_PLACEHOLDER_FN(macro)  \
     macro (ompt_idle)                       \
@@ -629,11 +630,16 @@ OMPT_API_FUNCTION(int, ompt_enumerate_state, (
     const char **next_state_name
 ));
 
+/* get_unique_id */
+OMPT_API_FUNCTION(uint64_t, ompt_get_unique_id, (void));
+
 #ifdef  __cplusplus
 };
 #endif
 
 #endif
+
+
 
 static void* ompt_get_return_address(int level)
 {

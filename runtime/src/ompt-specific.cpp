@@ -387,3 +387,20 @@ __ompt_team_assign_id(kmp_team_t *team, ompt_parallel_data_t ompt_pid)
 {
     team->t.ompt_team_info.parallel_data = ompt_pid;
 }
+
+//----------------------------------------------------------
+// misc
+//----------------------------------------------------------
+
+
+static uint64_t __ompt_get_unique_id_internal()
+{
+    static uint64_t thread=1;
+    static __thread uint64_t ID=0;
+    if (ID == 0)
+    {
+      uint64_t new_thread = __sync_fetch_and_add(&thread,1);
+      ID = new_thread << 48;
+    }
+    return ++ID;
+}
