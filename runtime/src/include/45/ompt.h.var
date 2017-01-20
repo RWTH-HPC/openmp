@@ -18,7 +18,7 @@
  *****************************************************************************/
 
 #define FOREACH_OMPT_INQUIRY_FN(macro)  \
-    macro (ompt_enumerate_state)        \
+    macro (ompt_enumerate_states)        \
                                         \
     macro (ompt_set_callback)           \
     macro (ompt_get_callback)           \

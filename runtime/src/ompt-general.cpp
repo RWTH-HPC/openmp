@@ -300,7 +300,7 @@ void* __ompt_get_return_address(int level)
  * state
  ****************************************************************************/
 
-OMPT_API_ROUTINE int ompt_enumerate_state(int current_state, int *next_state,
+OMPT_API_ROUTINE int ompt_enumerate_states(int current_state, int *next_state,
                                           const char **next_state_name)
 {
     const static int len = sizeof(ompt_state_info) / sizeof(ompt_state_info_t);
