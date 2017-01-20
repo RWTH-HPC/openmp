@@ -87,6 +87,8 @@ void ompt_pre_init(void);
 void ompt_post_init(void);
 void ompt_fini(void);
 
+void* __ompt_get_return_address(int level);
+
 extern int ompt_enabled;
 
 #ifdef __cplusplus

@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <omp.h>
 #include <ompt.h>
+#include <execinfo.h>
 
 static const char* ompt_thread_type_t_values[] = {
   NULL,
@@ -40,7 +41,17 @@ do {\
 
 static void print_current_address()
 {
-  printf("%" PRIu64 ": current_address=%p\n", ompt_get_thread_data()->value, ompt_get_return_address(1)-5);
+    int real_level = 2;
+    void *array[real_level];
+    size_t size;
+    void *address;
+  
+    size = backtrace (array, real_level);
+    if(size == real_level)
+      address = array[real_level-1]-5;
+    else
+      address = NULL;
+  printf("%" PRIu64 ": current_address=%p\n", ompt_get_thread_data()->value, address);
 }
 
 static void

@@ -159,7 +159,7 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
                 ompt_scope_begin,
                 pId,
                 tId,
-                ompt_get_return_address(3));
+                __ompt_get_return_address(3));
         }
     }
 #endif
@@ -325,7 +325,7 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
                 ompt_scope_end,
                 pId,
                 tId,
-                ompt_get_return_address(3));
+                __ompt_get_return_address(3));
         }
     }
 #endif
