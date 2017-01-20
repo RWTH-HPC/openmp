@@ -25,7 +25,7 @@ VERSION {
         #
         # OMPT API
         #
-        ompt_tool;           # OMPT initialization interface
+        ompt_start_tool;     # OMPT start interface
         ompt_control;        # OMPT control interface
 
         # icc drops weak attribute at linking step without the following line:

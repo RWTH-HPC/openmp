@@ -53,13 +53,14 @@ enum tool_setting_e {
     omp_tool_enabled
 };
 
-
-typedef void (*ompt_initialize_t) (
-    ompt_function_lookup_t ompt_fn_lookup,
-    const char *version,
-    unsigned int ompt_version
+typedef int (*ompt_initialize_t) (
+    ompt_function_lookup_t lookup,
+    struct ompt_fns_t *fns
 );
 
+typedef void (*ompt_finalize_t) (
+    struct ompt_fns_t *fns
+);
 
 
 /*****************************************************************************
@@ -76,7 +77,7 @@ ompt_state_info_t ompt_state_info[] = {
 
 ompt_callbacks_internal_t ompt_callbacks;
 
-static ompt_initialize_t  ompt_initialize_fn = NULL;
+static ompt_fns_t* ompt_fns = NULL;
 
 
 
@@ -94,7 +95,7 @@ OMPT_API_ROUTINE ompt_thread_data_t* ompt_get_thread_data(void);
  ****************************************************************************/
 
 /* On Unix-like systems that support weak symbols the following implementation
- * of ompt_tool() will be used in case no tool-supplied implementation of
+ * of ompt_start_tool() will be used in case no tool-supplied implementation of
  * this function is present in the address space of a process.
  *
  * On Windows, the ompt_tool_windows function is used to find the
@@ -104,10 +105,12 @@ OMPT_API_ROUTINE ompt_thread_data_t* ompt_get_thread_data(void);
 #if OMPT_HAVE_WEAK_ATTRIBUTE
 _OMP_EXTERN
 __attribute__ (( weak ))
-ompt_initialize_t ompt_tool()
+ompt_fns_t* ompt_start_tool(
+    unsigned int omp_version,
+    const char *runtime_version)
 {
 #if OMPT_DEBUG
-    printf("ompt_tool() is called from the RTL\n");
+    printf("ompt_start_tool() is called from the RTL\n");
 #endif
     return NULL;
 }
@@ -214,8 +217,9 @@ void ompt_pre_init()
 
     case omp_tool_unset:
     case omp_tool_enabled:
-        ompt_initialize_fn = ompt_tool();
-        if (ompt_initialize_fn) {
+        ompt_fns = ompt_start_tool(OMPT_VERSION, ompt_get_runtime_version());
+        printf("%s, %p\n", "start_post", ompt_fns);
+        if (ompt_fns) {
             ompt_enabled = 1;
         }
         break;
@@ -248,8 +252,7 @@ void ompt_post_init()
     // Initialize the tool if so indicated.
     //--------------------------------------------------
     if (ompt_enabled) {
-        ompt_initialize_fn(ompt_fn_lookup, ompt_get_runtime_version(),
-                           OMPT_VERSION);
+        ompt_fns->initialize(ompt_fn_lookup, ompt_fns);
 
         ompt_thread_t *root_thread = ompt_get_thread();
 
@@ -271,6 +274,9 @@ void ompt_fini()
         if (ompt_callbacks.ompt_callback(ompt_event_runtime_shutdown)) {
             ompt_callbacks.ompt_callback(ompt_event_runtime_shutdown)();
         }
+    }
+    if (ompt_enabled) {
+        ompt_fns->finalize(ompt_fns);
     }
 
     ompt_enabled = 0;

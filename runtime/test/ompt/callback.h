@@ -278,11 +278,11 @@ on_ompt_callback_implicit_task(
     case ompt_scope_begin:
       task_data->value = ompt_get_unique_id();
       printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data->value, task_data->value);
-      //printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu32 "\n", ompt_get_thread_data()->value, parallel_data->value, task_data->value, team_size);
+      //printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu32 ", thread_num=%" PRIu32 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, team_size, thread_num);
       break;
     case ompt_scope_end:
       printf("%" PRIu64 ": ompt_event_implicit_task_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data->value, task_data->value);
-      //printf("%" PRIu64 ": ompt_event_implicit_task_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu32 "\n", ompt_get_thread_data()->value, parallel_data->value, task_data->value, team_size);
+      //printf("%" PRIu64 ": ompt_event_implicit_task_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu32 ", thread_num=%" PRIu32 "\n", ompt_get_thread_data().value, parallel_data->value, task_data->value, team_size, thread_num);
       break;
   }
 }
@@ -622,10 +622,9 @@ on_ompt_event_workshare_end(
     printf("0: Could not register callback '" #name "'\n");   \
 }
 
-void ompt_initialize(
+int ompt_initialize(
   ompt_function_lookup_t lookup,
-  const char *runtime_version,
-  unsigned int ompt_version)
+  ompt_fns_t* fns)
 {
   ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
   ompt_get_task_data = (ompt_get_task_data_t) lookup("ompt_get_task_data");
@@ -668,9 +667,22 @@ void ompt_initialize(
   register_callback(ompt_event_workshare_begin);
   register_callback(ompt_event_workshare_end);
   printf("0: NULL_POINTER=%p\n", NULL);
+  return 1; //success
 }
 
-ompt_initialize_t ompt_tool()
+void ompt_finalize(ompt_fns_t* fns)
 {
-  return &ompt_initialize;
+  //runtime shutdown
+  free(fns);
+}
+
+ompt_fns_t* ompt_start_tool(
+  unsigned int omp_version,
+  const char *runtime_version)
+{
+  ompt_fns_t* ompt_fns = (ompt_fns_t*) malloc(sizeof(ompt_fns_t));
+  printf("ompt_fns is %p\n", ompt_fns);
+  ompt_fns->initialize = &ompt_initialize;
+  ompt_fns->finalize = &ompt_finalize;
+  return ompt_fns;
 }

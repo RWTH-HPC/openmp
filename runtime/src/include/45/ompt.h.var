@@ -566,12 +566,21 @@ OMPT_API_FUNCTION(void, ompt_mutex_wait, (
  * INITIALIZATION FUNCTIONS
  ***************************************************************************/
 
-OMPT_API_FUNCTION(void, ompt_initialize, (
+typedef struct ompt_fns_t ompt_fns_t;
+
+OMPT_API_FUNCTION(int, ompt_initialize, (
     ompt_function_lookup_t ompt_fn_lookup,
-    const char *runtime_version,
-    unsigned int ompt_version
+    ompt_fns_t *fns
 ));
 
+OMPT_API_FUNCTION(void, ompt_finalize, (
+    ompt_fns_t *fns
+));
+
+typedef struct ompt_fns_t {
+    ompt_initialize_t initialize;
+    ompt_finalize_t finalize;
+} ompt_fns_t;
 
 /* initialization interface to be defined by tool */
 ompt_initialize_t ompt_tool(void);
