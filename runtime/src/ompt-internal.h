@@ -15,13 +15,13 @@
 #define ompt_callback(e) e ## _callback
 
 
-typedef struct ompt_callbacks_s {
+typedef struct ompt_callbacks_internal_s {
 #define ompt_event_macro(event, callback, eventid) callback ompt_callback(event);
 
     FOREACH_OMPT_EVENT(ompt_event_macro)
 
 #undef ompt_event_macro
-} ompt_callbacks_t;
+} ompt_callbacks_internal_t;
 
 
 typedef struct kmp_taskdata  kmp_taskdata_t;
@@ -67,7 +67,7 @@ typedef struct {
 } ompt_thread_info_t;
 
 
-extern ompt_callbacks_t ompt_callbacks;
+extern ompt_callbacks_internal_t ompt_callbacks;
 
 #if OMP_40_ENABLED && OMPT_SUPPORT && OMPT_TRACE
 #if USE_FAST_MEMORY

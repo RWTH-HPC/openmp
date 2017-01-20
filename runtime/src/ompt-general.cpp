@@ -74,7 +74,7 @@ ompt_state_info_t ompt_state_info[] = {
 #undef ompt_state_macro
 };
 
-ompt_callbacks_t ompt_callbacks;
+ompt_callbacks_internal_t ompt_callbacks;
 
 static ompt_initialize_t  ompt_initialize_fn = NULL;
 
@@ -323,14 +323,14 @@ OMPT_API_ROUTINE int ompt_enumerate_states(int current_state, int *next_state,
  * callbacks
  ****************************************************************************/
 
-OMPT_API_ROUTINE int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb)
+OMPT_API_ROUTINE int ompt_set_callback(ompt_callbacks_t which, ompt_callback_t callback)
 {
-    switch (evid) {
+    switch (which) {
 
 #define ompt_event_macro(event_name, callback_type, event_id)                  \
     case event_name:                                                           \
         if (ompt_event_implementation_status(event_name)) {                    \
-            ompt_callbacks.ompt_callback(event_name) = (callback_type) cb;     \
+            ompt_callbacks.ompt_callback(event_name) = (callback_type) callback;\
         }                                                                      \
         return ompt_event_implementation_status(event_name);
 
@@ -343,9 +343,9 @@ OMPT_API_ROUTINE int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb)
 }
 
 
-OMPT_API_ROUTINE int ompt_get_callback(ompt_event_t evid, ompt_callback_t *cb)
+OMPT_API_ROUTINE int ompt_get_callback(ompt_callbacks_t which, ompt_callback_t *callback)
 {
-    switch (evid) {
+    switch (which) {
 
 #define ompt_event_macro(event_name, callback_type, event_id)                  \
     case event_name:                                                           \
@@ -353,7 +353,7 @@ OMPT_API_ROUTINE int ompt_get_callback(ompt_event_t evid, ompt_callback_t *cb)
             ompt_callback_t mycb =                                             \
                 (ompt_callback_t) ompt_callbacks.ompt_callback(event_name);    \
             if (mycb) {                                                        \
-                *cb = mycb;                                                    \
+                *callback = mycb;                                              \
                 return ompt_get_callback_success;                              \
             }                                                                  \
         }                                                                      \

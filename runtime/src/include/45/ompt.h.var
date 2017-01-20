@@ -216,11 +216,11 @@ typedef enum {
  * runtime events
  *---------------------*/
 
-typedef enum {
+typedef enum ompt_callbacks_e{
 #define ompt_event_macro(event, callback, eventid) event = eventid,
     FOREACH_OMPT_EVENT(ompt_event_macro)
 #undef ompt_event_macro
-} ompt_event_t;
+} ompt_callbacks_t;
 
 
 /*---------------------
@@ -584,7 +584,7 @@ typedef enum opt_init_mode_e {
 } ompt_init_mode_t;
 
 OMPT_API_FUNCTION(int, ompt_set_callback, (
-    ompt_event_t event,
+    ompt_callbacks_t event,
     ompt_callback_t callback
 ));
 
@@ -598,7 +598,7 @@ typedef enum ompt_set_callback_rc_e {  /* non-standard */
 
 
 OMPT_API_FUNCTION(int, ompt_get_callback, (
-    ompt_event_t event,
+    ompt_callbacks_t event,
     ompt_callback_t *callback
 ));
 
