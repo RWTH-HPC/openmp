@@ -672,17 +672,13 @@ int ompt_initialize(
 
 void ompt_finalize(ompt_fns_t* fns)
 {
-  //runtime shutdown
-  free(fns);
+  on_ompt_event_runtime_shutdown();
 }
 
 ompt_fns_t* ompt_start_tool(
   unsigned int omp_version,
   const char *runtime_version)
 {
-  ompt_fns_t* ompt_fns = (ompt_fns_t*) malloc(sizeof(ompt_fns_t));
-  printf("ompt_fns is %p\n", ompt_fns);
-  ompt_fns->initialize = &ompt_initialize;
-  ompt_fns->finalize = &ompt_finalize;
-  return ompt_fns;
+  static ompt_fns_t ompt_fns = {&ompt_initialize,&ompt_finalize};
+  return &ompt_fns;
 }

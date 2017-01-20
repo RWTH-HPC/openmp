@@ -583,7 +583,10 @@ typedef struct ompt_fns_t {
 } ompt_fns_t;
 
 /* initialization interface to be defined by tool */
-ompt_initialize_t ompt_tool(void);
+ompt_fns_t * ompt_start_tool(
+    unsigned int omp_version, 
+    const char * runtime_version
+);
 
 typedef enum opt_init_mode_e {
     ompt_init_mode_never  = 0,
