@@ -396,9 +396,9 @@ OMPT_API_ROUTINE void *ompt_get_parallel_function(int ancestor_level)
 }
 
 
-OMPT_API_ROUTINE ompt_state_t ompt_get_state(ompt_wait_id_t *ompt_wait_id)
+OMPT_API_ROUTINE ompt_state_t ompt_get_state(ompt_wait_id_t *wait_id)
 {
-    ompt_state_t thread_state = __ompt_get_state_internal(ompt_wait_id);
+    ompt_state_t thread_state = __ompt_get_state_internal(wait_id);
 
     if (thread_state == ompt_state_undefined) {
         thread_state = ompt_state_work_serial;
