@@ -634,7 +634,7 @@ void ompt_control(
 #endif
 
 /* state enumeration */
-OMPT_API_FUNCTION(int, ompt_enumerate_state, (
+OMPT_API_FUNCTION(int, ompt_enumerate_states, (
     int current_state,
     int *next_state,
     const char **next_state_name
