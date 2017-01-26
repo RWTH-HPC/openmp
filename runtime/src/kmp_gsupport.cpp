@@ -372,17 +372,19 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
     }
 
 #if OMPT_SUPPORT
+    int ompt_team_size;
     if (ompt_enabled) {
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
         ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
 
         // implicit task callback
         if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+            ompt_team_size = __kmp_team_from_gtid(gtid)->t.t_nproc;
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_begin,
                 &(team_info->parallel_data),
                 &(task_info->task_data),
-                //__kmp_team_from_gtid(gtid)->t.t_nproc,
+                ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
@@ -421,6 +423,7 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
 #if OMPT_SUPPORT
     if (ompt_enabled) {
         kmp_info_t *thr = __kmp_threads[gtid];
+        int ompt_team_size;
 
         // set up lightweight task
         ompt_lw_taskteam_t *lwt = (ompt_lw_taskteam_t *)
@@ -432,11 +435,12 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
 
         // implicit task callback
         if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+            ompt_team_size = __kmp_team_from_gtid(gtid)->t.t_nproc;
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_begin,
                 &(ompt_parallel_data),
                 &(lwt->ompt_task_info.task_data),
-                //__kmp_team_from_gtid(gtid)->t.t_nproc,
+                ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
@@ -487,6 +491,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
 {
     int gtid = __kmp_get_gtid();
     kmp_info_t *thr;
+    int ompt_team_size = __kmp_team_from_gtid(gtid)->t.t_nproc;
 
     thr = __kmp_threads[gtid];
 
@@ -517,7 +522,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
                 ompt_scope_end,
                 &(parallel_data),
                 &(task_info->task_data),
-                //__kmp_team_from_gtid(gtid)->t.t_nproc,
+                ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
         }
 
@@ -558,7 +563,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
                 ompt_scope_end,
                 &(parallel_data),
                 &(serialized_task_data),
-                //__kmp_team_from_gtid(gtid)->t.t_nproc,
+                ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
         }
 #endif
