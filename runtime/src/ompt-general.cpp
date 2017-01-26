@@ -378,23 +378,15 @@ OMPT_API_ROUTINE int ompt_get_callback(ompt_callbacks_t which, ompt_callback_t *
  * parallel regions
  ****************************************************************************/
 
-OMPT_API_ROUTINE ompt_parallel_data_t ompt_get_parallel_data(int ancestor_level)
+OMPT_API_ROUTINE int ompt_get_parallel_info(int ancestor_level, ompt_data_t **parallel_data, int *team_size)
 {
-    return __ompt_get_parallel_data_internal(ancestor_level);
+    return __ompt_get_parallel_info_internal(ancestor_level, parallel_data, team_size);
 }
-
-
-OMPT_API_ROUTINE int ompt_get_parallel_team_size(int ancestor_level)
-{
-    return __ompt_get_parallel_team_size_internal(ancestor_level);
-}
-
 
 OMPT_API_ROUTINE void *ompt_get_parallel_function(int ancestor_level)
 {
     return __ompt_get_parallel_function_internal(ancestor_level);
 }
-
 
 OMPT_API_ROUTINE ompt_state_t ompt_get_state(ompt_wait_id_t *wait_id)
 {

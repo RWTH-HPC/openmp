@@ -277,26 +277,28 @@ __ompt_get_parallel_function_internal(int depth)
 }
 
 
-ompt_parallel_data_t
-__ompt_get_parallel_data_internal(int depth)
-{
-    ompt_team_info_t *info = __ompt_get_teaminfo(depth, NULL);
-    ompt_parallel_data_t id = ompt_parallel_id_none;
-    return info ? info->parallel_data :id;
-}
-
-
 int
-__ompt_get_parallel_team_size_internal(int depth)
+__ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_data, int *team_size)
 {
-    // initialize the return value with the error value.
+    // initialize the team_size value with the error value.
     // if there is a team at the specified depth, the default
     // value will be overwritten the size of that team.
-    int size = -1;
-    (void) __ompt_get_teaminfo(depth, &size);
-    return size;
-}
 
+    ompt_team_info_t *info;
+    if(team_size)
+    {
+        info = __ompt_get_teaminfo(ancestor_level, team_size);
+    }
+    else
+    {
+        info = __ompt_get_teaminfo(ancestor_level, NULL);
+    }
+    if(parallel_data)
+    {
+        *parallel_data = info ? &(info->parallel_data) : NULL;
+    }
+    return info ? 1 : 0;
+}
 
 //----------------------------------------------------------
 // lightweight task team support

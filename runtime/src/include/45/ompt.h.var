@@ -28,8 +28,7 @@
                                         \
     macro (ompt_get_state)              \
                                         \
-    macro (ompt_get_parallel_data)      \
-    macro (ompt_get_parallel_team_size) \
+    macro (ompt_get_parallel_info)      \
     macro (ompt_get_task_data)          \
     macro (ompt_get_thread_data)        \
     macro (ompt_get_unique_id)
@@ -512,12 +511,10 @@ OMPT_API_FUNCTION(ompt_thread_data_t*, ompt_get_thread_data, (void));
 OMPT_API_FUNCTION(void *, ompt_get_idle_frame, (void));
 
 /* parallel region */
-OMPT_API_FUNCTION(ompt_parallel_data_t, ompt_get_parallel_data, (
-    int ancestor_level
-));
-
-OMPT_API_FUNCTION(int, ompt_get_parallel_team_size, (
-    int ancestor_level
+OMPT_API_FUNCTION(int, ompt_get_parallel_info, (
+    int ancestor_level,
+    ompt_data_t **parallel_data,
+    int *team_size
 ));
 
 /* task */
