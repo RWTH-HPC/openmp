@@ -1531,7 +1531,7 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
                 ompt_scope_begin,
                 &(my_parallel_data),
                 &(my_task_data),
-                __ompt_get_return_address(1));
+                OMPT_GET_RETURN_ADDRESS(1));
             }
         }
 #endif
@@ -1580,7 +1580,7 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
                 ompt_scope_end,
                 &(my_parallel_data),
                 &(my_task_data),
-                __ompt_get_return_address(1));
+                OMPT_GET_RETURN_ADDRESS(1));
             }
             taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
         }
@@ -1686,7 +1686,7 @@ __kmpc_taskgroup( ident_t* loc, int gtid )
         ompt_scope_begin,
         &(my_parallel_data),
         &(my_task_data),
-        __ompt_get_return_address(1));
+        OMPT_GET_RETURN_ADDRESS(1));
     }
 #endif
 }
@@ -1756,7 +1756,7 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
         ompt_scope_end,
         &(my_parallel_data),
         &(my_task_data),
-        __ompt_get_return_address(1));
+        OMPT_GET_RETURN_ADDRESS(1));
     }
 #endif
 }

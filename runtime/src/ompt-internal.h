@@ -87,7 +87,8 @@ void ompt_pre_init(void);
 void ompt_post_init(void);
 void ompt_fini(void);
 
-void* __ompt_get_return_address(int level);
+void* __ompt_get_return_address_internal(int level);
+#define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_internal(level)
 
 extern int ompt_enabled;
 

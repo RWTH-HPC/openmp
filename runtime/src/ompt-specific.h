@@ -55,8 +55,6 @@ static uint64_t __ompt_get_get_unique_id_internal();
 #define OMPT_HAVE_PSAPI KMP_HAVE_PSAPI
 #define OMPT_STR_MATCH(haystack, needle) __kmp_str_match(haystack, 0, needle)
 
-
-
 //******************************************************************************
 // inline functions
 //******************************************************************************

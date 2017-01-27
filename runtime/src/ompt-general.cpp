@@ -282,22 +282,6 @@ void ompt_fini()
     ompt_enabled = 0;
 }
 
-
-void* __ompt_get_return_address(int level)
-{
-  int real_level = level + 2;
-  void *array[real_level];
-  size_t size;
-
-  size = backtrace (array, real_level);
-  if(size == real_level)
-    return array[real_level-1];
-  else
-    return NULL;
-}
-
-
-
 /*****************************************************************************
  * interface operations
  ****************************************************************************/

@@ -1434,7 +1434,7 @@ __kmp_dispatch_finish_chunk( int gtid, ident_t *loc )
                 &(team_info->parallel_data),                                   \
                 &(task_info->task_data),                                       \
                 0,                                                             \
-                __ompt_get_return_address(0));                                   \
+                OMPT_GET_RETURN_ADDRESS(0));                                   \
         }                                                                      \
     }
         //TODO: implement count
