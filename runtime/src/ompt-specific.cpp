@@ -6,6 +6,8 @@
 #include "kmp.h"
 #include "ompt-internal.h"
 #include "ompt-specific.h"
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
 
 //******************************************************************************
 // macros
@@ -405,15 +407,33 @@ static uint64_t __ompt_get_unique_id_internal()
     return ++ID;
 }
 
+
 void* __ompt_get_return_address_internal(int level)
 {
-  int real_level = level + 2;
-  void *array[real_level];
-  size_t size;
+    /*
+    int real_level = level + 2;
+    void *array[real_level];
+    size_t size;
+  
+    size = backtrace (array, real_level);
+    if(size == real_level)
+      return array[real_level-1];
+    else
+      return NULL;
+    */
 
-  size = backtrace (array, real_level);
-  if(size == real_level)
-    return array[real_level-1];
-  else
-    return NULL;
+    unw_cursor_t cursor;
+    unw_context_t uc;
+    unw_word_t ip;
+
+    unw_getcontext(&uc);
+    unw_init_local(&cursor, &uc);
+    while (unw_step(&cursor) > 0 && level > 0)
+      level--;
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+
+    if(level == 0)
+      return (void*)ip;
+    else
+      return NULL;
 }
