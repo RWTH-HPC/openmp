@@ -459,7 +459,7 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
         }
 
         new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
-            __builtin_frame_address(0);
+            OMPT_GET_FRAME_ADDRESS(0);
     }
 
 #if OMPT_TRACE

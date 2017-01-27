@@ -5471,7 +5471,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
         this_thr->th.ompt_thread_info.wait_id = 0;
-        this_thr->th.ompt_thread_info.idle_frame = __builtin_frame_address(0);
+        this_thr->th.ompt_thread_info.idle_frame = OMPT_GET_FRAME_ADDRESS(0);
         if (ompt_callbacks.ompt_callback(ompt_callback_thread_begin)) {
             ompt_callbacks.ompt_callback(ompt_callback_thread_begin)(
                 ompt_thread_worker, thread_data);

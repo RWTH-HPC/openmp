@@ -39,7 +39,7 @@ xexpand(KMP_API_NAME_GOMP_BARRIER)(void)
     ompt_frame_t * ompt_frame;
     if (ompt_enabled ) {
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-        ompt_frame->reenter_runtime_frame = __builtin_frame_address(1);
+        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     } 
 #endif
     __kmpc_barrier(&loc, gtid);
@@ -273,7 +273,7 @@ __kmp_GOMP_microtask_wrapper(int *gtid, int *npr, void (*task)(void *),
 
         // set task frame
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-        ompt_frame->exit_runtime_frame = __builtin_frame_address(0);
+        ompt_frame->exit_runtime_frame = OMPT_GET_FRAME_ADDRESS(0);
     }
 #endif
 
@@ -318,7 +318,7 @@ __kmp_GOMP_parallel_microtask_wrapper(int *gtid, int *npr,
 
         // set task frame
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-        ompt_frame->exit_runtime_frame = __builtin_frame_address(0);
+        ompt_frame->exit_runtime_frame = OMPT_GET_FRAME_ADDRESS(0);
     }
 #endif
 
@@ -460,7 +460,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_START)(void (*task)(void *), void *data, unsi
 
     if (ompt_enabled) {
         __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL);
-        parent_frame->reenter_runtime_frame = __builtin_frame_address(1);
+        parent_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
 #endif
 
@@ -481,7 +481,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_START)(void (*task)(void *), void *data, unsi
 #if OMPT_SUPPORT
     if (ompt_enabled) {
         __ompt_get_task_info_internal(0, NULL, NULL, &frame, NULL, NULL);
-        frame->exit_runtime_frame = __builtin_frame_address(1);
+        frame->exit_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
 #endif
 }
@@ -514,7 +514,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         // Record that we re-entered the runtime system in the implicit
         // task frame representing the parallel region. 
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-        ompt_frame->reenter_runtime_frame = __builtin_frame_address(0);
+        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(0);
 
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
@@ -918,7 +918,7 @@ LOOP_NEXT_ULL(xexpand(KMP_API_NAME_GOMP_LOOP_ULL_ORDERED_RUNTIME_NEXT), \
     ompt_frame_t *parent_frame; \
     if (ompt_enabled) { \
         __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL); \
-        parent_frame->reenter_runtime_frame = __builtin_frame_address(1); \
+        parent_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1); \
     }
 
 
@@ -1000,7 +1000,7 @@ xexpand(KMP_API_NAME_GOMP_TASK)(void (*func)(void *), void *data, void (*copy_fu
     if (ompt_enabled) {
         current_task = __kmp_threads[ gtid ] -> th.th_current_task;
         current_task->ompt_task_info.frame.reenter_runtime_frame =
-            __builtin_frame_address(1);
+            OMPT_GET_FRAME_ADDRESS(1);
     }
 #endif
 
@@ -1021,7 +1021,7 @@ xexpand(KMP_API_NAME_GOMP_TASK)(void (*func)(void *), void *data, void (*copy_fu
             thread->th.ompt_thread_info.wait_id = 0;
             thread->th.ompt_thread_info.state = ompt_state_work_parallel;
             taskdata->ompt_task_info.frame.exit_runtime_frame =
-                __builtin_frame_address(0);
+                OMPT_GET_FRAME_ADDRESS(0);
         }
 #endif
 
@@ -1136,7 +1136,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_SECTIONS_START)(void (*task) (void *), void *
 
     if (ompt_enabled) {
         __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL); \
-        parent_frame->reenter_runtime_frame = __builtin_frame_address(1);
+        parent_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
 #endif
 
@@ -1207,7 +1207,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL)(void (*task)(void *), void *data, unsigned n
     ompt_task_info_t *parent_task_info, *task_info;
     if (ompt_enabled) {
         parent_task_info = __ompt_get_taskinfo(0);
-        parent_task_info->frame.reenter_runtime_frame = __builtin_frame_address(1);
+        parent_task_info->frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
 #endif
     if (__kmpc_ok_to_fork(&loc) && (num_threads != 1)) {
@@ -1226,7 +1226,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL)(void (*task)(void *), void *data, unsigned n
 #if OMPT_SUPPORT
     if (ompt_enabled) {
         task_info = __ompt_get_taskinfo(0);
-        task_info->frame.exit_runtime_frame = __builtin_frame_address(0);
+        task_info->frame.exit_runtime_frame = OMPT_GET_FRAME_ADDRESS(0);
     }
 #endif
     task(data);
