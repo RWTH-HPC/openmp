@@ -2281,7 +2281,7 @@ __kmpc_destroy_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
         ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)) {
         ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)(
             ompt_mutex_nest_lock,
-            (ompt_wait_id_t) ilk->lock,
+            (ompt_wait_id_t) user_lock,
             __ompt_get_return_address(0));
     }
 #endif
@@ -2311,7 +2311,7 @@ __kmpc_destroy_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
         ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)) {
         ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)(
             ompt_mutex_nest_lock,
-            (ompt_wait_id_t) lck,
+            (ompt_wait_id_t) user_lock,
             __ompt_get_return_address(0));
     }
 #endif
