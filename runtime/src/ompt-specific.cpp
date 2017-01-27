@@ -280,10 +280,6 @@ __ompt_get_parallel_function_internal(int depth)
 int
 __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_data, int *team_size)
 {
-    // initialize the team_size value with the error value.
-    // if there is a team at the specified depth, the default
-    // value will be overwritten the size of that team.
-
     ompt_team_info_t *info;
     if(team_size)
     {
@@ -353,15 +349,6 @@ __ompt_task_id_new(int gtid)
 }
 
 
-ompt_task_data_t
-__ompt_get_task_data_internal(int depth)
-{
-    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
-    ompt_task_data_t task_data = ompt_task_id_none;
-    return info ?  info->task_data : task_data;
-}
-
-
 void *
 __ompt_get_task_function_internal(int depth)
 {
@@ -371,14 +358,36 @@ __ompt_get_task_function_internal(int depth)
 }
 
 
-// OpenMP spec asks for the scheduling task to be returned.
-
-ompt_frame_t *
-__ompt_get_task_frame_internal(int depth)
+int
+__ompt_get_task_info_internal(
+    int ancestor_level,
+    ompt_task_type_t *type,
+    ompt_data_t **task_data,
+    ompt_frame_t **task_frame,
+    ompt_data_t **parallel_data,
+    int *thread_num)
 {
-    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
-    ompt_frame_t *frame = info ? frame = &info->frame : NULL;
-    return frame;
+    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(ancestor_level);
+    if(type)
+    {
+        //TODO
+    }
+    if(task_data)
+    {
+        *task_data = info ? &info->task_data : NULL;
+    }
+    if(task_frame)
+    {
+        // OpenMP spec asks for the scheduling task to be returned.
+        ompt_frame_t *frame = info ? frame = &info->frame : NULL;
+        *task_frame = frame;
+    }
+    if(parallel_data)
+    {
+        ompt_team_info_t* team_info = __ompt_get_teaminfo(ancestor_level, NULL);
+        *parallel_data = info ? &(team_info->parallel_data) : NULL;
+    }
+    return info ? 1 : 0;
 }
 
 //----------------------------------------------------------

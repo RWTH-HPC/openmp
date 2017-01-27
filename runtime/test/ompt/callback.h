@@ -19,21 +19,22 @@ static const char* ompt_task_type_t_values[] = {
   "ompt_task_target"
 };
 
-static ompt_get_task_data_t ompt_get_task_data;
-static ompt_get_task_frame_t ompt_get_task_frame;
+static ompt_get_task_info_t ompt_get_task_info;
 static ompt_get_thread_data_t ompt_get_thread_data;
 static ompt_get_parallel_info_t ompt_get_parallel_info;
 static ompt_get_unique_id_t ompt_get_unique_id;
 
 static void print_ids(int level)
 {
-  ompt_frame_t* frame = ompt_get_task_frame(level);
+  ompt_frame_t* frame ;
   ompt_data_t* parallel_data;
-  int exists = ompt_get_parallel_info(level, &parallel_data, NULL);
+  ompt_data_t* task_data;
+  int exists_parallel = ompt_get_parallel_info(level, &parallel_data, NULL);
+  int exists_task = ompt_get_task_info(level, NULL, &task_data, &frame, NULL, NULL);
   if (frame)
-    printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data()->value, level, exists ? parallel_data->value : 0, ompt_get_task_data(level).value, frame->exit_runtime_frame, frame->reenter_runtime_frame);
+    printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data()->value, level, exists_parallel ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame->exit_runtime_frame, frame->reenter_runtime_frame);
   else
-    printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", frame=%p\n", ompt_get_thread_data()->value, level, exists ? parallel_data->value : 0, ompt_get_task_data(level).value, frame);
+    printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", frame=%p\n", ompt_get_thread_data()->value, level, exists_parallel ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame);
 }
 
 #define print_frame(level)\
@@ -627,8 +628,7 @@ int ompt_initialize(
   ompt_fns_t* fns)
 {
   ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
-  ompt_get_task_data = (ompt_get_task_data_t) lookup("ompt_get_task_data");
-  ompt_get_task_frame = (ompt_get_task_frame_t) lookup("ompt_get_task_frame");
+  ompt_get_task_info = (ompt_get_task_info_t) lookup("ompt_get_task_info");
   ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
   ompt_get_parallel_info = (ompt_get_parallel_info_t) lookup("ompt_get_parallel_info");
   ompt_get_unique_id = (ompt_get_unique_id_t) lookup("ompt_get_unique_id");

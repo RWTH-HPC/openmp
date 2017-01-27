@@ -423,17 +423,16 @@ OMPT_API_ROUTINE ompt_thread_data_t* ompt_get_thread_data(void)
     return __ompt_get_thread_data_internal();
 }
 
-OMPT_API_ROUTINE ompt_task_data_t ompt_get_task_data(int depth)
+OMPT_API_ROUTINE int ompt_get_task_info(
+    int ancestor_level,
+    ompt_task_type_t *type,
+    ompt_data_t **task_data,
+    ompt_frame_t **task_frame,
+    ompt_data_t **parallel_data,
+    int *thread_num)
 {
-    return __ompt_get_task_data_internal(depth);
+    return __ompt_get_task_info_internal(ancestor_level, type, task_data, task_frame, parallel_data, thread_num);
 }
-
-
-OMPT_API_ROUTINE ompt_frame_t *ompt_get_task_frame(int depth)
-{
-    return __ompt_get_task_frame_internal(depth);
-}
-
 
 OMPT_API_ROUTINE void *ompt_get_task_function(int depth)
 {

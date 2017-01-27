@@ -24,12 +24,11 @@
     macro (ompt_get_callback)           \
                                         \
     macro (ompt_get_idle_frame)         \
-    macro (ompt_get_task_frame)         \
                                         \
     macro (ompt_get_state)              \
                                         \
     macro (ompt_get_parallel_info)      \
-    macro (ompt_get_task_data)          \
+    macro (ompt_get_task_info)           \
     macro (ompt_get_thread_data)        \
     macro (ompt_get_unique_id)
 
@@ -518,14 +517,14 @@ OMPT_API_FUNCTION(int, ompt_get_parallel_info, (
 ));
 
 /* task */
-OMPT_API_FUNCTION(ompt_task_data_t, ompt_get_task_data, (
-    int depth
+OMPT_API_FUNCTION(int, ompt_get_task_info, (
+    int ancestor_level,
+    ompt_task_type_t *type,
+    ompt_data_t **task_data,
+    ompt_frame_t **task_frame,
+    ompt_data_t **parallel_data,
+    int *thread_num
 ));
-
-OMPT_API_FUNCTION(ompt_frame_t *, ompt_get_task_frame, (
-    int depth
-));
-
 
 
 /****************************************************************************

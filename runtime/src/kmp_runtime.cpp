@@ -1436,14 +1436,13 @@ __kmp_fork_call(
 
 #if OMPT_SUPPORT
     ompt_parallel_data_t ompt_parallel_data;
-    ompt_task_data_t parent_task_data;
+    ompt_task_data_t *parent_task_data;
     ompt_frame_t *ompt_frame;
-    ompt_task_data_t* implicit_task_data;
+    ompt_task_data_t *implicit_task_data;
 
     if (ompt_enabled) {
         ompt_parallel_data.value = __ompt_parallel_id_new(gtid);
-        parent_task_data = __ompt_get_task_data_internal(0);
-        ompt_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, &parent_task_data, &ompt_frame, NULL, NULL);
     }
 #endif
 
@@ -1469,7 +1468,7 @@ __kmp_fork_call(
         int team_size = master_set_numthreads;
 
         ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
-            &parent_task_data, ompt_frame, &ompt_parallel_data,
+            parent_task_data, ompt_frame, &ompt_parallel_data,
             team_size,
             master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
             OMPT_INVOKER(call_context),
@@ -1567,7 +1566,7 @@ __kmp_fork_call(
 
                 if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                     ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
-                        &ompt_parallel_data, &parent_task_data,
+                        &ompt_parallel_data, parent_task_data,
                         OMPT_INVOKER(call_context),
                         __ompt_get_return_address(1));
                 }
@@ -1770,7 +1769,7 @@ __kmp_fork_call(
                     lw_taskteam.ompt_task_info.task_data = ompt_task_id_none;
                     if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
-                            &ompt_parallel_data, &parent_task_data,
+                            &ompt_parallel_data, parent_task_data,
                             OMPT_INVOKER(call_context),
                             __ompt_get_return_address(1));
                     }
@@ -1882,7 +1881,7 @@ __kmp_fork_call(
                     lw_taskteam.ompt_task_info.task_data = ompt_task_id_none;
                     if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
-                            &ompt_parallel_data, &parent_task_data,
+                            &ompt_parallel_data, parent_task_data,
                             OMPT_INVOKER(call_context),
                             __ompt_get_return_address(1));
                     }

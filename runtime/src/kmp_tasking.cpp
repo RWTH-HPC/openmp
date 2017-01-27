@@ -795,7 +795,9 @@ __kmpc_omp_task_complete_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *task
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        __ompt_get_task_frame_internal(0)->reenter_runtime_frame = NULL;
+        ompt_frame_t* ompt_frame;
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        ompt_frame->reenter_runtime_frame = NULL;
     }
 #endif
     return;

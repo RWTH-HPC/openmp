@@ -38,7 +38,7 @@ xexpand(KMP_API_NAME_GOMP_BARRIER)(void)
 #if OMPT_SUPPORT && OMPT_TRACE
     ompt_frame_t * ompt_frame;
     if (ompt_enabled ) {
-        ompt_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
         ompt_frame->reenter_runtime_frame = __builtin_frame_address(1);
     } 
 #endif
@@ -272,7 +272,7 @@ __kmp_GOMP_microtask_wrapper(int *gtid, int *npr, void (*task)(void *),
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
 
         // set task frame
-        ompt_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
         ompt_frame->exit_runtime_frame = __builtin_frame_address(0);
     }
 #endif
@@ -317,7 +317,7 @@ __kmp_GOMP_parallel_microtask_wrapper(int *gtid, int *npr,
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
 
         // set task frame
-        ompt_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
         ompt_frame->exit_runtime_frame = __builtin_frame_address(0);
     }
 #endif
@@ -396,21 +396,22 @@ static void
 __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *))
 {
 #if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data;
+    ompt_parallel_data_t* ompt_parallel_data;
     ompt_task_data_t my_ompt_task_data;
+    ompt_frame_t* ompt_frame;
     if (ompt_enabled) {
-        ompt_task_data_t ompt_task_data = __ompt_get_task_data_internal(0);
-        ompt_frame_t  *ompt_frame = __ompt_get_task_frame_internal(0);
+        ompt_task_data_t* ompt_task_data;
+        __ompt_get_task_info_internal(0, NULL, &ompt_task_data, &ompt_frame, &ompt_parallel_data, NULL);
         kmp_info_t *thr = __kmp_threads[gtid];
 
-        ompt_parallel_data = {.value=__ompt_parallel_id_new(gtid)};
+        //ompt_parallel_data = {.value=__ompt_parallel_id_new(gtid)};
         my_ompt_task_data = {.value=__ompt_task_id_new(gtid)};
 
         // parallel region callback
         if (ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
             int team_size = 1;
             ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
-                &ompt_task_data, ompt_frame, &ompt_parallel_data,
+                ompt_task_data, ompt_frame, ompt_parallel_data,
                 team_size, team_size,
                 OMPT_INVOKER(fork_context_gnu),
                 __ompt_get_return_address(1));
@@ -428,7 +429,7 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
         // set up lightweight task
         ompt_lw_taskteam_t *lwt = (ompt_lw_taskteam_t *)
             __kmp_allocate(sizeof(ompt_lw_taskteam_t));
-        __ompt_lw_taskteam_init(lwt, thr, gtid, (void *) task, ompt_parallel_data);
+        __ompt_lw_taskteam_init(lwt, thr, gtid, (void *) task, *ompt_parallel_data);
         lwt->ompt_task_info.task_data.value = __ompt_task_id_new(gtid);
         lwt->ompt_task_info.frame.exit_runtime_frame = 0;
         __ompt_lw_taskteam_link(lwt, thr);
@@ -438,7 +439,7 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
             ompt_team_size = __kmp_team_from_gtid(gtid)->t.t_nproc;
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_begin,
-                &(ompt_parallel_data),
+                ompt_parallel_data,
                 &(lwt->ompt_task_info.task_data),
                 ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
@@ -458,7 +459,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_START)(void (*task)(void *), void *data, unsi
     ompt_frame_t *parent_frame, *frame;
 
     if (ompt_enabled) {
-        parent_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL);
         parent_frame->reenter_runtime_frame = __builtin_frame_address(1);
     }
 #endif
@@ -479,7 +480,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_START)(void (*task)(void *), void *data, unsi
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &frame, NULL, NULL);
         frame->exit_runtime_frame = __builtin_frame_address(1);
     }
 #endif
@@ -512,7 +513,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         serialized_task_data = task_info->task_data;
         // Record that we re-entered the runtime system in the implicit
         // task frame representing the parallel region. 
-        ompt_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
         ompt_frame->reenter_runtime_frame = __builtin_frame_address(0);
 
         if (ompt_enabled &&
@@ -544,7 +545,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         if (ompt_enabled) {
           // Implicit task is finished here, in the barrier we might schedule deferred tasks, 
           // these don't see the implicit task on the stack
-          ompt_frame = __ompt_get_task_frame_internal(0);
+          __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
           ompt_frame->exit_runtime_frame = NULL;
         }
 #endif
@@ -916,7 +917,7 @@ LOOP_NEXT_ULL(xexpand(KMP_API_NAME_GOMP_LOOP_ULL_ORDERED_RUNTIME_NEXT), \
 #define OMPT_LOOP_PRE() \
     ompt_frame_t *parent_frame; \
     if (ompt_enabled) { \
-        parent_frame = __ompt_get_task_frame_internal(0); \
+        __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL); \
         parent_frame->reenter_runtime_frame = __builtin_frame_address(1); \
     }
 
@@ -1134,7 +1135,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_SECTIONS_START)(void (*task) (void *), void *
     ompt_frame_t *parent_frame;
 
     if (ompt_enabled) {
-        parent_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL); \
         parent_frame->reenter_runtime_frame = __builtin_frame_address(1);
     }
 #endif

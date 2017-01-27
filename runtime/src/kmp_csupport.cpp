@@ -685,7 +685,7 @@ __kmpc_barrier(ident_t *loc, kmp_int32 global_tid)
 #if OMPT_SUPPORT && OMPT_TRACE
     ompt_frame_t * ompt_frame;
     if (ompt_enabled ) {
-        ompt_frame = __ompt_get_task_frame_internal(0);
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
         if ( ompt_frame->reenter_runtime_frame == NULL )
             ompt_frame->reenter_runtime_frame = __builtin_frame_address(1);
     }
