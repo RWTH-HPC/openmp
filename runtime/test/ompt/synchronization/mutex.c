@@ -69,10 +69,11 @@ int main()
 
   // atomic cannot be tested because it is implemented with atomic hardware instructions
   // disabled_CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_atomic: wait_id=[[WAIT_ID:[0-9]+]], hint={{[0-9]+}}, impl={{[0-9]+}}, return_address={{0x[0-f]+}}
-  // disabled_CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_atomic: wait_id=[[WAIT_ID:[0-9]+]], return_address={{0x[0-f]+}}
+  // disabled_CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_atomic: wait_id=[[WAIT_ID]], return_address={{0x[0-f]+}}
 
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_ordered: wait_id=[[WAIT_ID:[0-9]+]], hint={{[0-9]+}}, impl={{[0-9]+}}, return_address={{0x[0-f]+}}
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_ordered: wait_id=[[WAIT_ID:[0-9]+]], return_address={{0x[0-f]+}}
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_ordered: wait_id=[[WAIT_ID]], return_address={{0x[0-f]+}}
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_release_ordered: wait_id=[[WAIT_ID]], return_address={{0x[0-f]+}} 
 
   return 0;
 }
