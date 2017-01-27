@@ -1169,7 +1169,7 @@ __kmpc_critical( ident_t * loc, kmp_int32 global_tid, kmp_critical_name * crit )
             ompt_mutex_critical,
             omp_lock_hint_none,
             0, //TODO for intel: specify impl
-            (ompt_wait_id_t) lck,
+            (ompt_wait_id_t) crit,
             __ompt_get_return_address(0));
         }
     }
@@ -1190,7 +1190,7 @@ __kmpc_critical( ident_t * loc, kmp_int32 global_tid, kmp_critical_name * crit )
         if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
             ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
             ompt_mutex_critical,
-            (ompt_wait_id_t) lck,
+            (ompt_wait_id_t) crit,
             __ompt_get_return_address(0));
         }
     }
@@ -1306,7 +1306,7 @@ __kmpc_critical_with_hint( ident_t * loc, kmp_int32 global_tid, kmp_critical_nam
                 ompt_mutex_critical,
                 (unsigned int)hint,
                 0, //TODO for intel: specify impl
-                (ompt_wait_id_t) lck,
+                (ompt_wait_id_t) crit,
                 __ompt_get_return_address(0));
             }
         }
@@ -1346,7 +1346,7 @@ __kmpc_critical_with_hint( ident_t * loc, kmp_int32 global_tid, kmp_critical_nam
                 ompt_mutex_critical,
                 (unsigned int)hint,
                 0, //TODO for intel: specify impl
-                (ompt_wait_id_t) lck,
+                (ompt_wait_id_t) crit,
                 __ompt_get_return_address(0));
             }
         }
@@ -1367,7 +1367,7 @@ __kmpc_critical_with_hint( ident_t * loc, kmp_int32 global_tid, kmp_critical_nam
         if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
             ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
             ompt_mutex_critical,
-            (ompt_wait_id_t) lck,
+            (ompt_wait_id_t) crit,
             __ompt_get_return_address(0));
         }
     }
@@ -1465,7 +1465,7 @@ __kmpc_end_critical(ident_t *loc, kmp_int32 global_tid, kmp_critical_name *crit)
         ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
         ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
             ompt_mutex_critical,
-            (ompt_wait_id_t) lck,
+            (ompt_wait_id_t) crit,
             __ompt_get_return_address(0));
     }
 #endif

@@ -64,7 +64,8 @@ int main()
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID]], return_address={{0x[0-f]+}}
 
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_critical: wait_id=[[WAIT_ID:[0-9]+]], hint={{[0-9]+}}, impl={{[0-9]+}}, return_address={{0x[0-f]+}}
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_critical: wait_id=[[WAIT_ID:[0-9]+]], return_address={{0x[0-f]+}}
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_critical: wait_id=[[WAIT_ID]], return_address={{0x[0-f]+}}
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_release_critical: wait_id=[[WAIT_ID]], return_address={{0x[0-f]+}} 
 
   // atomic cannot be tested because it is implemented with atomic hardware instructions
   // disabled_CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_atomic: wait_id=[[WAIT_ID:[0-9]+]], hint={{[0-9]+}}, impl={{[0-9]+}}, return_address={{0x[0-f]+}}
