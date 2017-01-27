@@ -23,8 +23,6 @@
     macro (ompt_set_callback)           \
     macro (ompt_get_callback)           \
                                         \
-    macro (ompt_get_idle_frame)         \
-                                        \
     macro (ompt_get_state)              \
                                         \
     macro (ompt_get_parallel_info)      \
@@ -506,8 +504,6 @@ OMPT_API_FUNCTION(ompt_state_t, ompt_get_state, (
 
 /* thread */
 OMPT_API_FUNCTION(ompt_thread_data_t*, ompt_get_thread_data, (void));
-
-OMPT_API_FUNCTION(void *, ompt_get_idle_frame, (void));
 
 /* parallel region */
 OMPT_API_FUNCTION(int, ompt_get_parallel_info, (

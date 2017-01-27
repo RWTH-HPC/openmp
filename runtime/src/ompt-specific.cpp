@@ -241,18 +241,6 @@ __ompt_get_state_internal(ompt_wait_id_t *ompt_wait_id)
 }
 
 //----------------------------------------------------------
-// idle frame support
-//----------------------------------------------------------
-
-void *
-__ompt_get_idle_frame_internal(void)
-{
-    kmp_info_t *ti = ompt_get_thread();
-    return ti ? ti->th.ompt_thread_info.idle_frame : NULL;
-}
-
-
-//----------------------------------------------------------
 // parallel region support
 //----------------------------------------------------------
 
