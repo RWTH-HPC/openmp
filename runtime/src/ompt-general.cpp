@@ -217,7 +217,7 @@ void ompt_pre_init()
 
     case omp_tool_unset:
     case omp_tool_enabled:
-        ompt_fns = ompt_start_tool(OMPT_VERSION, ompt_get_runtime_version());
+        ompt_fns = ompt_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
         if (ompt_fns) {
             ompt_enabled = 1;
         }
