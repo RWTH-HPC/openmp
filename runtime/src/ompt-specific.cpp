@@ -8,6 +8,7 @@
 #include "ompt-specific.h"
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
+#include <dlfcn.h>
 
 //******************************************************************************
 // macros
@@ -422,20 +423,42 @@ void* __ompt_get_return_address_internal(int level)
       return NULL;
     */
 
+    //level += 10;
+
     unw_cursor_t cursor;
     unw_context_t uc;
     unw_word_t ip;
+    Dl_info info;
 
     unw_getcontext(&uc);
     unw_init_local(&cursor, &uc);
-    while (unw_step(&cursor) > 0 && level > 0)
-      level--;
+    do
+    {
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+        dladdr((void*) ip, &info);
+        if((long int)info.dli_fbase < 0x500000)
+            return (void*)ip;
+    } while (unw_step(&cursor) > 0);
+    
+    /*
+    printf("%p, %d\n", (void*)ip, dladdr((void*) ip, &info));
+    printf("%s, %s\n", info.dli_fname, __FILE__);
+    printf("%s\n", dlerror());
+    while (level > 0 && unw_step(&cursor) > 0)
+    {
+        level--;
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+        printf("%p, %d\n", (void*)ip, dladdr((void*) ip, &info));
+        printf("%s, %s\n", info.dli_fname, __FILE__);
+        printf("%s\n", dlerror());
+    }
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
 
     if(level == 0)
       return (void*)ip;
     else
-      return NULL;
+    */
+        return NULL;
 }
 
 

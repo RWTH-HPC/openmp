@@ -218,7 +218,6 @@ void ompt_pre_init()
     case omp_tool_unset:
     case omp_tool_enabled:
         ompt_fns = ompt_start_tool(OMPT_VERSION, ompt_get_runtime_version());
-        printf("%s, %p\n", "start_post", ompt_fns);
         if (ompt_fns) {
             ompt_enabled = 1;
         }
