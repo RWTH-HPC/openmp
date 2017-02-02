@@ -437,3 +437,31 @@ void* __ompt_get_return_address_internal(int level)
     else
       return NULL;
 }
+
+
+void* __ompt_get_frame_address_internal(int level)
+{
+    level++;
+    unw_cursor_t cursor;
+    unw_context_t uc;
+    unw_word_t fp;
+
+    //printf("%p\n", (void*)cursor.opaque[0]);
+
+    unw_getcontext(&uc);
+    unw_init_local(&cursor, &uc);
+    //unw_get_reg(&cursor, UNW_REG_SP, &fp);
+    //printf("ompt %p\n", (void*)fp);
+    while (level > 0 && unw_step(&cursor) > 0)
+    {
+        //unw_get_reg(&cursor, UNW_REG_SP, &fp);
+        //printf("ompt %p\n", (void*)fp);
+        level--;
+    }
+    unw_get_reg(&cursor, UNW_REG_SP, &fp);
+
+    if(level == 0)
+      return (void*)(fp);
+    else
+      return NULL;
+}

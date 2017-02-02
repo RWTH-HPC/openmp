@@ -3,6 +3,8 @@
 #include <omp.h>
 #include <ompt.h>
 #include <execinfo.h>
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
 
 static const char* ompt_thread_type_t_values[] = {
   NULL,
@@ -36,6 +38,30 @@ static void print_ids(int level)
   else
     printf("%" PRIu64 ": level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", frame=%p\n", ompt_get_thread_data()->value, level, exists_parallel ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame);
 }
+
+/*
+#define print_frame(level)\
+do {\
+  unw_cursor_t cursor;\
+  unw_context_t uc;\
+  unw_word_t fp;\
+  unw_getcontext(&uc);\
+  unw_init_local(&cursor, &uc);\
+  int tmp_level = level;\
+  unw_get_reg(&cursor, UNW_REG_SP, &fp);\
+  printf("callback %p\n", (void*)fp);\
+  while (tmp_level > 0 && unw_step(&cursor) > 0)\
+  {\
+    unw_get_reg(&cursor, UNW_REG_SP, &fp);\
+    printf("callback %p\n", (void*)fp);\
+    tmp_level--;\
+  }\
+  if(tmp_level == 0)\
+    printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data()->value, level, (void*)fp);\
+  else\
+    printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data()->value, level, NULL);\
+} while(0)
+*/
 
 #define print_frame(level)\
 do {\

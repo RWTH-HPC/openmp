@@ -89,7 +89,10 @@ void ompt_fini(void);
 
 void* __ompt_get_return_address_internal(int level);
 #define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_internal(level)
+
+void* __ompt_get_frame_address_internal(int level);
 #define OMPT_GET_FRAME_ADDRESS(level) __builtin_frame_address(level)
+//#define OMPT_GET_FRAME_ADDRESS(level) __ompt_get_frame_address_internal(level)
 
 
 extern int ompt_enabled;
