@@ -270,11 +270,6 @@ void ompt_post_init()
 void ompt_fini()
 {
     if (ompt_enabled) {
-        if (ompt_callbacks.ompt_callback(ompt_event_runtime_shutdown)) {
-            ompt_callbacks.ompt_callback(ompt_event_runtime_shutdown)();
-        }
-    }
-    if (ompt_enabled) {
         ompt_fns->finalize(ompt_fns);
     }
 

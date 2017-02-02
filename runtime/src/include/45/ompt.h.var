@@ -87,8 +87,6 @@
                                                                                                                 \
     macro (ompt_event_control,                  ompt_control_callback_t,        7) /* support control calls */  \
                                                                                                                 \
-    macro (ompt_event_runtime_shutdown,         ompt_callback_t,                8) /* runtime shutdown */       \
-                                                                                                                \
     /*--- Optional Events (blame shifting, ompt_event_unimplemented) ---*/                                      \
     macro (ompt_callback_idle,                  ompt_callback_idle_t,           9) /* begin or end idle state */\
                                                                                                                 \

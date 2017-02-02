@@ -55,8 +55,6 @@
 
 #define ompt_event_control_implemented                  ompt_event_MAY_ALWAYS
 
-#define ompt_event_runtime_shutdown_implemented         ompt_event_MAY_ALWAYS
-
 #define ompt_callback_implicit_task_implemented         ompt_event_MAY_ALWAYS
 
 

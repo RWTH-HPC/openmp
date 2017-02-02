@@ -479,12 +479,6 @@ on_ompt_callback_parallel_end(
 }
 
 static void
-on_ompt_event_runtime_shutdown(void)
-{
-  printf("%d: ompt_event_runtime_shutdown\n", omp_get_thread_num());
-}
-
-static void
 on_ompt_event_sections_begin(
   ompt_parallel_data_t parallel_data,
   ompt_task_data_t parent_task_data,
@@ -677,7 +671,6 @@ int ompt_initialize(
   register_callback(ompt_callback_master);
   register_callback(ompt_callback_parallel_begin);
   register_callback(ompt_callback_parallel_end);
-  register_callback(ompt_event_runtime_shutdown);
   register_callback(ompt_event_sections_begin);
   register_callback(ompt_event_sections_end);
   register_callback(ompt_callback_task_create);
@@ -698,7 +691,7 @@ int ompt_initialize(
 
 void ompt_finalize(ompt_fns_t* fns)
 {
-  on_ompt_event_runtime_shutdown();
+  printf("%d: ompt_event_runtime_shutdown\n", omp_get_thread_num());
 }
 
 ompt_fns_t* ompt_start_tool(
