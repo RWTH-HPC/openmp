@@ -278,6 +278,15 @@ on_ompt_callback_flush(
 }
 
 static void
+on_ompt_callback_cancel(
+    ompt_data_t *task_data,
+    int flags,
+    const void *codeptr_ra)
+{
+  printf("%" PRIu64 ": ompt_event_cancel: task_data=%" PRIu64 ", flags=%" PRIu32 ", codeptr_ra=%p\n", ompt_get_thread_data()->value, task_data->value, flags,  codeptr_ra);
+}
+
+static void
 on_ompt_callback_idle(
   ompt_scope_endpoint_t endpoint)
 {
@@ -661,6 +670,7 @@ int ompt_initialize(
   register_callback(ompt_callback_sync_region_wait);
   register_callback(ompt_event_control);
   register_callback(ompt_callback_flush);
+  register_callback(ompt_callback_cancel);
   register_callback(ompt_callback_idle);
   register_callback(ompt_callback_implicit_task);
   register_callback(ompt_event_initial_task_begin);

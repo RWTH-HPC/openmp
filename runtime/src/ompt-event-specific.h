@@ -103,6 +103,8 @@
 
 #define ompt_callback_flush_implemented                 ompt_event_MAY_ALWAYS_TRACE
 
+#define ompt_callback_cancel_implemented                ompt_event_MAY_ALWAYS_TRACE
+
 #if OMP_40_ENABLED
 # define ompt_callback_task_dependences_implemented      ompt_event_MAY_ALWAYS_TRACE
 # define ompt_callback_task_dependence_implemented       ompt_event_MAY_ALWAYS_TRACE
