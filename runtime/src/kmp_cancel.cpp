@@ -76,14 +76,14 @@ kmp_int32 __kmpc_cancel(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 cncl_kind) {
                     if (old == cancel_noreq || old == cncl_kind) {
                         // we do not have a cancellation request in this taskgroup or we do have one
                         // that matches the current request -> cancel
-                        ompt_task_data_t *task_data;
-                        __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                         #if OMPT_SUPPORT && OMPT_TRACE
+                            ompt_task_data_t *task_data;
+                            __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                             if (ompt_enabled &&
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)(
                                     task_data,
-                                    ompt_cancel_taskgroup || ompt_cancel_activated,
+                                    ompt_cancel_taskgroup | ompt_cancel_activated,
                                     OMPT_GET_RETURN_ADDRESS(0));
                             }
                         #endif

@@ -471,12 +471,13 @@ typedef void (*ompt_callback_sync_region_t) (
 );
 
 typedef enum ompt_cancel_flag_e {
-    ompt_cancel_parallel    = 0x1,
-    ompt_cancel_sections    = 0x2,
-    ompt_cancel_do	        = 0x4,
-    ompt_cancel_taskgroup   = 0x8,
-    ompt_cancel_activated   = 0x10,
-    ompt_cancel_detected    = 0x20
+    ompt_cancel_parallel       = 0x1,
+    ompt_cancel_sections       = 0x2,
+    ompt_cancel_do	           = 0x4,
+    ompt_cancel_taskgroup      = 0x8,
+    ompt_cancel_activated      = 0x10,
+    ompt_cancel_detected       = 0x20,
+    ompt_cancel_discarded_task = 0x40
 } ompt_cancel_flag_t;
 
 typedef void (*ompt_callback_cancel_t) (

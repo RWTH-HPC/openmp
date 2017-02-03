@@ -1263,6 +1263,17 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
         kmp_team_t * this_team = this_thr->th.th_team;
         kmp_taskgroup_t * taskgroup = taskdata->td_taskgroup;
         if ((taskgroup && taskgroup->cancel_request) || (this_team->t.t_cancel_request == cancel_parallel)) {
+            #if OMPT_SUPPORT && OMPT_TRACE
+                ompt_task_data_t *task_data;
+                __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
+                if (ompt_enabled &&
+                    ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
+                    ompt_callbacks.ompt_callback(ompt_callback_cancel)(
+                        task_data,
+                        ((taskgroup && taskgroup->cancel_request) ? ompt_cancel_taskgroup : ompt_cancel_parallel) | ompt_cancel_discarded_task,
+                        OMPT_GET_RETURN_ADDRESS(0));
+                }
+            #endif
             KMP_COUNT_BLOCK(TASK_cancelled);
             // this task belongs to a task group and we need to cancel it
             discard = 1 /* true */;
