@@ -48,6 +48,8 @@ int main()
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: __builtin_frame_address(0)=[[MAIN_REENTER:0x[0-f]+]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_parallel_begin: parent_task_id=[[PARENT_TASK_ID:[0-9]+]], parent_task_frame.exit=[[NULL]], parent_task_frame.reenter=[[MAIN_REENTER]], parallel_id=[[PARALLEL_ID:[0-9]+]], requested_team_size=2, parallel_function=0x{{[0-f]+}}, invoker=[[PARALLEL_INVOKER:[0-9]+]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit=[[NULL]], parent_task_frame.reenter=(nil), new_task_id={{[0-9]+}}, parallel_function=0x{{[0-f]+}}, task_type=ompt_task_initial=1, has_dependences=no
+
   // nested parallel masters
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_implicit_task_begin: parallel_id=[[PARALLEL_ID]], task_id=[[IMPLICIT_TASK_ID:[0-9]+]]
   // CHECK: {{^}}[[MASTER_ID]]: __builtin_frame_address(1)=[[EXIT:0x[0-f]+]]
