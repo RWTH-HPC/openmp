@@ -259,15 +259,6 @@ __ompt_parallel_id_new(int gtid)
 }
 
 
-void *
-__ompt_get_parallel_function_internal(int depth)
-{
-    ompt_team_info_t *info = __ompt_get_teaminfo(depth, NULL);
-    void *function = info ? info->microtask : NULL;
-    return function;
-}
-
-
 int
 __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_data, int *team_size)
 {
@@ -337,15 +328,6 @@ __ompt_task_id_new(int gtid)
 #else
     return 0;
 #endif
-}
-
-
-void *
-__ompt_get_task_function_internal(int depth)
-{
-    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
-    void *function = info ? info->function : NULL;
-    return function;
 }
 
 

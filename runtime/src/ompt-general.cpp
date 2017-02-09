@@ -372,11 +372,6 @@ OMPT_API_ROUTINE int ompt_get_parallel_info(int ancestor_level, ompt_data_t **pa
     return __ompt_get_parallel_info_internal(ancestor_level, parallel_data, team_size);
 }
 
-OMPT_API_ROUTINE void *ompt_get_parallel_function(int ancestor_level)
-{
-    return __ompt_get_parallel_function_internal(ancestor_level);
-}
-
 OMPT_API_ROUTINE ompt_state_t ompt_get_state(ompt_wait_id_t *wait_id)
 {
     ompt_state_t thread_state = __ompt_get_state_internal(wait_id);
@@ -409,12 +404,6 @@ OMPT_API_ROUTINE int ompt_get_task_info(
 {
     return __ompt_get_task_info_internal(ancestor_level, type, task_data, task_frame, parallel_data, thread_num);
 }
-
-OMPT_API_ROUTINE void *ompt_get_task_function(int depth)
-{
-    return __ompt_get_task_function_internal(depth);
-}
-
 
 /*****************************************************************************
  * placeholders
