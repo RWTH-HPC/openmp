@@ -314,10 +314,8 @@ set(LIBOMP_OMPT_DEBUG FALSE CACHE BOOL
   "Trace OMPT initialization?")
 set(LIBOMP_OMPT_SUPPORT FALSE CACHE BOOL
   "OMPT-support?")
-set(LIBOMP_OMPT_BLAME TRUE CACHE BOOL
-  "OMPT-blame?")
-set(LIBOMP_OMPT_TRACE TRUE CACHE BOOL
-  "OMPT-trace?")
+set(LIBOMP_OMPT_OPTIONAL TRUE CACHE BOOL
+  "OMPT-optional?")
 if(LIBOMP_OMPT_SUPPORT AND (NOT LIBOMP_HAVE_OMPT_SUPPORT))
   libomp_error_say("OpenMP Tools Interface requested but not available")
 endif()
@@ -384,8 +382,7 @@ if(${LIBOMP_STANDALONE_BUILD})
   libomp_say("Use ITT notify       -- ${LIBOMP_USE_ITT_NOTIFY}")
   libomp_say("Use OMPT-support     -- ${LIBOMP_OMPT_SUPPORT}")
   if(${LIBOMP_OMPT_SUPPORT})
-    libomp_say("Use OMPT-blame       -- ${LIBOMP_OMPT_BLAME}")
-    libomp_say("Use OMPT-trace       -- ${LIBOMP_OMPT_TRACE}")
+    libomp_say("Use OMPT-optional  -- ${LIBOMP_OMPT_OPTIONAL}")
   endif()
   libomp_say("Use Adaptive locks   -- ${LIBOMP_USE_ADAPTIVE_LOCKS}")
   libomp_say("Use quad precision   -- ${LIBOMP_USE_QUAD_PRECISION}")

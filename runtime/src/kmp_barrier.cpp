@@ -1085,7 +1085,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
     ANNOTATE_NEW_BARRIER_BEGIN(&team->t.t_bar);
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-#if OMPT_TRACE
+#if OMPT_OPTIONAL
         my_task_data = team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data;
         my_parallel_data = team->t.ompt_team_info.parallel_data;
 
@@ -1321,7 +1321,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-#if OMPT_BLAME
+#if OMPT_OPTIONAL
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,
@@ -1438,7 +1438,7 @@ __kmp_join_barrier(int gtid)
     ANNOTATE_NEW_BARRIER_BEGIN(&team->t.t_bar);
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-#if OMPT_TRACE
+#if OMPT_OPTIONAL
         my_task_data = team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data;
         my_parallel_data = team->t.ompt_team_info.parallel_data;
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
@@ -1592,7 +1592,7 @@ __kmp_join_barrier(int gtid)
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-#if OMPT_BLAME
+#if OMPT_OPTIONAL
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,

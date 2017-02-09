@@ -69,7 +69,7 @@ typedef struct {
 
 extern ompt_callbacks_internal_t ompt_callbacks;
 
-#if OMP_40_ENABLED && OMPT_SUPPORT && OMPT_TRACE
+#if OMP_40_ENABLED && OMPT_SUPPORT && OMPT_OPTIONAL
 #if USE_FAST_MEMORY
 #  define KMP_OMPT_DEPS_ALLOC __kmp_fast_allocate
 #  define KMP_OMPT_DEPS_FREE __kmp_fast_free
@@ -77,7 +77,7 @@ extern ompt_callbacks_internal_t ompt_callbacks;
 #  define KMP_OMPT_DEPS_ALLOC __kmp_thread_malloc
 #  define KMP_OMPT_DEPS_FREE __kmp_thread_free
 # endif
-#endif /* OMP_40_ENABLED && OMPT_SUPPORT && OMPT_TRACE */
+#endif /* OMP_40_ENABLED && OMPT_SUPPORT && OMPT_OPTIONAL */
 
 #ifdef __cplusplus
 extern "C" {

@@ -1263,7 +1263,7 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
         kmp_team_t * this_team = this_thr->th.th_team;
         kmp_taskgroup_t * taskgroup = taskdata->td_taskgroup;
         if ((taskgroup && taskgroup->cancel_request) || (this_team->t.t_cancel_request == cancel_parallel)) {
-            #if OMPT_SUPPORT && OMPT_TRACE
+            #if OMPT_SUPPORT && OMPT_OPTIONAL
                 ompt_task_data_t *task_data;
                 __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                 if (ompt_enabled &&
@@ -1526,7 +1526,7 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
         thread = __kmp_threads[ gtid ];
         taskdata = thread -> th.th_current_task;
 
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
         ompt_task_data_t my_task_data;
         ompt_parallel_data_t my_parallel_data;
         
@@ -1583,7 +1583,7 @@ __kmpc_omp_taskwait( ident_t *loc_ref, kmp_int32 gtid )
         // Debugger:  The taskwait is completed. Location remains, but thread is negated.
         taskdata->td_taskwait_thread = - taskdata->td_taskwait_thread;
 
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
         if (ompt_enabled) {
             if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
                 ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
@@ -1684,7 +1684,7 @@ __kmpc_taskgroup( ident_t* loc, int gtid )
     tg_new->parent = taskdata->td_taskgroup;
     taskdata->td_taskgroup = tg_new;
 
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
         kmp_team_t *team = thread->th.th_team;
@@ -1754,7 +1754,7 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
     KA_TRACE(10, ("__kmpc_end_taskgroup(exit): T#%d task %p finished waiting\n", gtid, taskdata) );
     ANNOTATE_HAPPENS_AFTER(taskdata);
 
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
         kmp_team_t *team = thread->th.th_team;

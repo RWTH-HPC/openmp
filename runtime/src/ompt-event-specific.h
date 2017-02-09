@@ -28,13 +28,13 @@
 #define ompt_event_MAY_CONVENIENT    ompt_set_result_event_may_occur_callback_some
 #define ompt_event_MAY_ALWAYS        ompt_set_result_event_may_occur_callback_always
 
-#if OMPT_TRACE
+#if OMPT_OPTIONAL
 #define ompt_event_MAY_ALWAYS_TRACE   ompt_event_MAY_ALWAYS
 #else
 #define ompt_event_MAY_ALWAYS_TRACE   ompt_event_UNIMPLEMENTED
 #endif
 
-#if OMPT_BLAME
+#if OMPT_OPTIONAL
 #define ompt_event_MAY_ALWAYS_BLAME   ompt_event_MAY_ALWAYS
 #else
 #define ompt_event_MAY_ALWAYS_BLAME   ompt_event_UNIMPLEMENTED

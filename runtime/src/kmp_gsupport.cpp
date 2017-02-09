@@ -35,7 +35,7 @@ xexpand(KMP_API_NAME_GOMP_BARRIER)(void)
     int gtid = __kmp_entry_gtid();
     MKLOC(loc, "GOMP_barrier");
     KA_TRACE(20, ("GOMP_barrier: T#%d\n", gtid));
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
     ompt_frame_t * ompt_frame;
     if (ompt_enabled ) {
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);

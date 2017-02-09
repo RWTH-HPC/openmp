@@ -130,7 +130,7 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
     stats_state_e thread_state = KMP_GET_THREAD_STATE();
 #endif
 
-#if OMPT_SUPPORT && OMPT_BLAME
+#if OMPT_SUPPORT && OMPT_OPTIONAL
     ompt_state_t ompt_state = this_thr->th.ompt_thread_info.state;
     ompt_thread_data_t thread_data = this_thr->th.ompt_thread_info.thread_data;
     if (ompt_enabled &&
@@ -298,7 +298,7 @@ __kmp_wait_template(kmp_info_t *this_thr, C *flag, int final_spin
         // TODO: If thread is done with work and times out, disband/free
     }
 
-#if OMPT_SUPPORT && OMPT_BLAME
+#if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled &&
         ompt_state != ompt_state_undefined) {
         if (ompt_state == ompt_state_idle) {

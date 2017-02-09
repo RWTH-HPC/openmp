@@ -1254,7 +1254,7 @@ __kmp_dispatch_init(
 
 
 //TODO for intel: need to be able to distinguish between sections and loops for ompt callback
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_work)) {
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
@@ -1421,7 +1421,7 @@ __kmp_dispatch_finish_chunk( int gtid, ident_t *loc )
 /* Define a macro for exiting __kmp_dispatch_next(). If status is 0
  * (no more work), then tell OMPT the loop is over. In some cases
  * kmp_dispatch_fini() is not called. */
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
 #define OMPT_LOOP_END                                                          \
     if (status == 0) {                                                         \
         if (ompt_enabled &&                     \
