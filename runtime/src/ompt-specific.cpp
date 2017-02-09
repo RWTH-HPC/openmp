@@ -441,20 +441,23 @@ void* __ompt_get_return_address_internal(int level)
       return NULL;
     */
 
-    //level += 10;
-
+    //get info about runtime lib
+    Dl_info lib_info;
+    dladdr((void*)&__ompt_get_return_address_internal, &lib_info);
+    
     unw_cursor_t cursor;
     unw_context_t uc;
     unw_word_t ip;
     Dl_info info;
 
+    //search for return address that does not point into the runtime lib
     unw_getcontext(&uc);
     unw_init_local(&cursor, &uc);
     do
     {
         unw_get_reg(&cursor, UNW_REG_IP, &ip);
         dladdr((void*) ip, &info);
-        if((long int)info.dli_fbase < 0x500000)
+        if(info.dli_fbase != lib_info.dli_fbase)
             return (void*)ip;
     } while (unw_step(&cursor) > 0);
     
