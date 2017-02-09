@@ -130,21 +130,6 @@
                                                                                                                 \
     /*--- Old Events --- */                                                                                     \
     macro (ompt_event_control,                  ompt_control_callback_t,       29) /* support control calls */  \
-                                                                                                                \
-    macro (ompt_event_wait_taskwait_begin,      ompt_parallel_callback_t,      30) /* begin wait at taskwait */ \
-    macro (ompt_event_wait_taskwait_end,        ompt_parallel_callback_t,      31) /* end wait at taskwait */   \
-                                                                                                                \
-    macro (ompt_event_wait_taskgroup_begin,     ompt_parallel_callback_t,      32) /* begin wait at taskgroup */\
-    macro (ompt_event_wait_taskgroup_end,       ompt_parallel_callback_t,      33) /* end wait at taskgroup */  \
-                                                                                                                \
-    macro (ompt_event_initial_task_begin,       ompt_parallel_callback_t,      34) /* initial task begin   */   \
-    macro (ompt_event_initial_task_end,         ompt_parallel_callback_t,      35) /* initial task end  */      \
-                                                                                                                \
-    macro (ompt_event_sections_begin,           ompt_new_workshare_callback_t, 36) /* task at sections begin  */\
-    macro (ompt_event_sections_end,             ompt_parallel_callback_t,      37) /* task at sections end */   \
-                                                                                                                \
-    macro (ompt_event_workshare_begin,          ompt_new_workshare_callback_t, 38) /* task at workshare begin */\
-    macro (ompt_event_workshare_end,            ompt_parallel_callback_t,      39) /* task at workshare end */  \
 
 
 

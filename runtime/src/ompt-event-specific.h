@@ -66,12 +66,6 @@
 
 #define ompt_callback_sync_region_wait_implemented      ompt_event_MAY_ALWAYS_BLAME
 
-#define ompt_event_wait_taskwait_begin_implemented      ompt_event_UNIMPLEMENTED
-#define ompt_event_wait_taskwait_end_implemented        ompt_event_UNIMPLEMENTED
-
-#define ompt_event_wait_taskgroup_begin_implemented     ompt_event_UNIMPLEMENTED
-#define ompt_event_wait_taskgroup_end_implemented       ompt_event_UNIMPLEMENTED
-
 #define ompt_callback_mutex_released_implemented        ompt_event_MAY_ALWAYS_BLAME
 
 
@@ -79,16 +73,7 @@
  | Optional Events (synchronous events)
  +--------------------------------------------------------------------------*/
 
-#define ompt_event_initial_task_begin_implemented       ompt_event_UNIMPLEMENTED
-#define ompt_event_initial_task_end_implemented         ompt_event_UNIMPLEMENTED
-
 #define ompt_callback_work_implemented                  ompt_event_MAY_ALWAYS_TRACE
-
-#define ompt_event_sections_begin_implemented           ompt_event_UNIMPLEMENTED
-#define ompt_event_sections_end_implemented             ompt_event_UNIMPLEMENTED
-
-#define ompt_event_workshare_begin_implemented          ompt_event_UNIMPLEMENTED
-#define ompt_event_workshare_end_implemented            ompt_event_UNIMPLEMENTED
 
 #define ompt_callback_master_implemented                ompt_event_MAY_ALWAYS_TRACE
 

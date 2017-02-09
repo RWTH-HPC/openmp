@@ -324,22 +324,6 @@ on_ompt_callback_implicit_task(
 }
 
 static void
-on_ompt_event_initial_task_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_initial_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_initial_task_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_initial_task_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
 on_ompt_callback_lock_init(
   ompt_mutex_kind_t kind,
   unsigned int hint,
@@ -488,23 +472,6 @@ on_ompt_callback_parallel_end(
 }
 
 static void
-on_ompt_event_sections_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t parent_task_data,
-  void *workshare_function)
-{
-  printf("%" PRIu64 ": ompt_event_sections_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p\n", ompt_get_thread_data()->value, parallel_data.value, parent_task_data.value, workshare_function);
-}
-
-static void
-on_ompt_event_sections_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_sections_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
 on_ompt_callback_task_create(
     ompt_task_data_t *parent_task_data,    /* id of parent task            */
     ompt_frame_t *parent_frame,  /* frame data for parent task   */
@@ -548,70 +515,6 @@ on_ompt_callback_task_dependence(
 }
 
 static void
-on_ompt_event_wait_taskgroup_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_wait_taskgroup_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_taskgroup_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_taskgroup_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_wait_taskgroup_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_wait_taskgroup_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_taskgroup_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_taskgroup_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_wait_taskwait_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_wait_taskwait_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_taskwait_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_taskwait_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_wait_taskwait_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_wait_taskwait_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
-on_ompt_event_taskwait_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_taskwait_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
-}
-
-static void
 on_ompt_callback_thread_begin(
   ompt_thread_type_t thread_type,
   ompt_data_t *thread_data)
@@ -626,23 +529,6 @@ on_ompt_callback_thread_end(
 {
   printf("%" PRIu64 ": ompt_event_thread_end: thread_id=%" PRIu64 "\n", ompt_get_thread_data()->value, thread_data->value);
   //printf("%" PRIu64 ": ompt_event_thread_end: thread_type=%s=%d, thread_id=%" PRIu64 "\n", ompt_get_thread_data()->value, ompt_thread_type_t_values[thread_type], thread_type, thread_data->value);
-}
-
-static void
-on_ompt_event_workshare_begin(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t parent_task_data,
-  void *workshare_function)
-{
-  printf("%" PRIu64 ": ompt_event_workshare_begin: parallel_id=%" PRIu64 ", parent_task_id=%" PRIu64 ", workshare_function=%p\n", ompt_get_thread_data()->value, parallel_data.value, parent_task_data.value, workshare_function);
-}
-
-static void
-on_ompt_event_workshare_end(
-  ompt_parallel_data_t parallel_data,
-  ompt_task_data_t task_data)
-{
-  printf("%" PRIu64 ": ompt_event_workshare_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, parallel_data.value, task_data.value);
 }
 
 #define register_callback(name)                               \
@@ -673,28 +559,18 @@ int ompt_initialize(
   register_callback(ompt_callback_cancel);
   register_callback(ompt_callback_idle);
   register_callback(ompt_callback_implicit_task);
-  register_callback(ompt_event_initial_task_begin);
-  register_callback(ompt_event_initial_task_end);
   register_callback(ompt_callback_lock_init);
   register_callback(ompt_callback_lock_destroy);
   register_callback(ompt_callback_work);
   register_callback(ompt_callback_master);
   register_callback(ompt_callback_parallel_begin);
   register_callback(ompt_callback_parallel_end);
-  register_callback(ompt_event_sections_begin);
-  register_callback(ompt_event_sections_end);
   register_callback(ompt_callback_task_create);
   register_callback(ompt_callback_task_schedule);
   register_callback(ompt_callback_task_dependences);
   register_callback(ompt_callback_task_dependence);
-  register_callback(ompt_event_wait_taskgroup_begin);
-  register_callback(ompt_event_wait_taskgroup_end);
-  register_callback(ompt_event_wait_taskwait_begin);
-  register_callback(ompt_event_wait_taskwait_end);
   register_callback(ompt_callback_thread_begin);
   register_callback(ompt_callback_thread_end);
-  register_callback(ompt_event_workshare_begin);
-  register_callback(ompt_event_workshare_end);
   printf("0: NULL_POINTER=%p\n", NULL);
   return 1; //success
 }
