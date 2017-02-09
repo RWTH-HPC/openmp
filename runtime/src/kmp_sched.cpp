@@ -103,7 +103,7 @@ __kmp_for_static_init(
     if (ompt_enabled) {
         // Only fully initialize variables needed by OMPT if OMPT is enabled.
         team_info = __ompt_get_teaminfo(0, NULL);
-        task_info = __ompt_get_taskinfo(0);
+        task_info = __ompt_get_task_info_object(0);
     }
 #endif
 

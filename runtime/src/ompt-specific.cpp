@@ -40,7 +40,7 @@
 
 //----------------------------------------------------------
 // traverse the team and task hierarchy
-// note: __ompt_get_teaminfo and __ompt_get_taskinfo
+// note: __ompt_get_teaminfo and __ompt_get_task_info_object
 //       traverse the hierarchy similarly and need to be
 //       kept consistent
 //----------------------------------------------------------
@@ -92,7 +92,7 @@ __ompt_get_teaminfo(int depth, int *size)
 
 
 ompt_task_info_t *
-__ompt_get_taskinfo(int depth)
+__ompt_get_task_info_object(int depth)
 {
     ompt_task_info_t *info = NULL;
     kmp_info_t *thr = ompt_get_thread();
@@ -358,7 +358,44 @@ __ompt_get_task_info_internal(
     ompt_data_t **parallel_data,
     int *thread_num)
 {
-    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(ancestor_level);
+    //copied from __ompt_get_scheduling_taskinfo
+    ompt_task_info_t *info = NULL;
+    kmp_info_t *thr = ompt_get_thread();
+
+    if (thr) {
+        kmp_taskdata_t  *taskdata = thr->th.th_current_task;
+        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
+
+        while (ancestor_level > 0) {
+            // next lightweight team (if any)
+            if (lwt) lwt = lwt->parent;
+
+            // next heavyweight team (if any) after
+            // lightweight teams are exhausted
+            if (!lwt && taskdata) {
+                // first try scheduling parent (for explicit task scheduling)
+                if (taskdata->ompt_task_info.scheduling_parent) {
+                    taskdata = taskdata->ompt_task_info.scheduling_parent;
+                // then go for implicit tasks
+                } else {
+                    taskdata = taskdata->td_parent;
+                }
+                if (taskdata) {
+                    lwt = LWT_FROM_TEAM(taskdata->td_team);
+                }
+            }
+            ancestor_level--;
+        }
+
+        if (lwt) {
+            info = &lwt->ompt_task_info;
+        } else if (taskdata) {
+            info = &taskdata->ompt_task_info;
+        }
+    }
+    
+    //ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(ancestor_level);
+
     if(type)
     {
         //TODO
@@ -370,8 +407,7 @@ __ompt_get_task_info_internal(
     if(task_frame)
     {
         // OpenMP spec asks for the scheduling task to be returned.
-        ompt_frame_t *frame = info ? frame = &info->frame : NULL;
-        *task_frame = frame;
+        *task_frame = info ? &info->frame : NULL;
     }
     if(parallel_data)
     {

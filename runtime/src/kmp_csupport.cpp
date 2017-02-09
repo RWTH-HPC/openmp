@@ -1679,7 +1679,7 @@ __kmpc_for_static_fini( ident_t *loc, kmp_int32 global_tid )
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_work)) {
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
-        ompt_task_info_t *task_info = __ompt_get_taskinfo(0);
+        ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
         ompt_callbacks.ompt_callback(ompt_callback_work)(
             ompt_work_loop,
             ompt_scope_end,
