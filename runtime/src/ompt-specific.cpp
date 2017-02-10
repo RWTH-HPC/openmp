@@ -9,6 +9,7 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #include <dlfcn.h>
+#include <execinfo.h>
 
 //******************************************************************************
 // macros
@@ -218,6 +219,7 @@ __ompt_get_thread_data_internal()
     return &(thread->th.ompt_thread_info.thread_data);
 }
 
+
 //----------------------------------------------------------
 // state support
 //----------------------------------------------------------
@@ -426,10 +428,9 @@ static uint64_t __ompt_get_unique_id_internal()
     return ++ID;
 }
 
-
-void* __ompt_get_return_address_internal(int level)
+void* __ompt_get_return_address_backtrace(int level)
 {
-    /*
+
     int real_level = level + 2;
     void *array[real_level];
     size_t size;
@@ -439,8 +440,12 @@ void* __ompt_get_return_address_internal(int level)
       return array[real_level-1];
     else
       return NULL;
-    */
+}
 
+#ifdef OMPT_USE_LIBUNWIND
+
+void* __ompt_get_return_address_internal(int level)
+{
     //get info about runtime lib
     Dl_info lib_info;
     dladdr((void*)&__ompt_get_return_address_internal, &lib_info);
@@ -509,3 +514,4 @@ void* __ompt_get_frame_address_internal(int level)
     else
       return NULL;
 }
+#endif
