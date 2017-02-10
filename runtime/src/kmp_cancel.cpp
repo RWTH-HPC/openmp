@@ -57,10 +57,10 @@ kmp_int32 __kmpc_cancel(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 cncl_kind) {
                     // we do not have a cancellation request in this team or we do have one
                     // that matches the current request -> cancel
                     #if OMPT_SUPPORT && OMPT_OPTIONAL
-                            ompt_task_data_t *task_data;
-                            __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                             if (ompt_enabled &&
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
+                                ompt_task_data_t *task_data;
+                                __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                                 //printf("__kmp_omp_cancellation:%d\n", __kmp_omp_cancellation);
                                 ompt_cancel_flag_t type;
                                 if(__kmp_omp_cancellation == cancel_parallel)
@@ -96,10 +96,10 @@ kmp_int32 __kmpc_cancel(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 cncl_kind) {
                         // we do not have a cancellation request in this taskgroup or we do have one
                         // that matches the current request -> cancel
                         #if OMPT_SUPPORT && OMPT_OPTIONAL
-                            ompt_task_data_t *task_data;
-                            __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                             if (ompt_enabled &&
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
+                                ompt_task_data_t *task_data;
+                                __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)(
                                     task_data,
                                     ompt_cancel_taskgroup | ompt_cancel_activated,
@@ -163,10 +163,10 @@ kmp_int32 __kmpc_cancellationpoint(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 c
                         // the request in the team structure matches the type of
                         // cancellation point so we can cancel
                         #if OMPT_SUPPORT && OMPT_OPTIONAL
-                            ompt_task_data_t *task_data;
-                            __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                             if (ompt_enabled &&
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
+                                ompt_task_data_t *task_data;
+                                __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                                 //printf("__kmp_omp_cancellation:%d\n", __kmp_omp_cancellation);
                                 ompt_cancel_flag_t type;
                                 if(__kmp_omp_cancellation == cancel_parallel)
@@ -207,10 +207,10 @@ kmp_int32 __kmpc_cancellationpoint(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 c
                     // return the current status of cancellation for the
                     // taskgroup
                     #if OMPT_SUPPORT && OMPT_OPTIONAL
-                        ompt_task_data_t *task_data;
-                        __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                         if (ompt_enabled && !!taskgroup->cancel_request &&
                             ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
+                            ompt_task_data_t *task_data;
+                            __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                             ompt_callbacks.ompt_callback(ompt_callback_cancel)(
                                 task_data,
                                 ompt_cancel_taskgroup | ompt_cancel_detected,
