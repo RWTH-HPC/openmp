@@ -31,13 +31,17 @@ ompt_id_t __ompt_task_id_new(int gtid);
 
 ompt_team_info_t *__ompt_get_teaminfo(int depth, int *size);
 
-ompt_task_info_t *__ompt_get_taskinfo(int depth);
+ompt_task_info_t *__ompt_get_task_info_object(int depth);
 
-int __ompt_get_parallel_team_size_internal(int ancestor_level);
+int __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_data, int *team_size);
 
-ompt_task_data_t __ompt_get_task_data_internal(int depth);
-
-ompt_frame_t *__ompt_get_task_frame_internal(int depth);
+int __ompt_get_task_info_internal(
+    int ancestor_level,
+    ompt_task_type_t *type,
+    ompt_data_t **task_data,
+    ompt_frame_t **task_frame,
+    ompt_data_t **parallel_data,
+    int *thread_num);
 
 ompt_thread_data_t *__ompt_get_thread_data_internal();
 
@@ -50,8 +54,6 @@ static uint64_t __ompt_get_get_unique_id_internal();
 #define OMPT_HAVE_WEAK_ATTRIBUTE KMP_HAVE_WEAK_ATTRIBUTE
 #define OMPT_HAVE_PSAPI KMP_HAVE_PSAPI
 #define OMPT_STR_MATCH(haystack, needle) __kmp_str_match(haystack, 0, needle)
-
-
 
 //******************************************************************************
 // inline functions

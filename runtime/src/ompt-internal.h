@@ -69,7 +69,7 @@ typedef struct {
 
 extern ompt_callbacks_internal_t ompt_callbacks;
 
-#if OMP_40_ENABLED && OMPT_SUPPORT && OMPT_TRACE
+#if OMP_40_ENABLED && OMPT_SUPPORT && OMPT_OPTIONAL
 #if USE_FAST_MEMORY
 #  define KMP_OMPT_DEPS_ALLOC __kmp_fast_allocate
 #  define KMP_OMPT_DEPS_FREE __kmp_fast_free
@@ -77,7 +77,7 @@ extern ompt_callbacks_internal_t ompt_callbacks;
 #  define KMP_OMPT_DEPS_ALLOC __kmp_thread_malloc
 #  define KMP_OMPT_DEPS_FREE __kmp_thread_free
 # endif
-#endif /* OMP_40_ENABLED && OMPT_SUPPORT && OMPT_TRACE */
+#endif /* OMP_40_ENABLED && OMPT_SUPPORT && OMPT_OPTIONAL */
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,7 +87,18 @@ void ompt_pre_init(void);
 void ompt_post_init(void);
 void ompt_fini(void);
 
-void* __ompt_get_return_address(int level);
+
+#ifdef OMPT_USE_LIBUNWIND
+  void* __ompt_get_return_address_internal(int level);
+  #define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_internal(level)
+  void* __ompt_get_frame_address_internal(int level);
+  #define OMPT_GET_FRAME_ADDRESS(level) __ompt_get_frame_address_internal(level)
+#else
+  void* __ompt_get_return_address_backtrace(int level);
+//  #define OMPT_GET_RETURN_ADDRESS(level) __builtin_return_address(level)
+  #define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_backtrace(level)
+  #define OMPT_GET_FRAME_ADDRESS(level) __builtin_frame_address(level)
+#endif
 
 extern int ompt_enabled;
 

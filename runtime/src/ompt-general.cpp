@@ -217,8 +217,7 @@ void ompt_pre_init()
 
     case omp_tool_unset:
     case omp_tool_enabled:
-        ompt_fns = ompt_start_tool(OMPT_VERSION, ompt_get_runtime_version());
-        printf("%s, %p\n", "start_post", ompt_fns);
+        ompt_fns = ompt_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
         if (ompt_fns) {
             ompt_enabled = 1;
         }
@@ -262,6 +261,17 @@ void ompt_post_init()
             ompt_callbacks.ompt_callback(ompt_callback_thread_begin)(
                 ompt_thread_initial, __ompt_get_thread_data_internal());
         }
+        ompt_data_t* task_data;
+        __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
+        if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
+            ompt_callbacks.ompt_callback(ompt_callback_task_create)(
+                NULL,
+                NULL,
+                task_data,
+                ompt_task_initial,
+                0,
+                OMPT_GET_RETURN_ADDRESS(0));
+        }
 
         ompt_set_thread_state(root_thread, ompt_state_work_serial);
     }
@@ -271,32 +281,11 @@ void ompt_post_init()
 void ompt_fini()
 {
     if (ompt_enabled) {
-        if (ompt_callbacks.ompt_callback(ompt_event_runtime_shutdown)) {
-            ompt_callbacks.ompt_callback(ompt_event_runtime_shutdown)();
-        }
-    }
-    if (ompt_enabled) {
         ompt_fns->finalize(ompt_fns);
     }
 
     ompt_enabled = 0;
 }
-
-
-void* __ompt_get_return_address(int level)
-{
-  int real_level = level + 2;
-  void *array[real_level];
-  size_t size;
-
-  size = backtrace (array, real_level);
-  if(size == real_level)
-    return array[real_level-1];
-  else
-    return NULL;
-}
-
-
 
 /*****************************************************************************
  * interface operations
@@ -378,27 +367,14 @@ OMPT_API_ROUTINE int ompt_get_callback(ompt_callbacks_t which, ompt_callback_t *
  * parallel regions
  ****************************************************************************/
 
-OMPT_API_ROUTINE ompt_parallel_data_t ompt_get_parallel_data(int ancestor_level)
+OMPT_API_ROUTINE int ompt_get_parallel_info(int ancestor_level, ompt_data_t **parallel_data, int *team_size)
 {
-    return __ompt_get_parallel_data_internal(ancestor_level);
+    return __ompt_get_parallel_info_internal(ancestor_level, parallel_data, team_size);
 }
 
-
-OMPT_API_ROUTINE int ompt_get_parallel_team_size(int ancestor_level)
+OMPT_API_ROUTINE ompt_state_t ompt_get_state(ompt_wait_id_t *wait_id)
 {
-    return __ompt_get_parallel_team_size_internal(ancestor_level);
-}
-
-
-OMPT_API_ROUTINE void *ompt_get_parallel_function(int ancestor_level)
-{
-    return __ompt_get_parallel_function_internal(ancestor_level);
-}
-
-
-OMPT_API_ROUTINE ompt_state_t ompt_get_state(ompt_wait_id_t *ompt_wait_id)
-{
-    ompt_state_t thread_state = __ompt_get_state_internal(ompt_wait_id);
+    ompt_state_t thread_state = __ompt_get_state_internal(wait_id);
 
     if (thread_state == ompt_state_undefined) {
         thread_state = ompt_state_work_serial;
@@ -406,19 +382,6 @@ OMPT_API_ROUTINE ompt_state_t ompt_get_state(ompt_wait_id_t *ompt_wait_id)
 
     return thread_state;
 }
-
-
-
-/*****************************************************************************
- * threads
- ****************************************************************************/
-
-
-OMPT_API_ROUTINE void *ompt_get_idle_frame()
-{
-    return __ompt_get_idle_frame_internal();
-}
-
 
 
 /*****************************************************************************
@@ -431,23 +394,16 @@ OMPT_API_ROUTINE ompt_thread_data_t* ompt_get_thread_data(void)
     return __ompt_get_thread_data_internal();
 }
 
-OMPT_API_ROUTINE ompt_task_data_t ompt_get_task_data(int depth)
+OMPT_API_ROUTINE int ompt_get_task_info(
+    int ancestor_level,
+    ompt_task_type_t *type,
+    ompt_data_t **task_data,
+    ompt_frame_t **task_frame,
+    ompt_data_t **parallel_data,
+    int *thread_num)
 {
-    return __ompt_get_task_data_internal(depth);
+    return __ompt_get_task_info_internal(ancestor_level, type, task_data, task_frame, parallel_data, thread_num);
 }
-
-
-OMPT_API_ROUTINE ompt_frame_t *ompt_get_task_frame(int depth)
-{
-    return __ompt_get_task_frame_internal(depth);
-}
-
-
-OMPT_API_ROUTINE void *ompt_get_task_function(int depth)
-{
-    return __ompt_get_task_function_internal(depth);
-}
-
 
 /*****************************************************************************
  * placeholders

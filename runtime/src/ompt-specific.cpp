@@ -6,6 +6,10 @@
 #include "kmp.h"
 #include "ompt-internal.h"
 #include "ompt-specific.h"
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#include <dlfcn.h>
+#include <execinfo.h>
 
 //******************************************************************************
 // macros
@@ -37,7 +41,7 @@
 
 //----------------------------------------------------------
 // traverse the team and task hierarchy
-// note: __ompt_get_teaminfo and __ompt_get_taskinfo
+// note: __ompt_get_teaminfo and __ompt_get_task_info_object
 //       traverse the hierarchy similarly and need to be
 //       kept consistent
 //----------------------------------------------------------
@@ -89,7 +93,7 @@ __ompt_get_teaminfo(int depth, int *size)
 
 
 ompt_task_info_t *
-__ompt_get_taskinfo(int depth)
+__ompt_get_task_info_object(int depth)
 {
     ompt_task_info_t *info = NULL;
     kmp_info_t *thr = ompt_get_thread();
@@ -215,6 +219,7 @@ __ompt_get_thread_data_internal()
     return &(thread->th.ompt_thread_info.thread_data);
 }
 
+
 //----------------------------------------------------------
 // state support
 //----------------------------------------------------------
@@ -241,18 +246,6 @@ __ompt_get_state_internal(ompt_wait_id_t *ompt_wait_id)
 }
 
 //----------------------------------------------------------
-// idle frame support
-//----------------------------------------------------------
-
-void *
-__ompt_get_idle_frame_internal(void)
-{
-    kmp_info_t *ti = ompt_get_thread();
-    return ti ? ti->th.ompt_thread_info.idle_frame : NULL;
-}
-
-
-//----------------------------------------------------------
 // parallel region support
 //----------------------------------------------------------
 
@@ -268,35 +261,24 @@ __ompt_parallel_id_new(int gtid)
 }
 
 
-void *
-__ompt_get_parallel_function_internal(int depth)
-{
-    ompt_team_info_t *info = __ompt_get_teaminfo(depth, NULL);
-    void *function = info ? info->microtask : NULL;
-    return function;
-}
-
-
-ompt_parallel_data_t
-__ompt_get_parallel_data_internal(int depth)
-{
-    ompt_team_info_t *info = __ompt_get_teaminfo(depth, NULL);
-    ompt_parallel_data_t id = ompt_parallel_id_none;
-    return info ? info->parallel_data :id;
-}
-
-
 int
-__ompt_get_parallel_team_size_internal(int depth)
+__ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_data, int *team_size)
 {
-    // initialize the return value with the error value.
-    // if there is a team at the specified depth, the default
-    // value will be overwritten the size of that team.
-    int size = -1;
-    (void) __ompt_get_teaminfo(depth, &size);
-    return size;
+    ompt_team_info_t *info;
+    if(team_size)
+    {
+        info = __ompt_get_teaminfo(ancestor_level, team_size);
+    }
+    else
+    {
+        info = __ompt_get_teaminfo(ancestor_level, NULL);
+    }
+    if(parallel_data)
+    {
+        *parallel_data = info ? &(info->parallel_data) : NULL;
+    }
+    return info ? 1 : 0;
 }
-
 
 //----------------------------------------------------------
 // lightweight task team support
@@ -351,32 +333,72 @@ __ompt_task_id_new(int gtid)
 }
 
 
-ompt_task_data_t
-__ompt_get_task_data_internal(int depth)
+int
+__ompt_get_task_info_internal(
+    int ancestor_level,
+    ompt_task_type_t *type,
+    ompt_data_t **task_data,
+    ompt_frame_t **task_frame,
+    ompt_data_t **parallel_data,
+    int *thread_num)
 {
-    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
-    ompt_task_data_t task_data = ompt_task_id_none;
-    return info ?  info->task_data : task_data;
-}
+    //copied from __ompt_get_scheduling_taskinfo
+    ompt_task_info_t *info = NULL;
+    kmp_info_t *thr = ompt_get_thread();
 
+    if (thr) {
+        kmp_taskdata_t  *taskdata = thr->th.th_current_task;
+        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
 
-void *
-__ompt_get_task_function_internal(int depth)
-{
-    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
-    void *function = info ? info->function : NULL;
-    return function;
-}
+        while (ancestor_level > 0) {
+            // next lightweight team (if any)
+            if (lwt) lwt = lwt->parent;
 
+            // next heavyweight team (if any) after
+            // lightweight teams are exhausted
+            if (!lwt && taskdata) {
+                // first try scheduling parent (for explicit task scheduling)
+                if (taskdata->ompt_task_info.scheduling_parent) {
+                    taskdata = taskdata->ompt_task_info.scheduling_parent;
+                // then go for implicit tasks
+                } else {
+                    taskdata = taskdata->td_parent;
+                }
+                if (taskdata) {
+                    lwt = LWT_FROM_TEAM(taskdata->td_team);
+                }
+            }
+            ancestor_level--;
+        }
 
-// OpenMP spec asks for the scheduling task to be returned.
+        if (lwt) {
+            info = &lwt->ompt_task_info;
+        } else if (taskdata) {
+            info = &taskdata->ompt_task_info;
+        }
+    }
+    
+    //ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(ancestor_level);
 
-ompt_frame_t *
-__ompt_get_task_frame_internal(int depth)
-{
-    ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(depth);
-    ompt_frame_t *frame = info ? frame = &info->frame : NULL;
-    return frame;
+    if(type)
+    {
+        //TODO
+    }
+    if(task_data)
+    {
+        *task_data = info ? &info->task_data : NULL;
+    }
+    if(task_frame)
+    {
+        // OpenMP spec asks for the scheduling task to be returned.
+        *task_frame = info ? &info->frame : NULL;
+    }
+    if(parallel_data)
+    {
+        ompt_team_info_t* team_info = __ompt_get_teaminfo(ancestor_level, NULL);
+        *parallel_data = info ? &(team_info->parallel_data) : NULL;
+    }
+    return info ? 1 : 0;
 }
 
 //----------------------------------------------------------
@@ -405,3 +427,91 @@ static uint64_t __ompt_get_unique_id_internal()
     }
     return ++ID;
 }
+
+void* __ompt_get_return_address_backtrace(int level)
+{
+
+    int real_level = level + 2;
+    void *array[real_level];
+    size_t size;
+  
+    size = backtrace (array, real_level);
+    if(size == real_level)
+      return array[real_level-1];
+    else
+      return NULL;
+}
+
+#ifdef OMPT_USE_LIBUNWIND
+
+void* __ompt_get_return_address_internal(int level)
+{
+    //get info about runtime lib
+    Dl_info lib_info;
+    dladdr((void*)&__ompt_get_return_address_internal, &lib_info);
+    
+    unw_cursor_t cursor;
+    unw_context_t uc;
+    unw_word_t ip;
+    Dl_info info;
+
+    //search for return address that does not point into the runtime lib
+    unw_getcontext(&uc);
+    unw_init_local(&cursor, &uc);
+    do
+    {
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+        dladdr((void*) ip, &info);
+        if(info.dli_fbase != lib_info.dli_fbase)
+            return (void*)ip;
+    } while (unw_step(&cursor) > 0);
+    
+    /*
+    printf("%p, %d\n", (void*)ip, dladdr((void*) ip, &info));
+    printf("%s, %s\n", info.dli_fname, __FILE__);
+    printf("%s\n", dlerror());
+    while (level > 0 && unw_step(&cursor) > 0)
+    {
+        level--;
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+        printf("%p, %d\n", (void*)ip, dladdr((void*) ip, &info));
+        printf("%s, %s\n", info.dli_fname, __FILE__);
+        printf("%s\n", dlerror());
+    }
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+
+    if(level == 0)
+      return (void*)ip;
+    else
+    */
+        return NULL;
+}
+
+
+void* __ompt_get_frame_address_internal(int level)
+{
+    level++;
+    unw_cursor_t cursor;
+    unw_context_t uc;
+    unw_word_t fp;
+
+    //printf("%p\n", (void*)cursor.opaque[0]);
+
+    unw_getcontext(&uc);
+    unw_init_local(&cursor, &uc);
+    //unw_get_reg(&cursor, UNW_REG_SP, &fp);
+    //printf("ompt %p\n", (void*)fp);
+    while (level > 0 && unw_step(&cursor) > 0)
+    {
+        //unw_get_reg(&cursor, UNW_REG_SP, &fp);
+        //printf("ompt %p\n", (void*)fp);
+        level--;
+    }
+    unw_get_reg(&cursor, UNW_REG_SP, &fp);
+
+    if(level == 0)
+      return (void*)(fp);
+    else
+      return NULL;
+}
+#endif

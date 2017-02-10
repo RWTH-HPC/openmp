@@ -226,7 +226,7 @@ __kmp_track_dependence ( kmp_depnode_t *source, kmp_depnode_t *sink,
 
     __kmp_printf("%d(%s) -> %d(%s)\n", source->dn.id, task_source->td_ident->psource, sink->dn.id, task_sink->td_ident->psource);
 #endif
-#if OMPT_SUPPORT && OMPT_TRACE
+#if OMPT_SUPPORT && OMPT_OPTIONAL
     /* OMPT tracks dependences between task (a=source, b=sink) in which
        task a blocks the execution of b through the ompt_new_dependence_callback */
     if (ompt_enabled &&
@@ -239,7 +239,7 @@ __kmp_track_dependence ( kmp_depnode_t *source, kmp_depnode_t *sink,
           &(task_source->ompt_task_info.task_data),
           &(task_sink->ompt_task_info.task_data));
     }
-#endif /* OMPT_SUPPORT && OMPT_TRACE */
+#endif /* OMPT_SUPPORT && OMPT_OPTIONAL */
 }
 
 template< bool filter >
@@ -459,10 +459,10 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
         }
 
         new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
-            __builtin_frame_address(0);
+            OMPT_GET_FRAME_ADDRESS(0);
     }
 
-#if OMPT_TRACE
+#if OMPT_OPTIONAL
     /* OMPT grab all dependences if requested by the tool */
     if (ndeps+ndeps_noalias > 0 &&
         ompt_callbacks.ompt_callback(ompt_callback_task_dependences))
@@ -515,7 +515,7 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
         new_taskdata->ompt_task_info.deps = NULL;
         new_taskdata->ompt_task_info.ndeps = 0;
     }
-#endif /* OMPT_TRACE */
+#endif /* OMPT_OPTIONAL */
 #endif /* OMPT_SUPPORT */
 
     bool serial = current_task->td_flags.team_serial || current_task->td_flags.tasking_ser || current_task->td_flags.final;
