@@ -380,32 +380,56 @@ __ompt_get_task_info_internal(
 
         if (lwt) {
             info = &lwt->ompt_task_info;
+            if(type)
+            {
+                *type = ompt_task_implicit;
+            }
+            if(task_data)
+            {
+                *task_data = info ? &info->task_data : NULL;
+            }
+            if(task_frame)
+            {
+                // OpenMP spec asks for the scheduling task to be returned.
+                *task_frame = info ? &info->frame : NULL;
+            }
+            if(parallel_data)
+            {
+                ompt_team_info_t* team_info = __ompt_get_teaminfo(ancestor_level, NULL);
+                *parallel_data = info ? &(team_info->parallel_data) : NULL;
+            }
+            return info ? 1 : 0;
         } else if (taskdata) {
             info = &taskdata->ompt_task_info;
+            if(type)
+            {
+                if(taskdata->td_parent)
+                {
+                    *type = taskdata->td_flags.tasktype ? ompt_task_explicit : ompt_task_implicit;
+                }
+                else
+                {
+                    *type = ompt_task_initial;
+                }
+            }
+            if(task_data)
+            {
+                *task_data = info ? &info->task_data : NULL;
+            }
+            if(task_frame)
+            {
+                // OpenMP spec asks for the scheduling task to be returned.
+                *task_frame = info ? &info->frame : NULL;
+            }
+            if(parallel_data)
+            {
+                ompt_team_info_t* team_info = __ompt_get_teaminfo(ancestor_level, NULL);
+                *parallel_data = info ? &(team_info->parallel_data) : NULL;
+            }
+            return info ? 1 : 0;
         }
     }
-    
-    //ompt_task_info_t *info = __ompt_get_scheduling_taskinfo(ancestor_level);
-
-    if(type)
-    {
-        //TODO
-    }
-    if(task_data)
-    {
-        *task_data = info ? &info->task_data : NULL;
-    }
-    if(task_frame)
-    {
-        // OpenMP spec asks for the scheduling task to be returned.
-        *task_frame = info ? &info->frame : NULL;
-    }
-    if(parallel_data)
-    {
-        ompt_team_info_t* team_info = __ompt_get_teaminfo(ancestor_level, NULL);
-        *parallel_data = info ? &(team_info->parallel_data) : NULL;
-    }
-    return info ? 1 : 0;
+    return 0;
 }
 
 //----------------------------------------------------------
@@ -430,7 +454,7 @@ static uint64_t __ompt_get_unique_id_internal()
     if (ID == 0)
     {
       uint64_t new_thread = __sync_fetch_and_add(&thread,1);
-      ID = new_thread << 48;
+      ID = new_thread << (sizeof(uint64_t)*8 - OMPT_THREAD_ID_BITS);
     }
     return ++ID;
 }
@@ -456,7 +480,7 @@ void* __ompt_get_return_address_internal(int level)
     //get info about runtime lib
     Dl_info lib_info;
     dladdr((void*)&__ompt_get_return_address_internal, &lib_info);
-    
+
     unw_cursor_t cursor;
     unw_context_t uc;
     unw_word_t ip;
