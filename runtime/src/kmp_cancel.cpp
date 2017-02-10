@@ -56,6 +56,25 @@ kmp_int32 __kmpc_cancel(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 cncl_kind) {
                     //       this_team->t.t_cancel_request, &(this_team->t.t_cancel_request));
                     // we do not have a cancellation request in this team or we do have one
                     // that matches the current request -> cancel
+                    #if OMPT_SUPPORT && OMPT_OPTIONAL
+                            ompt_task_data_t *task_data;
+                            __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
+                            if (ompt_enabled &&
+                                ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
+                                //printf("__kmp_omp_cancellation:%d\n", __kmp_omp_cancellation);
+                                ompt_cancel_flag_t type;
+                                if(__kmp_omp_cancellation == cancel_parallel)
+                                    type = ompt_cancel_parallel;
+                                else if(__kmp_omp_cancellation == cancel_loop)
+                                    type = ompt_cancel_do;
+                                else if(__kmp_omp_cancellation == cancel_sections)
+                                    type = ompt_cancel_sections;
+                                ompt_callbacks.ompt_callback(ompt_callback_cancel)(
+                                    task_data,
+                                    type | ompt_cancel_activated,
+                                    OMPT_GET_RETURN_ADDRESS(0));
+                            }
+                    #endif
                     return 1 /* true */;
                 }
                 break;
