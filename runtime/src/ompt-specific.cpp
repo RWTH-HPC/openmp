@@ -6,8 +6,12 @@
 #include "kmp.h"
 #include "ompt-internal.h"
 #include "ompt-specific.h"
+
+#ifdef OMPT_USE_LIBUNWIND
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
+#endif
+
 #include <dlfcn.h>
 #include <execinfo.h>
 
