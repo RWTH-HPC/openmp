@@ -341,7 +341,7 @@ typedef void (*ompt_callback_task_schedule_t) (
 
 typedef void (*ompt_callback_task_create_t) (
     ompt_data_t *parent_task_data,    /* data of parent task         */
-    ompt_frame_t *parent_frame,       /* frame data for parent task   */
+    const ompt_frame_t *parent_frame,       /* frame data for parent task   */
     ompt_data_t *new_task_data,       /* data of created task         */
     ompt_task_type_t type,
     int has_dependences,
