@@ -5479,6 +5479,11 @@ __kmp_launch_thread( kmp_info_t *this_thr )
     }
 #endif
 
+#if OMPT_SUPPORT
+        if (ompt_enabled) {
+            this_thr->th.ompt_thread_info.state = ompt_state_idle;
+        }
+#endif
     /* This is the place where threads wait for work */
     while( ! TCR_4(__kmp_global.g.g_done) ) {
         KMP_DEBUG_ASSERT( this_thr == __kmp_threads[ gtid ] );
@@ -5487,11 +5492,6 @@ __kmp_launch_thread( kmp_info_t *this_thr )
         /* wait for work to do */
         KA_TRACE( 20, ("__kmp_launch_thread: T#%d waiting for work\n", gtid ));
 
-#if OMPT_SUPPORT
-        if (ompt_enabled) {
-            this_thr->th.ompt_thread_info.state = ompt_state_idle;
-        }
-#endif
 
         /* No tid yet since not part of a team */
         __kmp_fork_barrier( gtid, KMP_GTID_DNE );
@@ -5554,22 +5554,6 @@ __kmp_launch_thread( kmp_info_t *this_thr )
             }
             /* join barrier after parallel region */
             __kmp_join_barrier( gtid );
-#if OMPT_SUPPORT
-            if (ompt_enabled) {
-                if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
-                    // don't access *pteam here: it may have already been freed
-                    // by the master thread behind the barrier (possible race)
-                    ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
-                        ompt_scope_end,
-                        &(my_parallel_data),
-                        &(task_info->task_data),
-                        ompt_team_size,
-                        __kmp_tid_from_gtid(gtid));
-                }
-                task_info->frame.exit_runtime_frame = NULL;
-                task_info->task_data.value = 0;
-            }
-#endif
         }
     }
     TCR_SYNC_PTR((intptr_t)__kmp_global.g.g_done);
@@ -7125,7 +7109,43 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
 #endif /* KMP_DEBUG */
 
     __kmp_join_barrier( gtid );  /* wait for everyone */
-
+#if OMPT_SUPPORT
+    int ds_tid = this_thr->th.th_info.ds.ds_tid;
+    if (this_thr->th.ompt_thread_info.state == ompt_state_wait_barrier_implicit) {
+        ompt_task_data_t* tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
+        ompt_parallel_data_t* pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
+        this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+#if OMPT_OPTIONAL
+        if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+            ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+            ompt_sync_region_barrier,
+            ompt_scope_end,
+            pId,  
+            tId,
+            OMPT_GET_RETURN_ADDRESS(1));
+        }
+        if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+            ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+            ompt_sync_region_barrier,
+            ompt_scope_end,
+            pId,
+            tId,
+            OMPT_GET_RETURN_ADDRESS(1));
+        }
+#endif
+        if (!KMP_MASTER_TID(ds_tid) && ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
+                ompt_scope_end,
+                pId,
+                tId,
+                0,
+                ds_tid);
+        }
+        // return to idle state
+        this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+    }
+#endif
+                        
     KMP_MB();       /* Flush all pending memory write invalidates.  */
     KMP_ASSERT( this_thr->th.th_team  ==  team );
 }

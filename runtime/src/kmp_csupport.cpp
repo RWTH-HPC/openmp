@@ -1621,8 +1621,15 @@ __kmpc_single(ident_t *loc, kmp_int32 global_tid)
                     &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
                     1,
                     OMPT_GET_RETURN_ADDRESS(0));
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_end,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    OMPT_GET_RETURN_ADDRESS(0));
             }
-            this_thr->th.ompt_thread_info.state = ompt_state_wait_single;
+//            this_thr->th.ompt_thread_info.state = ompt_state_work_parallel;
         }
     }
 #endif
