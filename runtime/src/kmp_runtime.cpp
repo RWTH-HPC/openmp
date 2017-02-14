@@ -1461,7 +1461,7 @@ __kmp_fork_call(
 #if OMPT_SUPPORT
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
-        int team_size = master_set_numthreads;
+        int team_size = master_set_numthreads? master_set_numthreads : get__nproc_2( parent_team, master_tid );
 
         ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
             parent_task_data, 
