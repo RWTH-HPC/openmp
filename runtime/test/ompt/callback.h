@@ -450,12 +450,12 @@ on_ompt_callback_master(
 static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *parent_task_data,
-  ompt_frame_t *parent_task_frame,
+  const ompt_frame_t *parent_task_frame,
   ompt_data_t* parallel_data,
   uint32_t requested_team_size,
   uint32_t actual_team_size,
   ompt_invoker_t invoker,
-  void *codeptr_ra)
+  const void *codeptr_ra)
 {
   parallel_data->value = ompt_get_unique_id();
   printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", parallel_function=%p, invoker=%d, actual_team_size=%" PRIu32 "\n", ompt_get_thread_data()->value, parent_task_data->value, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_data->value, requested_team_size, codeptr_ra, invoker, actual_team_size);
@@ -466,7 +466,7 @@ on_ompt_callback_parallel_end(
   ompt_data_t *parallel_data,
   ompt_task_data_t *task_data,
   ompt_invoker_t invoker,
-  void *codeptr_ra)
+  const void *codeptr_ra)
 {
   printf("%" PRIu64 ": ompt_event_parallel_end: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", invoker=%d, codeptr_ra=%p\n", ompt_get_thread_data()->value, parallel_data->value, task_data->value, invoker, codeptr_ra);
 }
@@ -474,11 +474,11 @@ on_ompt_callback_parallel_end(
 static void
 on_ompt_callback_task_create(
     ompt_task_data_t *parent_task_data,    /* id of parent task            */
-    ompt_frame_t *parent_frame,  /* frame data for parent task   */
+    const ompt_frame_t *parent_frame,  /* frame data for parent task   */
     ompt_task_data_t* new_task_data,      /* id of created task           */
     ompt_task_type_t type,
     int has_dependences,
-    void *codeptr_ra)               /* pointer to outlined function */
+    const void *codeptr_ra)               /* pointer to outlined function */
 {
   new_task_data->value = ompt_get_unique_id();
   printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", parallel_function=%p, task_type=%s=%d, has_dependences=%s\n", ompt_get_thread_data()->value, parent_task_data ? parent_task_data->value : 0, parent_frame ? parent_frame->exit_runtime_frame : NULL, parent_frame ? parent_frame->reenter_runtime_frame : NULL, new_task_data->value, codeptr_ra, ompt_task_type_t_values[type], type, has_dependences ? "yes" : "no");
@@ -531,12 +531,15 @@ on_ompt_callback_thread_end(
   //printf("%" PRIu64 ": ompt_event_thread_end: thread_type=%s=%d, thread_id=%" PRIu64 "\n", ompt_get_thread_data()->value, ompt_thread_type_t_values[thread_type], thread_type, thread_data->value);
 }
 
-#define register_callback(name)                               \
-{                                                             \
-  if (ompt_set_callback(name, (ompt_callback_t)&on_##name) == \
-      ompt_has_event_no_callback)                             \
+#define register_callback_t(name, type)                       \
+do{                                                           \
+  type f_##name = &on_##name;                                 \
+  if (ompt_set_callback(name, (ompt_callback_t)f_##name) ==   \
+      ompt_set_never)                                         \
     printf("0: Could not register callback '" #name "'\n");   \
-}
+}while(0)
+
+#define register_callback(name) register_callback_t(name, name##_t)
 
 int ompt_initialize(
   ompt_function_lookup_t lookup,
@@ -549,12 +552,12 @@ int ompt_initialize(
   ompt_get_unique_id = (ompt_get_unique_id_t) lookup("ompt_get_unique_id");
 
   register_callback(ompt_callback_mutex_acquire);
-  register_callback(ompt_callback_mutex_acquired);
-  register_callback(ompt_callback_mutex_released);
+  register_callback_t(ompt_callback_mutex_acquired, ompt_callback_mutex_t);
+  register_callback_t(ompt_callback_mutex_released, ompt_callback_mutex_t);
   register_callback(ompt_callback_nest_lock);
   register_callback(ompt_callback_sync_region);
-  register_callback(ompt_callback_sync_region_wait);
-  register_callback(ompt_event_control);
+  register_callback_t(ompt_callback_sync_region_wait, ompt_callback_sync_region_t);
+//  register_callback(ompt_event_control);
   register_callback(ompt_callback_flush);
   register_callback(ompt_callback_cancel);
   register_callback(ompt_callback_idle);

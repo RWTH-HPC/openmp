@@ -23,10 +23,10 @@
  | the OMPT TR. They are exposed to tools through ompt_set_callback.
  +--------------------------------------------------------------------------*/
 
-#define ompt_event_NEVER             ompt_set_result_event_never_occurs
-#define ompt_event_UNIMPLEMENTED     ompt_set_result_event_may_occur_no_callback
-#define ompt_event_MAY_CONVENIENT    ompt_set_result_event_may_occur_callback_some
-#define ompt_event_MAY_ALWAYS        ompt_set_result_event_may_occur_callback_always
+//#define ompt_event_NEVER             ompt_set_never
+#define ompt_event_UNIMPLEMENTED     ompt_set_never
+#define ompt_event_MAY_CONVENIENT    ompt_set_sometimes
+#define ompt_event_MAY_ALWAYS        ompt_set_always
 
 #if OMPT_OPTIONAL
 #define ompt_event_MAY_ALWAYS_OPTIONAL   ompt_event_MAY_ALWAYS

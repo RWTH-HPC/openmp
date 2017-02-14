@@ -333,7 +333,7 @@ OMPT_API_ROUTINE int ompt_set_callback(ompt_callbacks_t which, ompt_callback_t c
 
 #undef ompt_event_macro
 
-    default: return ompt_set_result_registration_error;
+    default: return ompt_set_error;
     }
 }
 
