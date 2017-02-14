@@ -3,7 +3,7 @@
 LLVM/OpenMP runtime with changes towards TR4 compliance regarding OMPT
 
 # Reference tool
-For reference of the currently implemented OMPT API please check [callback.h](OpenMPToolsInterface/LLVM-openmp/blob/towards_tr4/runtime/test/ompt/callback.h),
+For reference of the currently implemented OMPT API please check [callback.h](runtime/test/ompt/callback.h),
 the tests (see below) are run with every push.
 
 # how to configure/build:
