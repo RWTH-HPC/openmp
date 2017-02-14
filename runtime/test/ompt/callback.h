@@ -3,8 +3,10 @@
 #include <omp.h>
 #include <ompt.h>
 #include <execinfo.h>
+#ifdef OMPT_USE_LIBUNWIND
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
+#endif
 
 static const char* ompt_thread_type_t_values[] = {
   NULL,
