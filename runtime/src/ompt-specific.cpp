@@ -291,9 +291,12 @@ __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_dat
 void
 __ompt_lw_taskteam_init(ompt_lw_taskteam_t *lwt, kmp_info_t *thr,
                         int gtid, void *microtask,
-                        ompt_parallel_data_t ompt_pid)
+                        ompt_parallel_data_t** ompt_pid)
 {
-    lwt->ompt_team_info.parallel_data = ompt_pid;
+    // initialize parallel_data with input, return address to parallel_data on exit
+    lwt->ompt_team_info.parallel_data = **ompt_pid;
+    *ompt_pid = &lwt->ompt_team_info.parallel_data;
+    
     lwt->ompt_team_info.microtask = microtask;
     lwt->ompt_task_info.task_data.value = 0;
     lwt->ompt_task_info.frame.reenter_runtime_frame = NULL;

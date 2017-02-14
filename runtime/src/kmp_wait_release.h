@@ -102,7 +102,7 @@ class kmp_flag {
 
 #if OMPT_SUPPORT
 static inline void
-__ompt_implicit_task_end(kmp_info_t *this_thr, ompt_state_t ompt_state, ompt_task_data_t* tId)
+__ompt_implicit_task_end(kmp_info_t *this_thr, ompt_state_t ompt_state, ompt_task_data_t* tId, ompt_parallel_data_t* pId)
 {
     int ds_tid = this_thr->th.th_info.ds.ds_tid;
     if (ompt_state == ompt_state_wait_barrier_implicit) {
@@ -112,7 +112,7 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, ompt_state_t ompt_state, ompt_tas
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
-                NULL,
+                pId,
                 tId,
                 OMPT_GET_RETURN_ADDRESS(3));
         }
@@ -120,7 +120,7 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, ompt_state_t ompt_state, ompt_tas
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
-                NULL,
+                pId,
                 tId,
                 OMPT_GET_RETURN_ADDRESS(3));
         }
@@ -131,11 +131,12 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, ompt_state_t ompt_state, ompt_tas
                 // by the master thread behind the barrier (possible race)
                 ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                     ompt_scope_end,
-                    NULL,
+                    pId,
                     tId,
                     0,
                     ds_tid);
             }
+            pId->ptr=NULL;
 #if OMPT_OPTIONAL
             if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
                 ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_begin);
@@ -245,6 +246,7 @@ THIS function is called from
                 tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
             }
         } else {        
+                pId = &(this_thr->th.ompt_thread_info.parallel_data);
                 tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
         }
 #if OMPT_OPTIONAL
@@ -273,7 +275,7 @@ THIS function is called from
 #endif
         if (final_spin && ( __kmp_tasking_mode == tskm_immediate_exec || this_thr->th.th_task_team==NULL )) {
             // implicit task is done. Either no taskqueue, or task-team finished
-            __ompt_implicit_task_end(this_thr, ompt_entry_state, tId);
+            __ompt_implicit_task_end(this_thr, ompt_entry_state, tId, pId);
         }
     }
 #endif
@@ -338,7 +340,7 @@ THIS function is called from
 #if OMPT_SUPPORT
                 // task-team is done now, other cases should be catched above
                     if (final_spin && ompt_enabled ) 
-                        __ompt_implicit_task_end(this_thr, ompt_entry_state, tId);
+                        __ompt_implicit_task_end(this_thr, ompt_entry_state, tId, pId);
 #endif
                     this_thr->th.th_task_team = NULL;
                 }
@@ -423,7 +425,7 @@ THIS function is called from
         ompt_exit_state != ompt_state_undefined) {
 #if OMPT_OPTIONAL
         if ( final_spin ) {
-            __ompt_implicit_task_end(this_thr, ompt_exit_state, tId);
+            __ompt_implicit_task_end(this_thr, ompt_exit_state, tId, pId);
             ompt_exit_state = this_thr->th.ompt_thread_info.state;
         }
 #endif

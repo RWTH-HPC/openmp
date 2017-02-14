@@ -1708,13 +1708,14 @@ __kmp_fork_barrier(int gtid, int tid)
     int ds_tid = this_thr->th.th_info.ds.ds_tid;
     if (this_thr->th.ompt_thread_info.state == ompt_state_wait_barrier_implicit) {
         ompt_task_data_t* tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
+        ompt_parallel_data_t* pId = (team)? &(team->t.ompt_team_info.parallel_data) : &(this_thr->th.ompt_thread_info.parallel_data);
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
 #if OMPT_OPTIONAL
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
-                NULL,
+                pId,
                 tId,
                 OMPT_GET_RETURN_ADDRESS(1));
         }
@@ -1722,7 +1723,7 @@ __kmp_fork_barrier(int gtid, int tid)
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
-                NULL,
+                pId,
                 tId,
                 OMPT_GET_RETURN_ADDRESS(1));
         }
@@ -1732,11 +1733,13 @@ __kmp_fork_barrier(int gtid, int tid)
             // by the master thread behind the barrier (possible race)
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                NULL,
+                pId,
                 tId,
                 0,
                 ds_tid);
         }
+        // not necessary for master, but avoid the branch here
+        pId->ptr=NULL;
         // return to idle state
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
     }
