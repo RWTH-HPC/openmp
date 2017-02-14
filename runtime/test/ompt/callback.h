@@ -453,12 +453,12 @@ on_ompt_callback_parallel_begin(
   const ompt_frame_t *parent_task_frame,
   ompt_data_t* parallel_data,
   uint32_t requested_team_size,
-  uint32_t actual_team_size,
+//  uint32_t actual_team_size,
   ompt_invoker_t invoker,
   const void *codeptr_ra)
 {
   parallel_data->value = ompt_get_unique_id();
-  printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", parallel_function=%p, invoker=%d, actual_team_size=%" PRIu32 "\n", ompt_get_thread_data()->value, parent_task_data->value, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_data->value, requested_team_size, codeptr_ra, invoker, actual_team_size);
+  printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", parallel_function=%p, invoker=%d\n", ompt_get_thread_data()->value, parent_task_data->value, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_data->value, requested_team_size, codeptr_ra, invoker);
 }
 
 static void

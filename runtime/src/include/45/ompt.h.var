@@ -314,7 +314,7 @@ typedef void (*ompt_callback_parallel_begin_t) (
     const ompt_frame_t *parent_frame, /* frame data of parent task    */
     ompt_data_t *parallel_data,       /* data of parallel region   */
     unsigned int requested_team_size, /* requested number of threads in team    */
-    unsigned int actual_team_size,    /* actual number of threads in team    */
+//    unsigned int actual_team_size,    /* actual number of threads in team    */
     ompt_invoker_t invoker,           /* who invokes master task?     */
     const void *codeptr_ra            
 );

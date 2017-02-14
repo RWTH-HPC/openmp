@@ -397,22 +397,20 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
 {
 #if OMPT_SUPPORT
     ompt_parallel_data_t* ompt_parallel_data;
-    ompt_task_data_t my_ompt_task_data;
+    ompt_task_data_t* ompt_task_data;
     ompt_frame_t* ompt_frame;
     if (ompt_enabled) {
-        ompt_task_data_t* ompt_task_data;
+        //ompt_task_data_t* ompt_task_data;
         __ompt_get_task_info_internal(0, NULL, &ompt_task_data, &ompt_frame, &ompt_parallel_data, NULL);
         kmp_info_t *thr = __kmp_threads[gtid];
-
-        //ompt_parallel_data = {.value=__ompt_parallel_id_new(gtid)};
-        my_ompt_task_data = {.value=__ompt_task_id_new(gtid)};
 
         // parallel region callback
         if (ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
             int team_size = 1;
             ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
                 ompt_task_data, ompt_frame, ompt_parallel_data,
-                team_size, team_size,
+                team_size, 
+                //team_size,
                 OMPT_INVOKER(fork_context_gnu),
                 OMPT_GET_RETURN_ADDRESS(1));
         }
@@ -501,16 +499,16 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
 
 
 #if OMPT_SUPPORT
-    ompt_parallel_data_t parallel_data;
-    ompt_task_data_t serialized_task_data;
+    ompt_parallel_data_t *parallel_data;
+    ompt_task_data_t *serialized_task_data;
     ompt_frame_t *ompt_frame = NULL;
 
     if (ompt_enabled) {
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
-        parallel_data = team_info->parallel_data;
+        parallel_data = &(team_info->parallel_data);
 
         ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
-        serialized_task_data = task_info->task_data;
+        serialized_task_data = &(task_info->task_data);
         // Record that we re-entered the runtime system in the implicit
         // task frame representing the parallel region. 
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
@@ -521,7 +519,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
             ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                &(parallel_data),
+                parallel_data,
                 &(task_info->task_data),
                 ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
@@ -562,8 +560,8 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                &(parallel_data),
-                &(serialized_task_data),
+                parallel_data,
+                serialized_task_data,
                 ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
         }
@@ -579,7 +577,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
 
             if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                 ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
-                    &parallel_data, &(parent_task_info->task_data), 
+                    parallel_data, &(parent_task_info->task_data), 
                     OMPT_INVOKER(fork_context_gnu),
                     OMPT_GET_RETURN_ADDRESS(1));
             }

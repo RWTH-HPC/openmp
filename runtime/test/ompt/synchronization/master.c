@@ -15,7 +15,7 @@ int main()
     print_current_address();
   }
 
-  printf("%d: x=%d\n", ompt_get_thread_data()->value, x);
+  printf("%" PRIu64 ": x=%d\n", ompt_get_thread_data()->value, x);
 
   // Check if libomp supports the callbacks for this test.
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_master'
