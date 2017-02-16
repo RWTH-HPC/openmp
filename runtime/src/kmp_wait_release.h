@@ -84,22 +84,6 @@ class kmp_flag {
     */
 };
 
-#if ! KMP_USE_MONITOR
-# if KMP_OS_UNIX && (KMP_ARCH_X86 || KMP_ARCH_X86_64)
-   // HW TSC is used to reduce overhead (clock tick instead of nanosecond).
-   extern double __kmp_ticks_per_nsec;
-#  define KMP_NOW() __kmp_hardware_timestamp()
-#  define KMP_BLOCKTIME_INTERVAL() (__kmp_dflt_blocktime * KMP_USEC_PER_SEC * __kmp_ticks_per_nsec)
-#  define KMP_BLOCKING(goal, count) ((goal) > KMP_NOW())
-# else
-   // System time is retrieved sporadically while blocking.
-   extern kmp_uint64 __kmp_now_nsec();
-#  define KMP_NOW() __kmp_now_nsec()
-#  define KMP_BLOCKTIME_INTERVAL() (__kmp_dflt_blocktime * KMP_USEC_PER_SEC)
-#  define KMP_BLOCKING(goal, count) ((count) % 1000 != 0 || (goal) > KMP_NOW())
-# endif
-#endif
-
 #if OMPT_SUPPORT
 static inline void
 __ompt_implicit_task_end(kmp_info_t *this_thr, ompt_state_t ompt_state, ompt_task_data_t* tId, ompt_parallel_data_t* pId)
@@ -309,7 +293,7 @@ THIS function is called from
                       th_gtid, __kmp_global.g.g_time.dt.t_value, hibernate,
                       hibernate - __kmp_global.g.g_time.dt.t_value));
 #else
-        hibernate_goal = KMP_NOW() + KMP_BLOCKTIME_INTERVAL();
+        hibernate_goal = KMP_NOW() + this_thr->th.th_team_bt_intervals;
         poll_count = 0;
 #endif // KMP_USE_MONITOR
     }
@@ -334,6 +318,8 @@ THIS function is called from
                     if (KMP_TASKING_ENABLED(task_team))
                         flag->execute_tasks(this_thr, th_gtid, final_spin, &tasks_completed
                                             USE_ITT_BUILD_ARG(itt_sync_obj), 0);
+                    else
+                        this_thr->th.th_reap_state = KMP_SAFE_TO_REAP;
                 }
                 else {
                     KMP_DEBUG_ASSERT(!KMP_MASTER_TID(this_thr->th.th_info.ds.ds_tid));
@@ -343,7 +329,10 @@ THIS function is called from
                         __ompt_implicit_task_end(this_thr, ompt_entry_state, tId, pId);
 #endif
                     this_thr->th.th_task_team = NULL;
+                    this_thr->th.th_reap_state = KMP_SAFE_TO_REAP;
                 }
+            } else {
+                this_thr->th.th_reap_state = KMP_SAFE_TO_REAP;
             } // if
         } // if
 
@@ -415,6 +404,10 @@ THIS function is called from
             if (__kmp_global.g.g_abort)
                 __kmp_abort_thread();
             break;
+        }
+        else if (__kmp_tasking_mode != tskm_immediate_exec
+                 && this_thr->th.th_reap_state == KMP_SAFE_TO_REAP) {
+            this_thr->th.th_reap_state = KMP_NOT_SAFE_TO_REAP;
         }
         // TODO: If thread is done with work and times out, disband/free
     }

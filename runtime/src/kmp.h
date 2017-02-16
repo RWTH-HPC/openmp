@@ -889,6 +889,24 @@ extern int __kmp_place_num_threads_per_core;
 #define KMP_INTERVALS_FROM_BLOCKTIME(blocktime, monitor_wakeups)  \
                                  ( ( (blocktime) + (KMP_BLOCKTIME_MULTIPLIER / (monitor_wakeups)) - 1 ) /  \
                                    (KMP_BLOCKTIME_MULTIPLIER / (monitor_wakeups)) )
+#else
+# if KMP_OS_UNIX && (KMP_ARCH_X86 || KMP_ARCH_X86_64)
+   // HW TSC is used to reduce overhead (clock tick instead of nanosecond).
+   extern double __kmp_ticks_per_nsec;
+#  define KMP_NOW() __kmp_hardware_timestamp()
+#  define KMP_NOW_MSEC() ((kmp_uint64)(KMP_NOW()/__kmp_ticks_per_nsec)/KMP_USEC_PER_SEC)
+#  define KMP_BLOCKTIME_INTERVAL() (__kmp_dflt_blocktime * KMP_USEC_PER_SEC * __kmp_ticks_per_nsec)
+#  define KMP_BLOCKING(goal, count) ((goal) > KMP_NOW())
+# else
+   // System time is retrieved sporadically while blocking.
+   extern kmp_uint64 __kmp_now_nsec();
+#  define KMP_NOW() __kmp_now_nsec()
+#  define KMP_NOW_MSEC() (KMP_NOW()/KMP_USEC_PER_SEC)
+#  define KMP_BLOCKTIME_INTERVAL() (__kmp_dflt_blocktime * KMP_USEC_PER_SEC)
+#  define KMP_BLOCKING(goal, count) ((count) % 1000 != 0 || (goal) > KMP_NOW())
+# endif
+# define KMP_YIELD_NOW() (KMP_NOW_MSEC() / KMP_MAX(__kmp_dflt_blocktime, 1)  \
+                         % (__kmp_yield_on_count + __kmp_yield_off_count) < (kmp_uint32)__kmp_yield_on_count)
 #endif // KMP_USE_MONITOR
 
 #define KMP_MIN_STATSCOLS       40
@@ -1611,6 +1629,9 @@ typedef struct kmp_disp {
 #define KMP_BARRIER_SWITCH_TO_OWN_FLAG 3  // Special state; tells worker to shift from parent to own b_go
 #define KMP_BARRIER_SWITCHING          4  // Special state; worker resets appropriate flag on wake-up
 
+#define KMP_NOT_SAFE_TO_REAP 0  // Thread th_reap_state: not safe to reap (tasking)
+#define KMP_SAFE_TO_REAP 1      // Thread th_reap_state: safe to reap (not tasking)
+
 enum barrier_type {
     bs_plain_barrier = 0,       /* 0, All non-fork/join barriers (except reduction barriers if enabled) */
     bs_forkjoin_barrier,        /* 1, All fork/join (parallel region) barriers */
@@ -2220,8 +2241,10 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
     /* to exist (from the POV of worker threads).                            */
 #if KMP_USE_MONITOR
     int               th_team_bt_intervals;
-#endif
     int               th_team_bt_set;
+#else
+    kmp_uint64        th_team_bt_intervals;
+#endif
 
 
 #if KMP_AFFINITY_SUPPORTED
@@ -2285,6 +2308,8 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
     kmp_uint8          * th_task_state_memo_stack;  // Stack holding memos of th_task_state at nested levels
     kmp_uint32           th_task_state_top;         // Top element of th_task_state_memo_stack
     kmp_uint32           th_task_state_stack_sz;    // Size of th_task_state_memo_stack
+    kmp_uint32           th_reap_state;  // Non-zero indicates thread is not
+                                         // tasking, thus safe to reap
 
     /*
      * More stuff for keeping track of active/sleeping threads
@@ -2653,10 +2678,10 @@ extern kmp_uint32 __kmp_yield_next;
 
 #if KMP_USE_MONITOR
 extern kmp_uint32 __kmp_yielding_on;
+#endif
 extern kmp_uint32 __kmp_yield_cycle;
 extern kmp_int32  __kmp_yield_on_count;
 extern kmp_int32  __kmp_yield_off_count;
-#endif
 
 /* ------------------------------------------------------------------------- */
 extern int        __kmp_allThreadsSpecified;
