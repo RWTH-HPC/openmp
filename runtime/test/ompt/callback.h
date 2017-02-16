@@ -23,6 +23,16 @@ static const char* ompt_task_type_t_values[] = {
   "ompt_task_target"
 };
 
+static const char* ompt_cancel_flag_t_values[] = {
+  "ompt_cancel_parallel",
+  "ompt_cancel_sections",
+  "ompt_cancel_do",
+  "ompt_cancel_taskgroup",
+  "ompt_cancel_activated",
+  "ompt_cancel_detected",
+  "ompt_cancel_discarded_task"
+};
+
 static ompt_get_task_info_t ompt_get_task_info;
 static ompt_get_thread_data_t ompt_get_thread_data;
 static ompt_get_parallel_info_t ompt_get_parallel_info;
@@ -288,7 +298,25 @@ on_ompt_callback_cancel(
     int flags,
     const void *codeptr_ra)
 {
-  printf("%" PRIu64 ": ompt_event_cancel: task_data=%" PRIu64 ", flags=%" PRIu32 ", codeptr_ra=%p\n", ompt_get_thread_data()->value, task_data->value, flags,  codeptr_ra);
+  const char* first_flag_value;
+  const char* second_flag_value;
+  if(flags & ompt_cancel_parallel)
+    first_flag_value = ompt_cancel_flag_t_values[0];
+  else if(flags & ompt_cancel_sections)
+    first_flag_value = ompt_cancel_flag_t_values[1];
+  else if(flags & ompt_cancel_do)
+    first_flag_value = ompt_cancel_flag_t_values[2];
+  else if(flags & ompt_cancel_taskgroup)
+    first_flag_value = ompt_cancel_flag_t_values[3];
+
+  if(flags & ompt_cancel_activated)
+    second_flag_value = ompt_cancel_flag_t_values[4];
+  else if(flags & ompt_cancel_detected)
+    second_flag_value = ompt_cancel_flag_t_values[5];
+  else if(flags & ompt_cancel_discarded_task)
+    second_flag_value = ompt_cancel_flag_t_values[6];
+    
+  printf("%" PRIu64 ": ompt_event_cancel: task_data=%" PRIu64 ", flags=%s|%s=%" PRIu32 ", codeptr_ra=%p\n", ompt_get_thread_data()->value, task_data->value, first_flag_value, second_flag_value, flags,  codeptr_ra);
 }
 
 static void
