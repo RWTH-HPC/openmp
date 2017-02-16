@@ -92,7 +92,7 @@ static void print_current_address()
   
     size = backtrace (array, real_level);
     if(size == real_level)
-      address = array[real_level-1]-4;
+      address = array[real_level-1]-5;
     else
       address = NULL;
   printf("%" PRIu64 ": current_address=%p\n", ompt_get_thread_data()->value, address);
