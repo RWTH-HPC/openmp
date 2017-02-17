@@ -512,7 +512,8 @@ static ompt_interface_fn_t ompt_fn_lookup(const char *s)
 {
 
 #define ompt_interface_fn(fn) \
-    if (strcmp(s, #fn) == 0) return (ompt_interface_fn_t) fn;
+    fn##_t fn##_f = fn; \
+    if (strcmp(s, #fn) == 0) return (ompt_interface_fn_t) fn##_f;
 
     FOREACH_OMPT_INQUIRY_FN(ompt_interface_fn)
 
