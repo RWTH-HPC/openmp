@@ -5,22 +5,17 @@
 
 int main()
 {
-  //omp_set_cancellation(1);
   #pragma omp taskgroup
   {
     int x = 0;
-    int i;
-    for(i = 0; i < 2; i++)
+    #pragma omp task shared(x)
     {
-      #pragma omp task shared(x)
-      {
-        //#pragma omp cancellation point taskgroup
-        x++;
-        if(x == 1)
-        {
-          #pragma omp cancel taskgroup
-        }
-      }
+      x++;
+      #pragma omp cancel taskgroup
+    }
+    #pragma omp task shared(x)
+    {
+      x++;
     }
   }
 
