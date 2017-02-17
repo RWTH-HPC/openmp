@@ -33,6 +33,7 @@ static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_discarded_task"
 };
 
+static ompt_set_callback_t ompt_set_callback;
 static ompt_get_task_info_t ompt_get_task_info;
 static ompt_get_thread_data_t ompt_get_thread_data;
 static ompt_get_parallel_info_t ompt_get_parallel_info;
@@ -574,15 +575,25 @@ do{                                                           \
 
 #define register_callback(name) register_callback_t(name, name##_t)
 
+#define lookup_t(name)                                        \
+do{                                                           \
+  name = (name##_t) lookup(#name);                            \
+}while(0)
+
 int ompt_initialize(
   ompt_function_lookup_t lookup,
   ompt_fns_t* fns)
 {
-  ompt_set_callback_t ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
-  ompt_get_task_info = (ompt_get_task_info_t) lookup("ompt_get_task_info");
-  ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
-  ompt_get_parallel_info = (ompt_get_parallel_info_t) lookup("ompt_get_parallel_info");
-  ompt_get_unique_id = (ompt_get_unique_id_t) lookup("ompt_get_unique_id");
+  lookup_t(ompt_set_callback);
+  lookup_t(ompt_get_task_info);
+  lookup_t(ompt_get_thread_data);
+  lookup_t(ompt_get_parallel_info);
+  lookup_t(ompt_get_unique_id);
+  //ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
+  //ompt_get_task_info = (ompt_get_task_info_t) lookup("ompt_get_task_info");
+  //ompt_get_thread_data = (ompt_get_thread_data_t) lookup("ompt_get_thread_data");
+  //ompt_get_parallel_info = (ompt_get_parallel_info_t) lookup("ompt_get_parallel_info");
+  //ompt_get_unique_id = (ompt_get_unique_id_t) lookup("ompt_get_unique_id");
 
   register_callback(ompt_callback_mutex_acquire);
   register_callback_t(ompt_callback_mutex_acquired, ompt_callback_mutex_t);
