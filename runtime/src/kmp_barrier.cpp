@@ -1736,13 +1736,16 @@ __kmp_fork_barrier(int gtid, int tid)
         ompt_parallel_data_t* pId = (team)? &(team->t.ompt_team_info.parallel_data) : &(this_thr->th.ompt_thread_info.parallel_data);
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
 #if OMPT_OPTIONAL
+        void * codeptr = NULL;
+        if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
+            codeptr = OMPT_GET_RETURN_ADDRESS(1);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
                 pId,
                 tId,
-                OMPT_GET_RETURN_ADDRESS(1));
+                codeptr);
         }
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
@@ -1750,7 +1753,7 @@ __kmp_fork_barrier(int gtid, int tid)
                 ompt_scope_end,
                 pId,
                 tId,
-                OMPT_GET_RETURN_ADDRESS(1));
+                codeptr);
         }
 #endif
         if (!KMP_MASTER_TID(ds_tid) && ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {

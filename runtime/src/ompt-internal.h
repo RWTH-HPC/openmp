@@ -96,8 +96,8 @@ void ompt_fini(void);
   #define OMPT_GET_FRAME_ADDRESS(level) __ompt_get_frame_address_internal(level)
 #else
   void* __ompt_get_return_address_backtrace(int level);
-//  #define OMPT_GET_RETURN_ADDRESS(level) __builtin_return_address(level)
-  #define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_backtrace(level)
+  #define OMPT_GET_RETURN_ADDRESS(level) __builtin_return_address(level)
+//  #define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_backtrace(level)
   #define OMPT_GET_FRAME_ADDRESS(level) __builtin_frame_address(level)
 #endif
 
