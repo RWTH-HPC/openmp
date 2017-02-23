@@ -19,10 +19,10 @@ int main()
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_flush: codeptr_ra=[[RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
+  // ___CHECK: {{^}}[[MASTER_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
   //
   // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_flush: codeptr_ra=[[RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
+  // ___CHECK: {{^}}[[THREAD_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
 
 
 
