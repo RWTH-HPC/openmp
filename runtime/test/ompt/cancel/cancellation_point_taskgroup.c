@@ -1,4 +1,4 @@
-// RUN:false &&  %libomp-compile-and-run | %sort-threads | FileCheck %s
+// RUN:  %libomp-compile && env OMP_CANCELLATION=true %libomp-run | %sort-threads | FileCheck %s
 // REQUIRES: ompt
 #include "callback.h"
 #include <omp.h> 
@@ -68,7 +68,9 @@ int main()
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_cancel: task_data=[[CANCEL_TASK_ID]], flags=ompt_cancel_taskgroup|ompt_cancel_activated=24, codeptr_ra={{0x[0-f]*}}
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_cancel: task_data=[[THIRD_TASK_ID]], flags=ompt_cancel_taskgroup|ompt_cancel_discarded_task=72, codeptr_ra={{0x[0-f]*}}
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_cancel: task_data=[[SECOND_TASK_ID]], flags=ompt_cancel_taskgroup|ompt_cancel_discarded_task=72, codeptr_ra={{0x[0-f]*}}
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_cancel: task_data=[[FIRST_TASK_ID]], flags=ompt_cancel_taskgroup|ompt_cancel_discarded_task=72, codeptr_ra={{0x[0-f]*}}
+  
+  // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_thread_begin: thread_type=ompt_thread_worker=2, thread_id=[[THREAD_ID]]
+  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_cancel: task_data=[[FIRST_TASK_ID]], flags=ompt_cancel_taskgroup|ompt_cancel_detected=40, codeptr_ra={{0x[0-f]*}}
 
   return 0;
 }

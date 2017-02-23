@@ -1,6 +1,7 @@
 // RUN: %libomp-compile && env OMP_CANCELLATION=true %libomp-run | %sort-threads | FileCheck %s
 // REQUIRES: ompt
 #include "callback.h"
+#include <unistd.h>
 
 int main()
 {
@@ -19,6 +20,7 @@ int main()
       else
       {
         x++;
+        sleep(1);
         #pragma omp cancellation point for
       }
     }
