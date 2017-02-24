@@ -16,12 +16,11 @@ int main()
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_thread_end'
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_parallel_begin'
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_parallel_end'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_end'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_barrier_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_barrier_end'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_wait_barrier_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_wait_barrier_end'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_implicit_task'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_mutex_acquire'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_mutex_acquired'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_mutex_released'
+
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_parallel_begin: parent_task_id=[[PARENT_TASK_ID:[0-9]+]], parent_task_frame.exit=[[NULL]], parent_task_frame.reenter={{0x[0-f]+}}, parallel_id=[[PARALLEL_ID:[0-9]+]], requested_team_size=4, parallel_function=0x{{[0-f]+}}, invoker=[[PARALLEL_INVOKER:[0-9]+]]

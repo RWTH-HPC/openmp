@@ -21,6 +21,7 @@ int main()
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_work'
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
+  //TODO: add test (for now: cannot distinguish between static for and sections)
 
   return 0;
 }

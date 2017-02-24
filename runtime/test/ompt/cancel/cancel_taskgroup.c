@@ -42,17 +42,11 @@ int main()
 
 
   // Check if libomp supports the callbacks for this test.
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_parallel_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_parallel_end'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_implicit_task_end'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_barrier_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_barrier_end'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_wait_barrier_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_wait_barrier_end'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_task_begin'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_task_switch'
-  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_event_task_end'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_master'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_task_create'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_task_schedule'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_cancel'
+  // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_thread_begin'
 
 
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
