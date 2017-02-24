@@ -565,6 +565,17 @@ on_ompt_callback_thread_end(
   //printf("%" PRIu64 ": ompt_event_thread_end: thread_type=%s=%d, thread_id=%" PRIu64 "\n", ompt_get_thread_data()->value, ompt_thread_type_t_values[thread_type], thread_type, thread_data->value);
 }
 
+static int
+on_ompt_callback_control_tool(
+  uint64_t command,
+  uint64_t modifier,
+  void *arg,
+  const void *codeptr_ra)
+{
+  printf("%" PRIu64 ": ompt_event_control_tool: command=%" PRIu64 ", modifier=%" PRIu64 ", arg=%p, codeptr_ra=%p\n", ompt_get_thread_data()->value, command, modifier, arg, codeptr_ra);
+  return 0; //success
+}
+
 #define register_callback_t(name, type)                       \
 do{                                                           \
   type f_##name = &on_##name;                                 \
@@ -591,7 +602,7 @@ int ompt_initialize(
   register_callback(ompt_callback_nest_lock);
   register_callback(ompt_callback_sync_region);
   register_callback_t(ompt_callback_sync_region_wait, ompt_callback_sync_region_t);
-//  register_callback(ompt_event_control);
+  register_callback(ompt_callback_control_tool);
   register_callback(ompt_callback_flush);
   register_callback(ompt_callback_cancel);
   register_callback(ompt_callback_idle);

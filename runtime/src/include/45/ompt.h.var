@@ -91,7 +91,7 @@
     /*macro (ompt_callback_target_data_op         ompt_callback_target_data_op_t, 9)*/ /* target data op*/          \
     /*macro (ompt_callback_target_submit,         ompt_callback_target_submit_t, 10)*/ /* target  submit*/          \
                                                                                                                 \
-    /*macro (ompt_callback_control_tool,          ompt_callback_control_tool_t,  11)*/ /* control tool */           \
+    macro (ompt_callback_control_tool,          ompt_callback_control_tool_t,  11) /* control tool */           \
                                                                                                                 \
     /*macro (ompt_callback_device_initialize,     ompt_callback_device_initialize_t, 12)*/ /* device initialize */  \
                                                                                                                 \
@@ -129,7 +129,7 @@
                                                                                                                 \
                                                                                                                 \
     /*--- Old Events --- */                                                                                     \
-    macro (ompt_event_control,                  ompt_control_callback_t,       29) /* support control calls */  \
+    //macro (ompt_event_control,                  ompt_control_callback_t,       29) /* support control calls */  \
 
 
 
@@ -368,10 +368,12 @@ typedef void (*ompt_callback_task_dependence_t) (
     ompt_data_t *sink_task_data
 );
 
-/* program */
-typedef void (*ompt_control_callback_t) (
+/* control_tool */
+typedef int (*ompt_callback_control_tool_t) (
     uint64_t command,                 /* command of control call      */
-    uint64_t modifier                 /* modifier of control call     */
+    uint64_t modifier,                /* modifier of control call     */
+    void *arg,
+    const void *codeptr_ra
 );
 
 typedef void (*ompt_callback_t)(void);
