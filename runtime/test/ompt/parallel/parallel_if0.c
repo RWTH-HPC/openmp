@@ -5,13 +5,13 @@
 int main()
 {
 //  print_frame(0);
-  #pragma omp parallel num_threads(1)
+  #pragma omp parallel if(0)
   {
 //    print_frame(1);
     print_ids(0);
     print_ids(1);
 //    print_frame(0);
-    #pragma omp parallel num_threads(1)
+    #pragma omp parallel if(0)
     {
 //      print_frame(1);
       print_ids(0);

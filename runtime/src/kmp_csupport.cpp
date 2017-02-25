@@ -514,6 +514,34 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
     KMP_DEBUG_ASSERT( serial_team -> t.t_threads );
     KMP_DEBUG_ASSERT( serial_team -> t.t_threads[0] == this_thr );
 
+#if OMPT_SUPPORT
+    if (ompt_enabled && this_thr->th.ompt_thread_info.state != ompt_state_overhead) {
+        this_thr->th.th_current_task->ompt_task_info.frame.exit_runtime_frame = NULL;
+        if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
+                ompt_scope_end,
+                &(serial_team->t.ompt_team_info.parallel_data),
+                &(this_thr->th.th_current_task->ompt_task_info.task_data),
+                1,
+                __kmp_tid_from_gtid(global_tid));
+        }
+
+        // reset clear the task id only after unlinking the task
+        ompt_task_data_t * parent_task_data;
+        __ompt_get_task_info_internal(1, NULL, &parent_task_data, NULL, NULL, NULL);
+
+        if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
+            ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
+                &(serial_team->t.ompt_team_info.parallel_data),
+                parent_task_data,
+                ompt_invoker_runtime,
+                OMPT_GET_RETURN_ADDRESS(1));
+        }
+        __ompt_lw_taskteam_unlink(this_thr);
+        this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+    }
+#endif
+
     /* If necessary, pop the internal control stack values and replace the team values */
     top = serial_team -> t.t_control_stack_top;
     if ( top && top -> serial_nesting_level == serial_team -> t.t_serialized ) {
@@ -579,6 +607,11 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
 
     if ( __kmp_env_consistency_check )
         __kmp_pop_parallel( global_tid, NULL );
+#if OMPT_SUPPORT
+    if (ompt_enabled )
+        this_thr->th.ompt_thread_info.state = ((this_thr -> th.th_team_serialized) ?
+          ompt_state_work_serial : ompt_state_work_parallel);
+#endif
 }
 
 /*!

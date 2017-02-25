@@ -397,19 +397,17 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
 {
 #if OMPT_SUPPORT
     ompt_parallel_data_t ompt_parallel_data;
-    ompt_parallel_data_t* ompt_parallel_data_p = &ompt_parallel_data;
-    ompt_task_data_t* ompt_task_data;
-    ompt_frame_t* ompt_frame;
+    ompt_task_info_t* ompt_task_info;
+    kmp_info_t *thr;
     if (ompt_enabled) {
-        //ompt_task_data_t* ompt_task_data;
-        __ompt_get_task_info_internal(0, NULL, &ompt_task_data, &ompt_frame, NULL, NULL);
-        kmp_info_t *thr = __kmp_threads[gtid];
+        thr = __kmp_threads[gtid];
+        ompt_task_info = OMPT_CUR_TASK_INFO(thr);
 
         // parallel region callback
         if (ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
             int team_size = 1;
             ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
-                ompt_task_data, ompt_frame, ompt_parallel_data_p,
+                &(ompt_task_info->task_data), &(ompt_task_info->frame), &ompt_parallel_data,
                 team_size, 
                 //team_size,
                 OMPT_INVOKER(fork_context_gnu),
@@ -422,25 +420,22 @@ __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        kmp_info_t *thr = __kmp_threads[gtid];
         int ompt_team_size;
 
         // set up lightweight task
-        ompt_lw_taskteam_t *lwt = (ompt_lw_taskteam_t *)
-            __kmp_allocate(sizeof(ompt_lw_taskteam_t));
-        __ompt_lw_taskteam_init(lwt, thr, gtid, (void *) task, &ompt_parallel_data_p);
-        lwt->ompt_task_info.task_data.value = __ompt_task_id_new(gtid);
-        lwt->ompt_task_info.frame.exit_runtime_frame = 0;
-        __ompt_lw_taskteam_link(lwt, thr);
+        ompt_lw_taskteam_t lwt;
+        __ompt_lw_taskteam_init(&lwt, thr, gtid, (void *) task, &ompt_parallel_data);
+        lwt.ompt_task_info.task_data.value = __ompt_task_id_new(gtid);
+        lwt.ompt_task_info.frame.exit_runtime_frame = 0;
+        __ompt_lw_taskteam_link(&lwt, thr, 1);
 
         // implicit task callback
         if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
-            ompt_team_size = __kmp_team_from_gtid(gtid)->t.t_nproc;
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_begin,
-                ompt_parallel_data_p,
-                &(lwt->ompt_task_info.task_data),
-                ompt_team_size,
+                OMPT_CUR_TEAM_DATA(thr),
+                &(ompt_task_info->task_data),
+                1,
                 __kmp_tid_from_gtid(gtid));
         }
         thr->th.ompt_thread_info.state = ompt_state_work_parallel;
@@ -505,15 +500,13 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
     ompt_frame_t *ompt_frame = NULL;
 
     if (ompt_enabled) {
-        ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
-        parallel_data = &(team_info->parallel_data);
+        parallel_data = OMPT_CUR_TEAM_DATA(thr);
 
-        ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
+        ompt_task_info_t *task_info = OMPT_CUR_TASK_INFO(thr);
         serialized_task_data = &(task_info->task_data);
         // Record that we re-entered the runtime system in the implicit
         // task frame representing the parallel region. 
-        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(0);
+        task_info->frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(0);
 
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
@@ -527,12 +520,8 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         }
 
         // unlink if necessary. no-op if there is not a lightweight task.
-        ompt_lw_taskteam_t *lwt = __ompt_lw_taskteam_unlink(thr);
-        // GOMP allocates/frees lwt since it can't be kept on the stack
-        if (lwt) {
-           __kmp_free(lwt);
-
-        }
+        // TODO: Don't we need the lwt for parallel_end? Shouldn't be the unlink after parellel end?
+        __ompt_lw_taskteam_unlink(thr);
     }
 #endif
 
@@ -544,8 +533,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         if (ompt_enabled) {
           // Implicit task is finished here, in the barrier we might schedule deferred tasks, 
           // these don't see the implicit task on the stack
-          __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-          ompt_frame->exit_runtime_frame = NULL;
+          OMPT_CUR_TASK_INFO(thr)->frame.exit_runtime_frame = NULL;
         }
 #endif
 

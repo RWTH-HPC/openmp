@@ -58,7 +58,7 @@ int main()
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_schedule: first_task_id=[[IMPLICIT_TASK_ID]], second_task_id=[[TASK_ID]]
   // CHECK: {{^}}[[MASTER_ID]]: __builtin_frame_address(1)=[[TASK_EXIT:0x[0-f]+]]
   // CHECK: {{^}}[[MASTER_ID]]: task level 0: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], exit_frame=[[TASK_EXIT]], reenter_frame=[[NULL]]
-  // CHECK: {{^}}[[MASTER_ID]]: task level 1: parallel_id=0, task_id=[[IMPLICIT_TASK_ID]], exit_frame=[[EXIT]], reenter_frame=[[REENTER]]
+  // CHECK: {{^}}[[MASTER_ID]]: task level 1: parallel_id=[[PARALLEL_ID]], task_id=[[IMPLICIT_TASK_ID]], exit_frame=[[EXIT]], reenter_frame=[[REENTER]]
   // CHECK: {{^}}[[MASTER_ID]]: task level 2: parallel_id=0, task_id=[[PARENT_TASK_ID]], exit_frame=[[NULL]], reenter_frame=[[MAIN_REENTER]]
   // <- ompt_event_task_schedule ([[TASK_ID]], [[IMPLICIT_TASK_ID]]) would be expected here
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_schedule: first_task_id=[[TASK_ID]], second_task_id=[[IMPLICIT_TASK_ID]]

@@ -9,6 +9,7 @@
 int main()
 {
   omp_set_nested(1);
+  int condition;
 
   #pragma omp parallel num_threads(4)
   {
@@ -29,7 +30,8 @@ int main()
         print_ids(1);
         print_ids(2);
         print_ids(3);
-        sleep(1);
+      OMPT_SIGNAL(condition);
+      OMPT_WAIT(condition,16);
       }
     }
   }

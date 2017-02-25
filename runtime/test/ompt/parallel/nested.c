@@ -7,6 +7,7 @@
 
 int main()
 {
+  int condition=0;
   omp_set_nested(1);
   print_frame(0);
 
@@ -27,7 +28,8 @@ int main()
       print_ids(1);
       print_ids(2);
       print_frame(0);
-      sleep(1);
+      OMPT_SIGNAL(condition);
+      OMPT_WAIT(condition,16);
       #pragma omp barrier
       print_ids(0);
     }

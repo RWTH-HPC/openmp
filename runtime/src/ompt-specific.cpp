@@ -19,7 +19,7 @@
 // macros
 //******************************************************************************
 
-#define LWT_FROM_TEAM(team) (team)->t.ompt_serialized_team_info;
+#define LWT_FROM_TEAM(team) (team)->t.ompt_serialized_team_info
 
 #define OMPT_THREAD_ID_BITS 16
 
@@ -59,7 +59,7 @@ __ompt_get_teaminfo(int depth, int *size)
         kmp_team *team = thr->th.th_team;
         if (team == NULL) return NULL;
 
-        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(team);
+        ompt_lw_taskteam_t *next_lwt = LWT_FROM_TEAM(team), *lwt=NULL;
 
         while(depth > 0) {
             // next lightweight team (if any)
@@ -68,9 +68,14 @@ __ompt_get_teaminfo(int depth, int *size)
             // next heavyweight team (if any) after
             // lightweight teams are exhausted
             if (!lwt && team) {
-                team=team->t.t_parent;
-                if (team) {
-                    lwt = LWT_FROM_TEAM(team);
+                if(next_lwt) {
+                    lwt = next_lwt;
+                    next_lwt=NULL;
+                } else {
+                    team=team->t.t_parent;
+                    if(team) {
+                        next_lwt = LWT_FROM_TEAM(team);
+                    }
                 }
             }
 
@@ -104,7 +109,7 @@ __ompt_get_task_info_object(int depth)
 
     if (thr) {
         kmp_taskdata_t  *taskdata = thr->th.th_current_task;
-        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
+        ompt_lw_taskteam_t *lwt=NULL, *next_lwt  = LWT_FROM_TEAM(taskdata->td_team);
 
         while (depth > 0) {
             // next lightweight team (if any)
@@ -113,9 +118,14 @@ __ompt_get_task_info_object(int depth)
             // next heavyweight team (if any) after
             // lightweight teams are exhausted
             if (!lwt && taskdata) {
-                taskdata = taskdata->td_parent;
-                if (taskdata) {
-                    lwt = LWT_FROM_TEAM(taskdata->td_team);
+                if(next_lwt) {
+                    lwt = next_lwt;
+                    next_lwt=NULL;
+                } else {
+                    taskdata = taskdata->td_parent;
+                    if (taskdata) {
+                        next_lwt = LWT_FROM_TEAM(taskdata->td_team);
+                    }
                 }
             }
             depth--;
@@ -139,7 +149,8 @@ __ompt_get_scheduling_taskinfo(int depth)
 
     if (thr) {
         kmp_taskdata_t  *taskdata = thr->th.th_current_task;
-        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
+
+        ompt_lw_taskteam_t *lwt=NULL, *next_lwt  = LWT_FROM_TEAM(taskdata->td_team);
 
         while (depth > 0) {
             // next lightweight team (if any)
@@ -151,12 +162,15 @@ __ompt_get_scheduling_taskinfo(int depth)
                 // first try scheduling parent (for explicit task scheduling)
                 if (taskdata->ompt_task_info.scheduling_parent) {
                     taskdata = taskdata->ompt_task_info.scheduling_parent;
-                // then go for implicit tasks
+                }else if(next_lwt) {
+                    lwt = next_lwt;
+                    next_lwt=NULL;
                 } else {
+                    // then go for implicit tasks
                     taskdata = taskdata->td_parent;
-                }
-                if (taskdata) {
-                    lwt = LWT_FROM_TEAM(taskdata->td_team);
+                    if (taskdata) {
+                        next_lwt = LWT_FROM_TEAM(taskdata->td_team);
+                    }
                 }
             }
             depth--;
@@ -291,36 +305,78 @@ __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_dat
 void
 __ompt_lw_taskteam_init(ompt_lw_taskteam_t *lwt, kmp_info_t *thr,
                         int gtid, void *microtask,
-                        ompt_parallel_data_t** ompt_pid)
+                        ompt_parallel_data_t* ompt_pid)
 {
     // initialize parallel_data with input, return address to parallel_data on exit
-    lwt->ompt_team_info.parallel_data = **ompt_pid;
-    *ompt_pid = &lwt->ompt_team_info.parallel_data;
+    lwt->ompt_team_info.parallel_data = *ompt_pid;
     
     lwt->ompt_team_info.microtask = microtask;
     lwt->ompt_task_info.task_data.value = 0;
     lwt->ompt_task_info.frame.reenter_runtime_frame = NULL;
     lwt->ompt_task_info.frame.exit_runtime_frame = NULL;
+    lwt->ompt_task_info.scheduling_parent = NULL;
     lwt->ompt_task_info.function = NULL;
+    lwt->ompt_task_info.deps = NULL;
+    lwt->ompt_task_info.ndeps = 0;
+    lwt->heap=0;
     lwt->parent = 0;
 }
 
 
 void
-__ompt_lw_taskteam_link(ompt_lw_taskteam_t *lwt,  kmp_info_t *thr)
+__ompt_lw_taskteam_link(ompt_lw_taskteam_t *lwt,  kmp_info_t *thr, int on_heap)
 {
-    ompt_lw_taskteam_t *my_parent = thr->th.th_team->t.ompt_serialized_team_info;
-    lwt->parent = my_parent;
-    thr->th.th_team->t.ompt_serialized_team_info = lwt;
+    ompt_lw_taskteam_t *link_lwt = lwt;
+    if (thr->th.th_team->t.t_serialized > 1) { // we already have a team, so link the new team and swap values
+        if(on_heap) { // the lw_taskteam cannot stay on stack, allocate it on heap
+            link_lwt = (ompt_lw_taskteam_t *) __kmp_allocate(sizeof(ompt_lw_taskteam_t));
+        }
+        link_lwt->heap = on_heap;
+
+        // would be swap in the (on_stack) case.
+        ompt_team_info_t tmp_team = lwt->ompt_team_info;
+        link_lwt->ompt_team_info = thr->th.th_team->t.ompt_team_info;
+        thr->th.th_team->t.ompt_team_info = tmp_team;
+
+        ompt_task_info_t tmp_task = lwt->ompt_task_info;
+        link_lwt->ompt_task_info = thr->th.th_current_task->ompt_task_info;
+        thr->th.th_current_task->ompt_task_info = tmp_task;
+
+        // link the taskteam into the list of taskteams:
+        ompt_lw_taskteam_t *my_parent = thr->th.th_team->t.ompt_serialized_team_info;
+        link_lwt->parent = my_parent;
+        thr->th.th_team->t.ompt_serialized_team_info = link_lwt;
+    }else{
+        // this is the first serialized team, so we just store the values in the team and drop the taskteam-object
+        thr->th.th_team->t.ompt_team_info = lwt->ompt_team_info;
+        thr->th.th_current_task->ompt_task_info = lwt->ompt_task_info;
+    }
 }
 
 
-ompt_lw_taskteam_t *
+void
 __ompt_lw_taskteam_unlink(kmp_info_t *thr)
 {
     ompt_lw_taskteam_t *lwtask = thr->th.th_team->t.ompt_serialized_team_info;
-    if (lwtask) thr->th.th_team->t.ompt_serialized_team_info = lwtask->parent;
-    return lwtask;
+    if (lwtask) {
+        thr->th.th_team->t.ompt_serialized_team_info = lwtask->parent;
+
+//        std::swap(lwtask->ompt_team_info,thr->th.th_team->t.ompt_team_info);
+        ompt_team_info_t tmp_team = lwtask->ompt_team_info;
+        lwtask->ompt_team_info = thr->th.th_team->t.ompt_team_info;
+        thr->th.th_team->t.ompt_team_info = tmp_team;
+
+//        std::swap(lwtask->ompt_task_info,thr->th.th_current_task->ompt_task_info);
+        ompt_task_info_t tmp_task = lwtask->ompt_task_info;
+        lwtask->ompt_task_info = thr->th.th_current_task->ompt_task_info;
+        thr->th.th_current_task->ompt_task_info = tmp_task;
+
+        if(lwtask->heap) {
+            __kmp_free(lwtask);
+            lwtask=NULL;
+        }
+    }
+//    return lwtask;
 }
 
 
@@ -351,11 +407,13 @@ __ompt_get_task_info_internal(
 {
     //copied from __ompt_get_scheduling_taskinfo
     ompt_task_info_t *info = NULL;
+    ompt_team_info_t *team_info = NULL;
     kmp_info_t *thr = ompt_get_thread();
 
     if (thr) {
         kmp_taskdata_t  *taskdata = thr->th.th_current_task;
-        ompt_lw_taskteam_t *lwt = LWT_FROM_TEAM(taskdata->td_team);
+        kmp_team *team = thr->th.th_team;
+        ompt_lw_taskteam_t *lwt=NULL, *next_lwt  = LWT_FROM_TEAM(taskdata->td_team);
 
         while (ancestor_level > 0) {
             // next lightweight team (if any)
@@ -367,12 +425,16 @@ __ompt_get_task_info_internal(
                 // first try scheduling parent (for explicit task scheduling)
                 if (taskdata->ompt_task_info.scheduling_parent) {
                     taskdata = taskdata->ompt_task_info.scheduling_parent;
-                // then go for implicit tasks
+                }else if(next_lwt) {
+                    lwt = next_lwt;
+                    next_lwt=NULL;
                 } else {
+                    // then go for implicit tasks
                     taskdata = taskdata->td_parent;
-                }
-                if (taskdata) {
-                    lwt = LWT_FROM_TEAM(taskdata->td_team);
+                    team = team->t.t_parent;
+                    if (taskdata) {
+                        next_lwt = LWT_FROM_TEAM(taskdata->td_team);
+                    }
                 }
             }
             ancestor_level--;
@@ -380,12 +442,14 @@ __ompt_get_task_info_internal(
 
         if (lwt) {
             info = &lwt->ompt_task_info;
+            team_info = &lwt->ompt_team_info;
             if(type)
             {
                 *type = ompt_task_implicit;
             }
         } else if (taskdata) {
             info = &taskdata->ompt_task_info;
+            team_info = &team->t.ompt_team_info;
             if(type)
             {
                 if(taskdata->td_parent)
@@ -409,8 +473,7 @@ __ompt_get_task_info_internal(
         }
         if(parallel_data)
         {
-            ompt_team_info_t* team_info = __ompt_get_teaminfo(ancestor_level, NULL);
-            *parallel_data = info ? &(team_info->parallel_data) : NULL;
+            *parallel_data = team_info ? &(team_info->parallel_data) : NULL;
         }
         return info ? 1 : 0;
     }

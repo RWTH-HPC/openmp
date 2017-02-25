@@ -47,6 +47,7 @@ typedef struct {
 typedef struct ompt_lw_taskteam_s {
     ompt_team_info_t    ompt_team_info;
     ompt_task_info_t    ompt_task_info;
+    int			heap;
     struct ompt_lw_taskteam_s *parent;
 } ompt_lw_taskteam_t;
 

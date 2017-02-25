@@ -1,12 +1,13 @@
 // RUN:  %libomp-compile && env OMP_CANCELLATION=true %libomp-run | %sort-threads | FileCheck %s
 // REQUIRES: ompt
+
 #include "callback.h"
-#include <omp.h> 
 #include <unistd.h>  
+#include <stdio.h>
 
 int main()
 {
-  omp_set_nested(0);
+  int condition=0;
   print_frame(0);
   #pragma omp parallel num_threads(2)
   {
@@ -14,27 +15,34 @@ int main()
     {
       #pragma omp taskgroup
       {
-        #pragma omp task
+        #pragma omp task shared(condition)
         {
-          sleep(2);
+          printf("start execute task 1\n");
+          OMPT_SIGNAL(condition);
+          OMPT_WAIT(condition,2);
           #pragma omp cancellation point taskgroup
+          printf("end execute task 1\n");
         }
-        #pragma omp task
+        #pragma omp task shared(condition)
         {
-          sleep(2);
+          printf("start execute task 2\n");
           #pragma omp cancellation point taskgroup
+          printf("end execute task 2\n");
         }
-        #pragma omp task
+      #pragma omp task shared(condition)
         {
-          sleep(2);
+          printf("start execute task 3\n");
           #pragma omp cancellation point taskgroup
+          printf("end execute task 3\n");
         }
-        sleep(1);
-        #pragma omp task if(0)
+      #pragma omp task if(0) shared(condition)
         {
-          print_ids(0);
+          printf("start execute task 4\n");
+          OMPT_WAIT(condition,1);
           #pragma omp cancel taskgroup
+          printf("end execute task 4\n");
         }
+        OMPT_SIGNAL(condition);
       }
     }
     #pragma omp barrier

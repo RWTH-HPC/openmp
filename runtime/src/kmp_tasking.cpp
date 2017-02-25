@@ -522,11 +522,11 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
     }
     if (ompt_enabled) {
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
-            kmp_taskdata_t *parent = taskdata->td_parent;
+            ompt_task_info_t * parent_info = &(current_task->ompt_task_info);
             ompt_task_data_t task_data = ompt_task_id_none;
             ompt_callbacks.ompt_callback(ompt_callback_task_create)(
-                parent ? &(parent->ompt_task_info.task_data) : &task_data,
-                parent ? &(parent->ompt_task_info.frame) : NULL,
+                &(parent_info->task_data),
+                &(parent_info->frame),
                 &(taskdata->ompt_task_info.task_data),
                 ompt_task_explicit,
                 0,
@@ -1391,8 +1391,8 @@ __kmpc_omp_task_parts( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
     kmp_taskdata_t *parent;
     if (ompt_enabled) {
         parent = new_taskdata->td_parent;
-        parent->ompt_task_info.frame.reenter_runtime_frame =
-            OMPT_GET_FRAME_ADDRESS(1);
+//        parent->ompt_task_info.frame.reenter_runtime_frame =
+//            OMPT_GET_FRAME_ADDRESS(1);
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             ompt_task_data_t task_data = ompt_task_id_none;
             ompt_callbacks.ompt_callback(ompt_callback_task_create)(
@@ -1447,7 +1447,7 @@ __kmp_omp_task( kmp_int32 gtid, kmp_task_t * new_task, bool serialize_immediate 
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        new_taskdata->ompt_task_info.frame.reenter_runtime_frame =
+        new_taskdata->td_parent->ompt_task_info.frame.reenter_runtime_frame =
             OMPT_GET_FRAME_ADDRESS(1);
     }
 #endif
@@ -1468,7 +1468,7 @@ __kmp_omp_task( kmp_int32 gtid, kmp_task_t * new_task, bool serialize_immediate 
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        new_taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
+        new_taskdata->td_parent->ompt_task_info.frame.reenter_runtime_frame = NULL;
     }
 #endif
 

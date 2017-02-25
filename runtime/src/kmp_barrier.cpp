@@ -18,6 +18,9 @@
 #include "kmp_stats.h"
 #include "kmp_itt.h"
 #include "kmp_os.h"
+#if OMPT_SUPPORT
+#include "ompt-specific.h"
+#endif
 
 
 #if KMP_MIC
@@ -1105,8 +1108,8 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
 #if OMPT_SUPPORT
     if (ompt_enabled) {
 #if OMPT_OPTIONAL
-        my_task_data = &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data);
-        my_parallel_data = &(team->t.ompt_team_info.parallel_data);
+        my_task_data = OMPT_CUR_TASK_DATA(this_thr);
+        my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,
@@ -1462,8 +1465,8 @@ __kmp_join_barrier(int gtid)
     ompt_parallel_data_t* my_parallel_data;
     if (ompt_enabled) {
 #if OMPT_OPTIONAL
-        my_task_data = &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data);
-        my_parallel_data = &(team->t.ompt_team_info.parallel_data);
+        my_task_data = OMPT_CUR_TASK_DATA(this_thr);
+        my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,

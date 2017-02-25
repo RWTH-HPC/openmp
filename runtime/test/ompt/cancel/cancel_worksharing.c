@@ -20,7 +20,7 @@ int main()
       else
       {
         x++;
-        sleep(1);
+        usleep(100);
         #pragma omp cancellation point for
       }
     }
@@ -35,7 +35,7 @@ int main()
       }
       #pragma omp section
       {
-        sleep(1);
+        usleep(100);
         #pragma omp cancellation point sections
       }
     }

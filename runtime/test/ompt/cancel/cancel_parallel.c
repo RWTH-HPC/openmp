@@ -13,7 +13,7 @@ int main()
     }
     else
     {
-      sleep(1);
+      usleep(100);
       #pragma omp cancellation point parallel
     }
   }

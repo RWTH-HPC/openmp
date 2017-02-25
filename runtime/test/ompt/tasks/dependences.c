@@ -15,7 +15,7 @@ int main()
       #pragma omp task depend(out:x)
       {
         x++;
-        sleep(1);
+        usleep(100);
       }
     
       #pragma omp task depend(in:x)
