@@ -476,13 +476,17 @@ void
 __ompt_task_finish( kmp_task_t *task, kmp_taskdata_t *resumed_task )
  {
     kmp_taskdata_t * taskdata = KMP_TASK_TO_TASKDATA(task);
+    ompt_task_status_t status = ompt_task_complete;
+    if (taskdata->td_flags.tiedness == TASK_UNTIED && KMP_TEST_THEN_ADD32(&(taskdata->td_untied_count),0) >1)
+        status = ompt_task_others;
+    
     /* let OMPT know that we're returning to the callee task */
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_task_schedule))
     {
       ompt_callbacks.ompt_callback(ompt_callback_task_schedule)(
         &(taskdata->ompt_task_info.task_data),
-        ompt_task_complete,
+        status,
         &((resumed_task?resumed_task:
             (taskdata->ompt_task_info.scheduling_parent?taskdata->ompt_task_info.scheduling_parent:
                 taskdata->td_parent))
@@ -1332,7 +1336,6 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
 #if OMPT_SUPPORT
         __ompt_task_finish(task, current_task);
 #endif
-
 #if OMP_40_ENABLED
     }
 #endif // OMP_40_ENABLED
@@ -1351,6 +1354,7 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
 #endif
       ANNOTATE_HAPPENS_BEFORE(taskdata->td_parent);
       __kmp_task_finish( gtid, task, current_task ); // OMPT only if not discarded
+
 #if OMP_45_ENABLED
     }
 #endif
@@ -1501,7 +1505,7 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
 
 #if OMPT_SUPPORT
     kmp_taskdata_t *parent;
-    if (ompt_enabled) {
+    if (ompt_enabled && !new_taskdata->td_flags.started) {
         parent = new_taskdata->td_parent;
         parent->ompt_task_info.frame.reenter_runtime_frame =
             OMPT_GET_FRAME_ADDRESS(1);
