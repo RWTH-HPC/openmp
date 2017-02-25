@@ -1,4 +1,4 @@
-// RUN:  %libomp-compile && env OMP_CANCELLATION=true %libomp-run | %sort-threads | FileCheck %s
+// RUN:  %libomp-compile && env OMP_CANCELLATION=true %libomp-run | %sort-threads | tee log.txt | FileCheck %s
 // REQUIRES: ompt
 
 #include "callback.h"
@@ -20,6 +20,7 @@ int main()
           printf("start execute task 1\n");
           OMPT_SIGNAL(condition);
           OMPT_WAIT(condition,2);
+          usleep(300); // master needs time to discard tasks 
           #pragma omp cancellation point taskgroup
           printf("end execute task 1\n");
         }

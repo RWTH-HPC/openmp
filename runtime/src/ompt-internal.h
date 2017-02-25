@@ -61,11 +61,12 @@ typedef struct ompt_lw_taskteam_s {
 
 
 typedef struct {
-    ompt_thread_data_t  thread_data;
+    ompt_thread_data_t    thread_data;
     ompt_parallel_data_t  parallel_data; /* stored here from implicit barrier-begin until implicit-task-end */
-    ompt_state_t        state;
-    ompt_wait_id_t      wait_id;
-    void                *idle_frame;
+    ompt_task_data_t      task_data; /* stored here from implicit barrier-begin until implicit-task-end */
+    ompt_state_t          state;
+    ompt_wait_id_t        wait_id;
+    void                  *idle_frame;
 } ompt_thread_info_t;
 
 
