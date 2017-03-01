@@ -61,7 +61,7 @@ kmp_int32 __kmpc_cancel(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 cncl_kind) {
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
                                 ompt_task_data_t *task_data;
                                 __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
-                                ompt_cancel_flag_t type;
+                                ompt_cancel_flag_t type = ompt_cancel_parallel;
                                 if(cncl_kind == cancel_parallel)
                                     type = ompt_cancel_parallel;
                                 else if(cncl_kind == cancel_loop)
@@ -166,7 +166,7 @@ kmp_int32 __kmpc_cancellationpoint(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 c
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
                                 ompt_task_data_t *task_data;
                                 __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
-                                ompt_cancel_flag_t type;
+                                ompt_cancel_flag_t type = ompt_cancel_parallel;
                                 if(cncl_kind == cancel_parallel)
                                     type = ompt_cancel_parallel;
                                 else if(cncl_kind == cancel_loop)
