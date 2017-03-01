@@ -494,7 +494,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
     KA_TRACE(20, ("GOMP_parallel_end: T#%d\n", gtid));
 
 
-#if OMPT_SUPPORT
+#if 0 && OMPT_SUPPORT
     ompt_parallel_data_t *parallel_data;
     ompt_task_data_t *serialized_task_data;
     ompt_frame_t *ompt_frame = NULL;
@@ -521,7 +521,6 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
 
         // unlink if necessary. no-op if there is not a lightweight task.
         // TODO: Don't we need the lwt for parallel_end? Shouldn't be the unlink after parellel end?
-        __ompt_lw_taskteam_unlink(thr);
     }
 #endif
 
@@ -544,25 +543,28 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         );
     }
     else {
-#if OMPT_SUPPORT
+#if 0 && OMPT_SUPPORT
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                parallel_data,
-                serialized_task_data,
+                OMPT_CUR_TEAM_DATA(thr),
+                OMPT_CUR_TASK_DATA(thr),
                 ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
+            thr->th.ompt_thread_info.state = ompt_state_overhead;
         }
 #endif
 
         __kmpc_end_serialized_parallel(&loc, gtid);
 
-#if OMPT_SUPPORT
+#if 0 && OMPT_SUPPORT
         if (ompt_enabled) {
             // Record that we re-entered the runtime system in the frame that
             // created the parallel region.
-            ompt_task_info_t *parent_task_info = __ompt_get_task_info_object(0);
+            ompt_parallel_data_t *parallel_data = OMPT_CUR_TEAM_DATA(thr);
+            __ompt_lw_taskteam_unlink(thr);
+            ompt_task_info_t *parent_task_info = OMPT_CUR_TASK_INFO(thr);
 
             if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                 ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(

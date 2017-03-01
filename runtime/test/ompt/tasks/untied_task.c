@@ -24,6 +24,15 @@ int main()
         print_ids(0);
         print_ids(1);
         print_ids(2);
+        #pragma omp task if(0)
+        {
+          print_ids(0);
+          print_ids(1);
+          print_ids(2);
+        }
+        print_ids(0);
+        print_ids(1);
+        print_ids(2);
       }
       OMPT_WAIT(condition,1);
       print_ids(0);
