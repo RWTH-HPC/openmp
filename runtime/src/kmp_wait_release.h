@@ -233,8 +233,8 @@ THIS function is called from
                 tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
             }
         } else {        
-                pId = &(this_thr->th.ompt_thread_info.parallel_data);
-//                pId = NULL;
+//                pId = &(this_thr->th.ompt_thread_info.parallel_data);
+                pId = NULL;
                 tId = &(this_thr->th.ompt_thread_info.task_data);
         }
 #if OMPT_OPTIONAL
