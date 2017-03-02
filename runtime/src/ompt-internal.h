@@ -103,6 +103,8 @@ void ompt_fini(void);
   #define OMPT_GET_FRAME_ADDRESS(level) __builtin_frame_address(level)
 #endif
 
+int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg);
+
 extern int ompt_enabled;
 
 #ifdef __cplusplus
