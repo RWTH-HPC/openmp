@@ -8,7 +8,6 @@ void ompt_signal(int* s)
 {                
   #pragma omp atomic
   (*s)++;
-  #pragma omp flush(s)
 }
                 
 #define OMPT_WAIT(s,v) ompt_wait(&s,v)
@@ -19,7 +18,7 @@ void ompt_wait(int *s, int v)
   int wait;
   do{
     usleep(10);
-    #pragma omp flush(s)
-    wait = (*s);
+    #pragma atomic
+	  wait = (*s)+0;
   }while(wait!=v);
 }
