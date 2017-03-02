@@ -123,7 +123,6 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, ompt_state_t ompt_state, ompt_tas
                     0,
                     ds_tid);
             }
-            pId->ptr=NULL;
 #if OMPT_OPTIONAL
             if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
                 ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_begin);
