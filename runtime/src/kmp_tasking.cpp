@@ -479,7 +479,11 @@ __ompt_task_finish( kmp_task_t *task, kmp_taskdata_t *resumed_task )
     ompt_task_status_t status = ompt_task_complete;
     if (taskdata->td_flags.tiedness == TASK_UNTIED && KMP_TEST_THEN_ADD32(&(taskdata->td_untied_count),0) >1)
         status = ompt_task_others;
-    
+    if(__kmp_omp_cancellation) //TODO: is taskgroup cancellation activated?
+    {
+        //status = ompt_task_cancel;
+    }
+
     /* let OMPT know that we're returning to the callee task */
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_task_schedule))
@@ -1674,6 +1678,15 @@ __kmpc_omp_taskyield( ident_t *loc_ref, kmp_int32 gtid, int end_part )
                 if (KMP_TASKING_ENABLED(task_team)) {
                     __kmp_execute_tasks_32( thread, gtid, NULL, FALSE, &thread_finished
                                             USE_ITT_BUILD_ARG(itt_sync_obj), __kmp_task_stealing_constraint );
+#if OMPT_SUPPORT
+                    if (ompt_enabled &&
+                        ompt_callbacks.ompt_callback(ompt_callback_task_schedule)) {
+                        ompt_callbacks.ompt_callback(ompt_callback_task_schedule)(
+                        &(taskdata->ompt_task_info.task_data),
+                        ompt_task_yield,
+                        &(taskdata->ompt_task_info.task_data)); //TODO: How can we access the task_data of the scheduled task? (for now the same task_data is used)
+                    }
+#endif
                 }
             }
         }

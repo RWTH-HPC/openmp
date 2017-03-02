@@ -24,6 +24,13 @@ static const char* ompt_task_type_t_values[] = {
   "ompt_task_target"
 };
 
+static const char* ompt_task_status_t_values[] = {
+  NULL,
+  "ompt_task_complete",
+  "ompt_task_yield",
+  "ompt_task_cancel",
+  "ompt_task_others"
+};
 static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_parallel",
   "ompt_cancel_sections",
@@ -525,7 +532,7 @@ on_ompt_callback_task_schedule(
     ompt_task_status_t prior_task_status,
     ompt_task_data_t *second_task_data)
 {
-  printf("%" PRIu64 ": ompt_event_task_schedule: first_task_id=%" PRIu64 ", second_task_id=%" PRIu64 ", prior_task_status=%d\n", ompt_get_thread_data()->value, first_task_data->value, second_task_data->value, prior_task_status);
+  printf("%" PRIu64 ": ompt_event_task_schedule: first_task_id=%" PRIu64 ", second_task_id=%" PRIu64 ", prior_task_status=%s=%d\n", ompt_get_thread_data()->value, first_task_data->value, second_task_data->value, ompt_task_status_t_values[prior_task_status], prior_task_status);
   if(prior_task_status == ompt_task_complete)
   {
     printf("%" PRIu64 ": ompt_event_task_end: task_id=%" PRIu64 "\n", ompt_get_thread_data()->value, first_task_data->value);
