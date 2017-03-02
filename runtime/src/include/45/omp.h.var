@@ -182,8 +182,6 @@
     extern void   __KAI_KMPC_CONVENTION  kmp_set_warnings_on(void);
     extern void   __KAI_KMPC_CONVENTION  kmp_set_warnings_off(void);
 
-#   if OMPT_SUPPORT
-
     /* OpenMP 5.0 Tool Control */
     typedef enum omp_control_tool_result_t {
         omp_control_tool_notool = -2,
@@ -193,8 +191,6 @@
     } omp_control_tool_result_t;
     
     extern int __KAI_KMPC_CONVENTION omp_control_tool(int, int, void*);
-
-#   endif
 
 #   undef __KAI_KMPC_CONVENTION
 
