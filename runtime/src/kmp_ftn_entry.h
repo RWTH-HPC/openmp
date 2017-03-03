@@ -402,8 +402,8 @@ xexpand(FTN_GET_MAX_THREADS)( void )
 int FTN_STDCALL
 xexpand(FTN_CONTROL_TOOL)(uint64_t command, uint64_t modifier, void *arg)
 {
-    #if defined(KMP_STUB) || OMPT_SUPPORT
-        return -2
+    #if defined(KMP_STUB) || !OMPT_SUPPORT
+        return -2;
     #else
         if ( ! TCR_4(__kmp_init_middle) ) {
             return -2;

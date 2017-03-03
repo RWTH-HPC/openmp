@@ -405,6 +405,123 @@ OMPT_API_ROUTINE int ompt_get_task_info(
     return __ompt_get_task_info_internal(ancestor_level, type, task_data, task_frame, parallel_data, thread_num);
 }
 
+
+/*****************************************************************************
+ * places
+ ****************************************************************************/
+
+OMPT_API_ROUTINE int ompt_get_num_places(void)
+{
+    //copied from kmp_ftn_entry.h (but modified)
+    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+        return 0;
+    #else
+        if (!KMP_AFFINITY_CAPABLE())
+            return 0;
+        return __kmp_affinity_num_masks;
+    #endif
+}
+
+OMPT_API_ROUTINE int ompt_get_place_proc_ids(
+    int place_num,
+    int ids_size,
+    int *ids)
+{
+    //copied from kmp_ftn_entry.h (but modified)
+    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+        return 0;
+    #else
+        int i,j,count;
+        if (!KMP_AFFINITY_CAPABLE())
+            return 0;
+        if ( place_num < 0 || place_num >= (int)__kmp_affinity_num_masks )
+            return 0;
+        kmp_affin_mask_t *mask = KMP_CPU_INDEX(__kmp_affinity_masks, place_num);
+        count = 0;
+        KMP_CPU_SET_ITERATE(i, mask) {
+            if ((! KMP_CPU_ISSET(i, __kmp_affin_fullMask)) ||
+              (!KMP_CPU_ISSET(i, mask))) {
+                continue;
+            }
+            count++;
+        }
+        if(ids_size >= count)
+        {
+            j = 0;
+            KMP_CPU_SET_ITERATE(i, mask) {
+                if ((! KMP_CPU_ISSET(i, __kmp_affin_fullMask)) ||
+                  (!KMP_CPU_ISSET(i, mask))) {
+                    continue;
+                }
+                ids[j++] = i;
+            }
+        }
+        return count;
+    #endif
+}
+
+OMPT_API_ROUTINE int ompt_get_place_num(void)
+{
+    //copied from kmp_ftn_entry.h (but modified)
+    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+        return -1;
+    #else
+        int gtid;
+        kmp_info_t *thread;
+        if (!KMP_AFFINITY_CAPABLE())
+            return -1;
+        gtid = __kmp_entry_gtid();
+        thread = __kmp_thread_from_gtid(gtid);
+        if ( thread->th.th_current_place < 0 )
+            return -1;
+        return thread->th.th_current_place;
+    #endif
+}
+
+OMPT_API_ROUTINE int ompt_get_partition_place_nums(
+    int place_nums_size,
+    int *place_nums)
+{
+    //copied from kmp_ftn_entry.h (but modified)
+    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+        return 0;
+    #else
+        int i, gtid, place_num, first_place, last_place, start, end;
+        kmp_info_t *thread;
+        if (!KMP_AFFINITY_CAPABLE())
+            return 0;
+        gtid = __kmp_entry_gtid();
+        thread = __kmp_thread_from_gtid(gtid);
+        first_place = thread->th.th_first_place;
+        last_place = thread->th.th_last_place;
+        if ( first_place < 0 || last_place < 0 )
+            return 0;
+        if ( first_place <= last_place ) {
+            start = first_place;
+            end = last_place;
+        } else {
+            start = last_place;
+            end = first_place;
+        }
+        if(end-start <= place_nums_size)
+        for (i = 0, place_num = start; place_num <= end; ++place_num, ++i) {
+            place_nums[i] = place_num;
+        }
+        return end-start;
+    #endif
+}
+
+
+/*****************************************************************************
+ * places
+ ****************************************************************************/
+
+OMPT_API_ROUTINE int ompt_get_proc_id(void)
+{
+    //TODO
+    return -1;
+}
+
 /*****************************************************************************
  * placeholders
  ****************************************************************************/
