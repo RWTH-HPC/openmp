@@ -431,7 +431,8 @@ OMPT_API_ROUTINE int ompt_get_place_proc_ids(
     #if !KMP_AFFINITY_SUPPORTED
         return 0;
     #else
-        int i,j,count;
+        int i,count;
+        int tmp_ids[ids_size];
         if (!KMP_AFFINITY_CAPABLE())
             return 0;
         if ( place_num < 0 || place_num >= (int)__kmp_affinity_num_masks )
@@ -443,17 +444,15 @@ OMPT_API_ROUTINE int ompt_get_place_proc_ids(
               (!KMP_CPU_ISSET(i, mask))) {
                 continue;
             }
+            if(count < ids_size)
+                tmp_ids[count] = i;
             count++;
         }
         if(ids_size >= count)
         {
-            j = 0;
-            KMP_CPU_SET_ITERATE(i, mask) {
-                if ((! KMP_CPU_ISSET(i, __kmp_affin_fullMask)) ||
-                  (!KMP_CPU_ISSET(i, mask))) {
-                    continue;
-                }
-                ids[j++] = i;
+            for(i = 0; i < count; i++)
+            {
+                ids[i] = tmp_ids[i];
             }
         }
         return count;
