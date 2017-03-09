@@ -479,9 +479,9 @@ __ompt_task_finish( kmp_task_t *task, kmp_taskdata_t *resumed_task )
     ompt_task_status_t status = ompt_task_complete;
     if (taskdata->td_flags.tiedness == TASK_UNTIED && KMP_TEST_THEN_ADD32(&(taskdata->td_untied_count),0) >1)
         status = ompt_task_others;
-    if(__kmp_omp_cancellation) //TODO: is taskgroup cancellation activated?
+    if(__kmp_omp_cancellation && taskdata->td_team->t.t_cancel_request)
     {
-        //status = ompt_task_cancel;
+        status = ompt_task_cancel;
     }
 
     /* let OMPT know that we're returning to the callee task */
