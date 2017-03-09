@@ -413,7 +413,7 @@ OMPT_API_ROUTINE int ompt_get_task_info(
 OMPT_API_ROUTINE int ompt_get_num_places(void)
 {
     //copied from kmp_ftn_entry.h (but modified)
-    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+    #if !KMP_AFFINITY_SUPPORTED
         return 0;
     #else
         if (!KMP_AFFINITY_CAPABLE())
@@ -428,7 +428,7 @@ OMPT_API_ROUTINE int ompt_get_place_proc_ids(
     int *ids)
 {
     //copied from kmp_ftn_entry.h (but modified)
-    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+    #if !KMP_AFFINITY_SUPPORTED
         return 0;
     #else
         int i,j,count;
@@ -463,7 +463,7 @@ OMPT_API_ROUTINE int ompt_get_place_proc_ids(
 OMPT_API_ROUTINE int ompt_get_place_num(void)
 {
     //copied from kmp_ftn_entry.h (but modified)
-    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+    #if !KMP_AFFINITY_SUPPORTED
         return -1;
     #else
         int gtid;
@@ -483,7 +483,7 @@ OMPT_API_ROUTINE int ompt_get_partition_place_nums(
     int *place_nums)
 {
     //copied from kmp_ftn_entry.h (but modified)
-    #if defined(KMP_STUB) || !KMP_AFFINITY_SUPPORTED
+    #if !KMP_AFFINITY_SUPPORTED
         return 0;
     #else
         int i, gtid, place_num, first_place, last_place, start, end;
