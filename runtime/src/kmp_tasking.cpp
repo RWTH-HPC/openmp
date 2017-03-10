@@ -1676,17 +1676,9 @@ __kmpc_omp_taskyield( ident_t *loc_ref, kmp_int32 gtid, int end_part )
             kmp_task_team_t * task_team = thread->th.th_task_team;
             if (task_team != NULL) {
                 if (KMP_TASKING_ENABLED(task_team)) {
+                    //TODO: store in thread that the task yields
                     __kmp_execute_tasks_32( thread, gtid, NULL, FALSE, &thread_finished
                                             USE_ITT_BUILD_ARG(itt_sync_obj), __kmp_task_stealing_constraint );
-#if OMPT_SUPPORT
-                    if (ompt_enabled &&
-                        ompt_callbacks.ompt_callback(ompt_callback_task_schedule)) {
-                        ompt_callbacks.ompt_callback(ompt_callback_task_schedule)(
-                        &(taskdata->ompt_task_info.task_data),
-                        ompt_task_yield,
-                        &(taskdata->ompt_task_info.task_data)); //TODO: How can we access the task_data of the scheduled task? (for now the same task_data is used)
-                    }
-#endif
                 }
             }
         }
