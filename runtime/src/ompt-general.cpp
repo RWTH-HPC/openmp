@@ -516,7 +516,6 @@ OMPT_API_ROUTINE int ompt_get_partition_place_nums(
 
 OMPT_API_ROUTINE int ompt_get_proc_id(void)
 {
-    unsigned core = sched_getcpu();
     return sched_getcpu();
 }
 
