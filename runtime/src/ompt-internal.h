@@ -60,10 +60,19 @@ typedef struct ompt_lw_taskteam_s {
 //} ompt_parallel_info_t;
 
 
+#define OMPT_STORE_GOMP_RETURN_ADDRESS(gtid) __kmp_threads[gtid]->th.ompt_thread_info.gomp_return_address = __builtin_return_address(0)
+#define OMPT_STORE_KMP_RETURN_ADDRESS(gtid) __kmp_threads[gtid]->th.ompt_thread_info.kmp_return_address = __builtin_return_address(0)
+#define OMPT_LOAD_RETURN_ADDRESS(thr) (thr->th.ompt_thread_info.gomp_return_address) ? \
+                                      thr->th.ompt_thread_info.gomp_return_address :\
+                                      thr->th.ompt_thread_info.kmp_return_address, \
+                                      thr->th.ompt_thread_info.gomp_return_address=NULL, thr->th.ompt_thread_info.kmp_return_address=NULL
+
 typedef struct {
     ompt_thread_data_t    thread_data;
     ompt_parallel_data_t  parallel_data; /* stored here from implicit barrier-begin until implicit-task-end */
     ompt_task_data_t      task_data; /* stored here from implicit barrier-begin until implicit-task-end */
+    void                  *kmp_return_address; /* stored here on entry of runtime */
+    void                  *gomp_return_address; /* stored here on entry of runtime */
     ompt_state_t          state;
     ompt_wait_id_t        wait_id;
     void                  *idle_frame;

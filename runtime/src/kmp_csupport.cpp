@@ -715,12 +715,13 @@ __kmpc_barrier(ident_t *loc, kmp_int32 global_tid)
         __kmp_check_barrier( global_tid, ct_barrier, loc );
     }
 
-#if OMPT_SUPPORT && OMPT_OPTIONAL
+#if OMPT_SUPPORT
     ompt_frame_t * ompt_frame;
     if (ompt_enabled ) {
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
         if ( ompt_frame->reenter_runtime_frame == NULL )
             ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
     }
 #endif
     __kmp_threads[ global_tid ]->th.th_ident = loc;
@@ -1528,10 +1529,24 @@ __kmpc_barrier_master(ident_t *loc, kmp_int32 global_tid)
     if ( __kmp_env_consistency_check )
         __kmp_check_barrier( global_tid, ct_barrier, loc );
 
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    }
+#endif
 #if USE_ITT_NOTIFY
     __kmp_threads[global_tid]->th.th_ident = loc;
 #endif
     status = __kmp_barrier( bs_plain_barrier, global_tid, TRUE, 0, NULL, NULL );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 
     return (status != 0) ? 0 : 1;
 }
@@ -1580,10 +1595,24 @@ __kmpc_barrier_master_nowait( ident_t * loc, kmp_int32 global_tid )
         __kmp_check_barrier( global_tid, ct_barrier, loc );
     }
 
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    }
+#endif
 #if USE_ITT_NOTIFY
     __kmp_threads[global_tid]->th.th_ident = loc;
 #endif
     __kmp_barrier( bs_plain_barrier, global_tid, FALSE, 0, NULL, NULL );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 
     ret = __kmpc_master (loc, global_tid);
 
@@ -1953,6 +1982,15 @@ __kmpc_copyprivate( ident_t *loc, kmp_int32 gtid, size_t cpy_size, void *cpy_dat
 
     if (didit) *data_ptr = cpy_data;
 
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    }
+#endif
     /* This barrier is not a barrier region boundary */
 #if USE_ITT_NOTIFY
     __kmp_threads[gtid]->th.th_ident = loc;
@@ -1964,10 +2002,20 @@ __kmpc_copyprivate( ident_t *loc, kmp_int32 gtid, size_t cpy_size, void *cpy_dat
     /* Consider next barrier the user-visible barrier for barrier region boundaries */
     /* Nesting checks are already handled by the single construct checks */
 
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    }
+#endif
 #if USE_ITT_NOTIFY
     __kmp_threads[gtid]->th.th_ident = loc; // TODO: check if it is needed (e.g. tasks can overwrite the location)
 #endif
     __kmp_barrier( bs_plain_barrier, gtid, FALSE , 0, NULL, NULL );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 }
 
 /* -------------------------------------------------------------------------- */
@@ -3271,11 +3319,28 @@ __kmpc_reduce_nowait(
 
         // this barrier should be invisible to a customer and to the threading profile tool
         //              (it's neither a terminating barrier nor customer's code, it's used for an internal purpose)
+#if OMPT_SUPPORT
+        //JP: can this barrier potentially leed to task scheduling?
+        //JP: as long as there is a barrier in the implementation, OMPT should and will provide the barrier events
+        //         so we set-up the necessary frame/return addresses.  
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    }
+#endif
 #if USE_ITT_NOTIFY
         __kmp_threads[global_tid]->th.th_ident = loc;
 #endif
         retval = __kmp_barrier( UNPACK_REDUCTION_BARRIER( packed_reduction_method ), global_tid, FALSE, reduce_size, reduce_data, reduce_func );
         retval = ( retval != 0 ) ? ( 0 ) : ( 1 );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 
         // all other workers except master should do this pop here
         //     ( none of other workers will get to __kmpc_end_reduce_nowait() )
@@ -3424,11 +3489,25 @@ __kmpc_reduce(
         //case tree_reduce_block:
         // this barrier should be visible to a customer and to the threading profile tool
         //              (it's a terminating barrier on constructs if NOWAIT not specified)
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    }
+#endif
 #if USE_ITT_NOTIFY
         __kmp_threads[global_tid]->th.th_ident = loc; // needed for correct notification of frames
 #endif
         retval = __kmp_barrier( UNPACK_REDUCTION_BARRIER( packed_reduction_method ), global_tid, TRUE, reduce_size, reduce_data, reduce_func );
         retval = ( retval != 0 ) ? ( 0 ) : ( 1 );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 
         // all other workers except master should do this pop here
         //     ( none of other workers except master will enter __kmpc_end_reduce() )
@@ -3476,28 +3555,70 @@ __kmpc_end_reduce( ident_t *loc, kmp_int32 global_tid, kmp_critical_name *lck ) 
         __kmp_end_critical_section_reduce_block( loc, global_tid, lck );
 
         // TODO: implicit barrier: should be exposed
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    }
+#endif
 #if USE_ITT_NOTIFY
         __kmp_threads[global_tid]->th.th_ident = loc;
 #endif
         __kmp_barrier( bs_plain_barrier, global_tid, FALSE, 0, NULL, NULL );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 
     } else if( packed_reduction_method == empty_reduce_block ) {
 
         // usage: if team size == 1, no synchronization is required ( Intel platforms only )
 
         // TODO: implicit barrier: should be exposed
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    }
+#endif
 #if USE_ITT_NOTIFY
         __kmp_threads[global_tid]->th.th_ident = loc;
 #endif
         __kmp_barrier( bs_plain_barrier, global_tid, FALSE, 0, NULL, NULL );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 
     } else if( packed_reduction_method == atomic_reduce_block ) {
 
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        if ( ompt_frame->reenter_runtime_frame == NULL )
+            ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    }
+#endif
         // TODO: implicit barrier: should be exposed
 #if USE_ITT_NOTIFY
         __kmp_threads[global_tid]->th.th_ident = loc;
 #endif
         __kmp_barrier( bs_plain_barrier, global_tid, FALSE, 0, NULL, NULL );
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    }
+#endif
 
     } else if( TEST_REDUCTION_METHOD( packed_reduction_method, tree_reduce_block ) ) {
 

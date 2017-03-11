@@ -35,14 +35,20 @@ xexpand(KMP_API_NAME_GOMP_BARRIER)(void)
     int gtid = __kmp_entry_gtid();
     MKLOC(loc, "GOMP_barrier");
     KA_TRACE(20, ("GOMP_barrier: T#%d\n", gtid));
-#if OMPT_SUPPORT && OMPT_OPTIONAL
+#if OMPT_SUPPORT
     ompt_frame_t * ompt_frame;
     if (ompt_enabled ) {
         __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
         ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
     } 
 #endif
     __kmpc_barrier(&loc, gtid);
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    } 
+#endif
 }
 
 
@@ -174,6 +180,15 @@ xexpand(KMP_API_NAME_GOMP_SINGLE_COPY_START)(void)
     // Wait for the first thread to set the copyprivate data pointer,
     // and for all other threads to reach this point.
     //
+    
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+    } 
+#endif
     __kmp_barrier(bs_plain_barrier, gtid, FALSE, 0, NULL, NULL);
 
     //
@@ -181,7 +196,17 @@ xexpand(KMP_API_NAME_GOMP_SINGLE_COPY_START)(void)
     // threads to do likewise, then return.
     //
     retval = __kmp_team_from_gtid(gtid)->t.t_copypriv_data;
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+    } 
+#endif
     __kmp_barrier(bs_plain_barrier, gtid, FALSE, 0, NULL, NULL);
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    } 
+#endif
     return retval;
 }
 
@@ -200,8 +225,26 @@ xexpand(KMP_API_NAME_GOMP_SINGLE_COPY_END)(void *data)
     // reuse the t_copypriv_data field.
     //
     __kmp_team_from_gtid(gtid)->t.t_copypriv_data = data;
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+    } 
+#endif
     __kmp_barrier(bs_plain_barrier, gtid, FALSE, 0, NULL, NULL);
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+    } 
+#endif
     __kmp_barrier(bs_plain_barrier, gtid, FALSE, 0, NULL, NULL);
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    } 
+#endif
 }
 
 
@@ -726,7 +769,20 @@ xexpand(KMP_API_NAME_GOMP_LOOP_END)(void)
     int gtid = __kmp_get_gtid();
     KA_TRACE(20, ("GOMP_loop_end: T#%d\n", gtid))
 
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+    } 
+#endif
     __kmp_barrier(bs_plain_barrier, gtid, FALSE, 0, NULL, NULL);
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    } 
+#endif
 
     KA_TRACE(20, ("GOMP_loop_end exit: T#%d\n", gtid))
 }
@@ -1163,7 +1219,20 @@ xexpand(KMP_API_NAME_GOMP_SECTIONS_END)(void)
     int gtid = __kmp_get_gtid();
     KA_TRACE(20, ("GOMP_sections_end: T#%d\n", gtid))
 
+#if OMPT_SUPPORT
+    ompt_frame_t * ompt_frame;
+    if (ompt_enabled ) {
+        __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+        OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+    } 
+#endif
     __kmp_barrier(bs_plain_barrier, gtid, FALSE, 0, NULL, NULL);
+#if OMPT_SUPPORT
+    if (ompt_enabled ) {
+        ompt_frame->reenter_runtime_frame = NULL;
+    } 
+#endif
 
     KA_TRACE(20, ("GOMP_sections_end exit: T#%d\n", gtid))
 }

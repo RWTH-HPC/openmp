@@ -1099,6 +1099,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
 #if OMPT_SUPPORT
     ompt_task_data_t* my_task_data;
     ompt_parallel_data_t* my_parallel_data;
+    void* return_address;
 #endif
 
     KA_TRACE(15, ("__kmp_barrier: T#%d(%d:%d) has arrived\n",
@@ -1107,24 +1108,25 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
     ANNOTATE_BARRIER_BEGIN(&team->t.t_bar);
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-#if OMPT_OPTIONAL
         my_task_data = OMPT_CUR_TASK_DATA(this_thr);
         my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
+        return_address = OMPT_LOAD_RETURN_ADDRESS(this_thr);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,
                 ompt_scope_begin,
                 my_parallel_data,
                 my_task_data,
-                OMPT_GET_RETURN_ADDRESS(1));
+                return_address);
         }
+#if OMPT_OPTIONAL
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
                 ompt_scope_begin,
                 my_parallel_data,
                 my_task_data,
-                OMPT_GET_RETURN_ADDRESS(1));
+                return_address);
         }
 #endif
         // It is OK to report the barrier state after the barrier begin callback.
@@ -1348,7 +1350,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
                 ompt_scope_end,
                 my_parallel_data,
                 my_task_data,
-                OMPT_GET_RETURN_ADDRESS(1));
+                return_address);
         }
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
@@ -1356,7 +1358,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
                 ompt_scope_end,
                 my_parallel_data,
                 my_task_data,
-                OMPT_GET_RETURN_ADDRESS(1));
+                return_address);
         }
 #endif
         this_thr->th.ompt_thread_info.state = ompt_state_work_parallel;
