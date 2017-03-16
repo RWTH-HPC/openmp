@@ -22,7 +22,6 @@ int main()
   	printf("%" PRIu64 ": omp_get_num_places()=%d\n", ompt_get_thread_data()->value, omp_get_num_places());
   	printf("%" PRIu64 ": ompt_get_num_places()=%d\n", ompt_get_thread_data()->value, ompt_get_num_places());
 
-    //place_proc_ids
     int omp_ids[omp_get_place_num_procs(0)];
     omp_get_place_proc_ids(0, omp_ids);
     print_list("omp_get_place_proc_ids" ,omp_ids);
@@ -33,7 +32,12 @@ int main()
   	printf("%" PRIu64 ": omp_get_place_num()=%d\n", ompt_get_thread_data()->value, omp_get_place_num());
   	printf("%" PRIu64 ": ompt_get_place_num()=%d\n", ompt_get_thread_data()->value, ompt_get_place_num());
 
-    //partition_place_nums
+    int omp_nums[omp_get_partition_num_places()];
+    omp_get_partition_place_nums(omp_nums);
+    print_list("omp_get_partition_place_nums" ,omp_nums);
+    int ompt_nums[omp_get_partition_num_places()];
+    ompt_get_partition_place_nums(omp_get_partition_num_places(), ompt_nums);
+    print_list("ompt_get_partition_place_nums", ompt_nums);
 
     printf("%" PRIu64 ": sched_getcpu()=%d\n", ompt_get_thread_data()->value, sched_getcpu());
     printf("%" PRIu64 ": ompt_get_proc_id()=%d\n", ompt_get_thread_data()->value, ompt_get_proc_id());
