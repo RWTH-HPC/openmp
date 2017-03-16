@@ -516,7 +516,11 @@ OMPT_API_ROUTINE int ompt_get_partition_place_nums(
 
 OMPT_API_ROUTINE int ompt_get_proc_id(void)
 {
+#ifdef __linux__
     return sched_getcpu();
+#else
+    return -1;
+#endif
 }
 
 /*****************************************************************************
