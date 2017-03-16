@@ -461,7 +461,6 @@ __ompt_task_start( kmp_task_t * task, kmp_taskdata_t * current_task, kmp_int32 g
     ompt_task_status_t status = ompt_task_others;
     if(__kmp_threads[ gtid ]->th.ompt_thread_info.ompt_task_yielded)
     {
-        printf("%s\n", "Taskyield schedule");
         status = ompt_task_yield;
         __kmp_threads[ gtid ]->th.ompt_thread_info.ompt_task_yielded = 0;
     }
@@ -1683,10 +1682,14 @@ __kmpc_omp_taskyield( ident_t *loc_ref, kmp_int32 gtid, int end_part )
             kmp_task_team_t * task_team = thread->th.th_task_team;
             if (task_team != NULL) {
                 if (KMP_TASKING_ENABLED(task_team)) {
+#if OMPT_SUPPORT
                     thread->th.ompt_thread_info.ompt_task_yielded = 1;
+#endif
                     __kmp_execute_tasks_32( thread, gtid, NULL, FALSE, &thread_finished
                                             USE_ITT_BUILD_ARG(itt_sync_obj), __kmp_task_stealing_constraint );
+#if OMPT_SUPPORT
                     thread->th.ompt_thread_info.ompt_task_yielded = 0;
+#endif
                 }
             }
         }
