@@ -1,5 +1,6 @@
 // RUN: %libomp-compile && env OMP_CANCELLATION=true %libomp-run | %sort-threads | FileCheck %s
-// REQUIRES: ompt
+// REQUIRES: ompt, cancel
+
 #include "callback.h"
 #include "omp.h"
 
