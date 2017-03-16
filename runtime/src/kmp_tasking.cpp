@@ -455,16 +455,23 @@ __kmp_task_start( kmp_int32 gtid, kmp_task_t * task, kmp_taskdata_t * current_ta
 
 #if OMPT_SUPPORT
 void
-__ompt_task_start( kmp_task_t * task, kmp_taskdata_t * current_task )
+__ompt_task_start( kmp_task_t * task, kmp_taskdata_t * current_task, kmp_int32 gtid )
 {
     kmp_taskdata_t * taskdata = KMP_TASK_TO_TASKDATA(task);
+    ompt_task_status_t status = ompt_task_others;
+    if(__kmp_threads[ gtid ]->th.ompt_thread_info.ompt_task_yielded)
+    {
+        printf("%s\n", "Taskyield schedule");
+        status = ompt_task_yield;
+        __kmp_threads[ gtid ]->th.ompt_thread_info.ompt_task_yielded = 0;
+    }
     /* let OMPT know that we're about to run this task */
     if (ompt_enabled &&
          ompt_callbacks.ompt_callback(ompt_callback_task_schedule))
     {
       ompt_callbacks.ompt_callback(ompt_callback_task_schedule)(
         &(current_task->ompt_task_info.task_data),
-        ompt_task_others,
+        status,
         &(taskdata->ompt_task_info.task_data));
     }
     if (ompt_enabled)
@@ -548,7 +555,7 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
     taskdata -> td_flags.task_serial = 1;  // Execute this task immediately, not deferred.
     __kmp_task_start( gtid, task, current_task );
 #if OMPT_SUPPORT
-    __ompt_task_start( task, current_task );
+    __ompt_task_start( task, current_task, gtid );
 #endif
 
     KA_TRACE(10, ("__kmpc_omp_task_begin_if0(exit): T#%d loc=%p task=%p,\n",
@@ -1323,7 +1330,7 @@ __kmp_invoke_task( kmp_int32 gtid, kmp_task_t *task, kmp_taskdata_t * current_ta
 
 // OMPT task begin
 #if OMPT_SUPPORT
-        __ompt_task_start(task, current_task);
+        __ompt_task_start(task, current_task, gtid);
 #endif
 
 #ifdef KMP_GOMP_COMPAT
@@ -1676,9 +1683,10 @@ __kmpc_omp_taskyield( ident_t *loc_ref, kmp_int32 gtid, int end_part )
             kmp_task_team_t * task_team = thread->th.th_task_team;
             if (task_team != NULL) {
                 if (KMP_TASKING_ENABLED(task_team)) {
-                    //TODO: store in thread that the task yields
+                    thread->th.ompt_thread_info.ompt_task_yielded = 1;
                     __kmp_execute_tasks_32( thread, gtid, NULL, FALSE, &thread_finished
                                             USE_ITT_BUILD_ARG(itt_sync_obj), __kmp_task_stealing_constraint );
+                    thread->th.ompt_thread_info.ompt_task_yielded = 0;
                 }
             }
         }

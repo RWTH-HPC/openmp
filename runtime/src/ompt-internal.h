@@ -75,6 +75,7 @@ typedef struct {
     void                  *gomp_return_address; /* stored here on entry of runtime */
     ompt_state_t          state;
     ompt_wait_id_t        wait_id;
+    int                   ompt_task_yielded;
     void                  *idle_frame;
 } ompt_thread_info_t;
 
