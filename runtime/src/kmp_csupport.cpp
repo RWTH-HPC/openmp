@@ -540,7 +540,7 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
                 &(serial_team->t.ompt_team_info.parallel_data),
                 parent_task_data,
                 ompt_invoker_runtime,
-                OMPT_GET_RETURN_ADDRESS(1));
+                OMPT_GET_RETURN_ADDRESS(0));
         }
         __ompt_lw_taskteam_unlink(this_thr);
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;
@@ -686,7 +686,7 @@ __kmpc_flush(ident_t *loc)
 	if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_flush)) { 
 	        ompt_callbacks.ompt_callback(ompt_callback_flush)(
 	            __ompt_get_thread_data_internal(), 
-		    OMPT_GET_RETURN_ADDRESS(1));
+		    OMPT_GET_RETURN_ADDRESS(0));
 	}
     #endif
 
@@ -780,7 +780,7 @@ __kmpc_master(ident_t *loc, kmp_int32 global_tid)
                 ompt_scope_begin,
                 &(team->t.ompt_team_info.parallel_data),
                 &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
-                OMPT_GET_RETURN_ADDRESS(1));
+                OMPT_GET_RETURN_ADDRESS(0));
         }
     }
 #endif
@@ -828,7 +828,7 @@ __kmpc_end_master(ident_t *loc, kmp_int32 global_tid)
             ompt_scope_end,
             &(team->t.ompt_team_info.parallel_data),
             &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
-            OMPT_GET_RETURN_ADDRESS(1));
+            OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
 
@@ -1760,7 +1760,7 @@ __kmpc_for_static_fini( ident_t *loc, kmp_int32 global_tid )
             &(team_info->parallel_data),
             &(task_info->task_data),
             0,
-            OMPT_GET_RETURN_ADDRESS(1));
+            OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
 
@@ -2063,7 +2063,7 @@ __kmp_init_lock_with_hint(ident_t *loc, void **lock, kmp_dyna_lockseq_t seq)
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lock,
-            OMPT_GET_RETURN_ADDRESS(1));
+            OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
     } else {
@@ -2081,7 +2081,7 @@ __kmp_init_lock_with_hint(ident_t *loc, void **lock, kmp_dyna_lockseq_t seq)
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lock,
-            OMPT_GET_RETURN_ADDRESS(1));
+            OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
     }
@@ -2131,7 +2131,7 @@ __kmp_init_nest_lock_with_hint(ident_t *loc, void **lock, kmp_dyna_lockseq_t seq
             omp_lock_hint_none,
             0,
             (ompt_wait_id_t) lock,
-            OMPT_GET_RETURN_ADDRESS(1));
+            OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
 }
