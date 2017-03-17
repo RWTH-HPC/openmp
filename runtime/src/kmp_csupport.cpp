@@ -1654,9 +1654,6 @@ introduce an explicit barrier if it is required.
 kmp_int32
 __kmpc_single(ident_t *loc, kmp_int32 global_tid)
 {
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
-#endif
     kmp_int32 rc = __kmp_enter_single( global_tid, loc, TRUE );
 
     if (rc) {
@@ -1664,6 +1661,45 @@ __kmpc_single(ident_t *loc, kmp_int32 global_tid)
         KMP_COUNT_BLOCK(OMP_SINGLE);
         KMP_PUSH_PARTITIONED_TIMER(OMP_single);
     }
+
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    kmp_info_t *this_thr        = __kmp_threads[ global_tid ];
+    kmp_team_t *team            = this_thr -> th.th_team;
+    int tid = __kmp_tid_from_gtid( global_tid );
+
+    if (ompt_enabled) {
+        if (rc) {
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_executor,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    OMPT_GET_RETURN_ADDRESS(0));
+                    //team->t.ompt_team_info.microtask); is the workshare function in tr2
+            }
+        } else {
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    OMPT_GET_RETURN_ADDRESS(0));
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_end,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    OMPT_GET_RETURN_ADDRESS(0));
+            }
+//            this_thr->th.ompt_thread_info.state = ompt_state_work_parallel;
+        }
+    }
+#endif
 
     return rc;
 }

@@ -145,11 +145,6 @@ xexpand(KMP_API_NAME_GOMP_SINGLE_START)(void)
     MKLOC(loc, "GOMP_single_start");
     KA_TRACE(20, ("GOMP_single_start: T#%d\n", gtid));
 
-
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
-#endif
-
     if (! TCR_4(__kmp_init_parallel))
         __kmp_parallel_initialize();
 
@@ -158,7 +153,48 @@ xexpand(KMP_API_NAME_GOMP_SINGLE_START)(void)
     // workshare when USE_CHECKS is defined.  We need to avoid the push,
     // as there is no corresponding GOMP_single_end() call.
     //
-    return __kmp_enter_single(gtid, &loc, FALSE);
+    kmp_int32 rc = __kmp_enter_single(gtid, &loc, FALSE);
+
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    kmp_info_t *this_thr        = __kmp_threads[ gtid ];
+    kmp_team_t *team            = this_thr -> th.th_team;
+    int tid = __kmp_tid_from_gtid( gtid );
+
+    if (ompt_enabled) {
+        if (rc) {
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_executor,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    OMPT_GET_RETURN_ADDRESS(0));
+                    //team->t.ompt_team_info.microtask); is the workshare function in tr2
+            }
+        } else {
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    OMPT_GET_RETURN_ADDRESS(0));
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_end,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    OMPT_GET_RETURN_ADDRESS(0));
+            }
+//            this_thr->th.ompt_thread_info.state = ompt_state_work_parallel;
+        }
+    }
+#endif
+
+    return rc;
 }
 
 
