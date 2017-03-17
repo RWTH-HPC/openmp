@@ -803,6 +803,43 @@ __kmp_enter_single( int gtid, ident_t *id_ref, int push_ws )
         __kmp_itt_single_start( gtid );
     }
 #endif /* USE_ITT_BUILD */
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    int tid = __kmp_tid_from_gtid( gtid );
+
+    if (ompt_enabled) {
+        void* address;
+        address = OMPT_LOAD_RETURN_ADDRESS(th);
+        if (status) {
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_executor,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    address);
+            }
+        } else {
+            if (ompt_callbacks.ompt_callback(ompt_callback_work)) {
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_begin,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    address);
+                ompt_callbacks.ompt_callback(ompt_callback_work)(
+                    ompt_work_single_other,
+                    ompt_scope_end,
+                    &(team->t.ompt_team_info.parallel_data),
+                    &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
+                    1,
+                    address);
+            }
+//            th->th.ompt_thread_info.state = ompt_state_work_parallel;
+        }
+    }
+#endif
     return status;
 }
 

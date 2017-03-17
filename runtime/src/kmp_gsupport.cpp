@@ -145,6 +145,11 @@ xexpand(KMP_API_NAME_GOMP_SINGLE_START)(void)
     MKLOC(loc, "GOMP_single_start");
     KA_TRACE(20, ("GOMP_single_start: T#%d\n", gtid));
 
+
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+#endif
+
     if (! TCR_4(__kmp_init_parallel))
         __kmp_parallel_initialize();
 
