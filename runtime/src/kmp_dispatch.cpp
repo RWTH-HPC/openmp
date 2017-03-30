@@ -1231,13 +1231,16 @@ __kmp_dispatch_init(
         ompt_callbacks.ompt_callback(ompt_callback_work)) {
         ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
         ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
+        kmp_info_t* thr = __kmp_threads[gtid];
+        void* return_address;
+        return_address = OMPT_LOAD_RETURN_ADDRESS(thr);
         ompt_callbacks.ompt_callback(ompt_callback_work)(
             ompt_work_loop,
             ompt_scope_begin,
             &(team_info->parallel_data),
             &(task_info->task_data),
             tc, //TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18)
-            team_info->microtask);
+            return_address);
     }
 #endif
 }
@@ -2440,6 +2443,7 @@ __kmpc_dispatch_init_4u( ident_t *loc, kmp_int32 gtid, enum sched_type schedule,
                         kmp_uint32 lb, kmp_uint32 ub, kmp_int32 st, kmp_int32 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dispatch_init< kmp_uint32 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
 

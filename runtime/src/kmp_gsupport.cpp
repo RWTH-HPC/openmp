@@ -479,52 +479,8 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
 static void
 __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *))
 {
-#if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data;
-    ompt_task_info_t* ompt_task_info;
-    kmp_info_t *thr;
-    if (ompt_enabled) {
-        thr = __kmp_threads[gtid];
-        ompt_task_info = OMPT_CUR_TASK_INFO(thr);
-
-        // parallel region callback
-        if (ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
-            int team_size = 1;
-            ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
-                &(ompt_task_info->task_data), &(ompt_task_info->frame), &ompt_parallel_data,
-                team_size, 
-                //team_size,
-                OMPT_INVOKER(fork_context_gnu),
-                OMPT_GET_RETURN_ADDRESS(1));
-        }
-    }
-#endif
-
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
     __kmp_serialized_parallel(loc, gtid);
-
-#if OMPT_SUPPORT
-    if (ompt_enabled) {
-        int ompt_team_size;
-
-        // set up lightweight task
-        ompt_lw_taskteam_t lwt;
-        __ompt_lw_taskteam_init(&lwt, thr, gtid, (void *) task, &ompt_parallel_data);
-        lwt.ompt_task_info.task_data.value = __ompt_task_id_new(gtid);
-        lwt.ompt_task_info.frame.exit_runtime_frame = 0;
-        __ompt_lw_taskteam_link(&lwt, thr, 1);
-
-        // implicit task callback
-        if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
-            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
-                ompt_scope_begin,
-                OMPT_CUR_TEAM_DATA(thr),
-                &(ompt_task_info->task_data),
-                1,
-                __kmp_tid_from_gtid(gtid));
-        }
-        thr->th.ompt_thread_info.state = ompt_state_work_parallel;
-    }
-#endif
 }
 
 

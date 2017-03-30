@@ -472,6 +472,7 @@ __kmpc_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
     // The implementation is now in kmp_runtime.cpp so that it can share static
     // functions with kmp_fork_call since the tasks to be done are similar in
     // each case.
+    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
     __kmp_serialized_parallel(loc, global_tid);
 }
 
