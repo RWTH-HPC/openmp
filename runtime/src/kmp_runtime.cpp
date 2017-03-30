@@ -1516,7 +1516,9 @@ __kmp_fork_call(
     if (ompt_enabled) {
         if(ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
             int team_size = master_set_numthreads? master_set_numthreads : get__nproc_2( parent_team, master_tid );
-
+            kmp_info_t* thr = __kmp_threads[gtid];
+            void* return_address;
+            return_address = OMPT_LOAD_RETURN_ADDRESS(thr);
             ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
                 parent_task_data, 
                 ompt_frame, 
@@ -1524,7 +1526,7 @@ __kmp_fork_call(
                 team_size,
                 //master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
                 OMPT_INVOKER(call_context),
-                OMPT_GET_RETURN_ADDRESS(1));
+                return_address);
         }
         master_th->th.ompt_thread_info.state = ompt_state_overhead;
     }

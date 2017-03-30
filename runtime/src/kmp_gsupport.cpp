@@ -436,6 +436,9 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
 
     va_list ap;
     va_start(ap, argc);
+#if OMPT_SUPPORT
+      OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+#endif
 
     rc = __kmp_fork_call(loc, gtid, fork_context_gnu, argc,
 #if OMPT_SUPPORT

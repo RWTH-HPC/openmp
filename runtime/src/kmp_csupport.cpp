@@ -320,6 +320,7 @@ __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...)
          ompt_task_info.frame);
        }
        ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
+       OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     }
 #endif
 
