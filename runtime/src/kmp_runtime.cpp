@@ -1382,7 +1382,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
                 &ompt_parallel_data,
                 team_size,
                 //master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
-                ompt_invoker_runtime,
+                ompt_invoker_program,
                 OMPT_GET_RETURN_ADDRESS(1));
         }
         void *dummy;
