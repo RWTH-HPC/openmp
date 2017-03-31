@@ -1111,7 +1111,7 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
 #if OMPT_OPTIONAL
         my_task_data = OMPT_CUR_TASK_DATA(this_thr);
         my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
-        return_address = OMPT_LOAD_RETURN_ADDRESS(this_thr);
+        return_address = OMPT_LOAD_RETURN_ADDRESS(gtid);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,

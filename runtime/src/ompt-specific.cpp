@@ -495,6 +495,15 @@ __ompt_team_assign_id(kmp_team_t *team, ompt_parallel_data_t ompt_pid)
 //----------------------------------------------------------
 
 
+void* __ompt_load_return_address(int gtid)
+{
+  kmp_info_t* thr = __kmp_threads[gtid];
+  void* return_address = thr->th.ompt_thread_info.gomp_return_address ? thr->th.ompt_thread_info.gomp_return_address : thr->th.ompt_thread_info.kmp_return_address;
+  thr->th.ompt_thread_info.gomp_return_address=NULL;
+  thr->th.ompt_thread_info.kmp_return_address=NULL;
+  return return_address;
+}
+
 static uint64_t __ompt_get_unique_id_internal()
 {
     static uint64_t thread=1;
