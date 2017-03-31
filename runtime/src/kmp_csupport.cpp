@@ -344,6 +344,12 @@ __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...)
 #if INCLUDE_SSC_MARKS
     SSC_MARK_JOINING();
 #endif
+
+#if OMPT_SUPPORT
+    if (ompt_enabled) {
+        OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    }
+#endif
     __kmp_join_call( loc, gtid
 #if OMPT_SUPPORT
         , fork_context_intel

@@ -2278,6 +2278,7 @@ __kmp_join_restore_state(
 
 static inline void
 __kmp_join_ompt(
+    int gtid,
     kmp_info_t *thread,
     kmp_team_t *team,
     ompt_parallel_data_t *parallel_data,
@@ -2288,7 +2289,7 @@ __kmp_join_ompt(
         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
             parallel_data, &(task_info->task_data),
             OMPT_INVOKER(fork_context),
-            OMPT_GET_RETURN_ADDRESS(1));
+            OMPT_LOAD_RETURN_ADDRESS(gtid));
     }
 
     task_info->frame.reenter_runtime_frame = NULL;
@@ -2455,7 +2456,7 @@ __kmp_join_call(ident_t *loc, int gtid
 
 #if OMPT_SUPPORT
         if (ompt_enabled) {
-            __kmp_join_ompt(master_th, parent_team, parallel_data, fork_context);
+            __kmp_join_ompt(gtid, master_th, parent_team, parallel_data, fork_context);
         }
 #endif
 
@@ -2564,7 +2565,7 @@ __kmp_join_call(ident_t *loc, int gtid
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        __kmp_join_ompt(master_th, parent_team, parallel_data, fork_context);
+        __kmp_join_ompt(gtid, master_th, parent_team, parallel_data, fork_context);
     }
 #endif
 
