@@ -1,8 +1,10 @@
 // RUN: %libomp-compile && env OMP_PLACES=cores %libomp-run | FileCheck %s
-// REQUIRES: ompt
+// REQUIRES: ompt linux
 #include "callback.h"
 #include <omp.h>
+#define __USE_GNU
 #include <sched.h>
+#undef __USE_GNU
 
 void print_list(char* function_name, int list[])
 {
