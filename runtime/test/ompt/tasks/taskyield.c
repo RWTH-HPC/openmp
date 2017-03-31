@@ -1,5 +1,5 @@
 // RUN: %libomp-compile-and-run | %sort-threads | FileCheck %s
-// REQUIRES: ompt
+// REQUIRES: ompt taskyield
 #include "callback.h"
 #include <omp.h>   
 #include <unistd.h>
