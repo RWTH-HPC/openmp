@@ -2433,6 +2433,7 @@ __kmpc_dispatch_init_4( ident_t *loc, kmp_int32 gtid, enum sched_type schedule,
                         kmp_int32 lb, kmp_int32 ub, kmp_int32 st, kmp_int32 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dispatch_init< kmp_int32 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
 /*!
@@ -2456,6 +2457,7 @@ __kmpc_dispatch_init_8( ident_t *loc, kmp_int32 gtid, enum sched_type schedule,
                         kmp_int64 st, kmp_int64 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dispatch_init< kmp_int64 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
 
@@ -2468,6 +2470,7 @@ __kmpc_dispatch_init_8u( ident_t *loc, kmp_int32 gtid, enum sched_type schedule,
                          kmp_int64 st, kmp_int64 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dispatch_init< kmp_uint64 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
 
@@ -2485,6 +2488,7 @@ __kmpc_dist_dispatch_init_4( ident_t *loc, kmp_int32 gtid, enum sched_type sched
     kmp_int32 *p_last, kmp_int32 lb, kmp_int32 ub, kmp_int32 st, kmp_int32 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dist_get_bounds< kmp_int32 >( loc, gtid, p_last, &lb, &ub, st );
     __kmp_dispatch_init< kmp_int32 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
@@ -2494,6 +2498,7 @@ __kmpc_dist_dispatch_init_4u( ident_t *loc, kmp_int32 gtid, enum sched_type sche
     kmp_int32 *p_last, kmp_uint32 lb, kmp_uint32 ub, kmp_int32 st, kmp_int32 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dist_get_bounds< kmp_uint32 >( loc, gtid, p_last, &lb, &ub, st );
     __kmp_dispatch_init< kmp_uint32 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
@@ -2503,6 +2508,7 @@ __kmpc_dist_dispatch_init_8( ident_t *loc, kmp_int32 gtid, enum sched_type sched
     kmp_int32 *p_last, kmp_int64 lb, kmp_int64 ub, kmp_int64 st, kmp_int64 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dist_get_bounds< kmp_int64 >( loc, gtid, p_last, &lb, &ub, st );
     __kmp_dispatch_init< kmp_int64 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
@@ -2512,6 +2518,7 @@ __kmpc_dist_dispatch_init_8u( ident_t *loc, kmp_int32 gtid, enum sched_type sche
     kmp_int32 *p_last, kmp_uint64 lb, kmp_uint64 ub, kmp_int64 st, kmp_int64 chunk )
 {
     KMP_DEBUG_ASSERT( __kmp_init_serial );
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     __kmp_dist_get_bounds< kmp_uint64 >( loc, gtid, p_last, &lb, &ub, st );
     __kmp_dispatch_init< kmp_uint64 >( loc, gtid, schedule, lb, ub, st, chunk, true );
 }
