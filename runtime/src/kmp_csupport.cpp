@@ -541,7 +541,7 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
             ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
                 &(serial_team->t.ompt_team_info.parallel_data),
                 parent_task_data,
-                ompt_invoker_runtime,
+                ompt_invoker_program,
                 OMPT_GET_RETURN_ADDRESS(0));
         }
         __ompt_lw_taskteam_unlink(this_thr);
