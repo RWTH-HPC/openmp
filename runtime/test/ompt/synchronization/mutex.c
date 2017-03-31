@@ -5,7 +5,8 @@
 
 int main()
 {
-  omp_lock_t lock;
+  omp_lock_t lock;\
+  omp_set_num_threads(4);
   printf("%" PRIu64 ": &lock: %lli\n", ompt_get_thread_data()->value, &lock);
   omp_init_lock(&lock);
   omp_set_lock(&lock);
