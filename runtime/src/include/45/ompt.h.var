@@ -251,8 +251,8 @@ typedef enum {
 } ompt_thread_type_t;
 
 typedef enum {
-    ompt_invoker_program = 0,         /* program invokes master task  */
-    ompt_invoker_runtime = 1          /* runtime invokes master task  */
+    ompt_invoker_program = 1,         /* program invokes master task  */
+    ompt_invoker_runtime = 2          /* runtime invokes master task  */
 } ompt_invoker_t;
 
 typedef void (*ompt_callback_thread_begin_t) (
