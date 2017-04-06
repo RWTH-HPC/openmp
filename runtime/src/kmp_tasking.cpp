@@ -1517,8 +1517,8 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
     kmp_taskdata_t *parent;
     if (ompt_enabled && !new_taskdata->td_flags.started) {
         parent = new_taskdata->td_parent;
-        parent->ompt_task_info.frame.reenter_runtime_frame =
-            OMPT_GET_FRAME_ADDRESS(1);
+        if(!parent->ompt_task_info.frame.reenter_runtime_frame)
+            parent->ompt_task_info.frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             ompt_task_data_t task_data = ompt_task_id_none;
             ompt_callbacks.ompt_callback(ompt_callback_task_create)(
