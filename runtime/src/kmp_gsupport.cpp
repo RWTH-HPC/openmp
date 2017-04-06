@@ -386,6 +386,11 @@ __kmp_GOMP_parallel_microtask_wrapper(int *gtid, int *npr,
     //
     // Intialize the loop worksharing construct.
     //
+
+#if OMPT_SUPPORT
+    if(ompt_enabled)
+        OMPT_STORE_GOMP_RETURN_ADDRESS(*gtid);
+#endif
     KMP_DISPATCH_INIT(loc, *gtid, schedule, start, end, incr, chunk_size,
       schedule != kmp_sch_static);
 
@@ -1328,6 +1333,12 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_SECTIONS)(void (*task) (void *), void *data,
     KA_TRACE(20, ("GOMP_parallel_sections exit: T#%d\n", gtid));
 }
 
+#if OMPT_SUPPORT
+#define INCLUDE_IF_OMPT_SUPPORT(code) code
+#else
+#define INCLUDE_IF_OMPT_SUPPORT(code)
+#endif
+
 #define PARALLEL_LOOP(func, schedule, ompt_pre, ompt_post) \
     void func (void (*task) (void *), void *data, unsigned num_threads,      \
       long lb, long ub, long str, long chunk_sz, unsigned flags)             \
@@ -1354,12 +1365,13 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_SECTIONS)(void (*task) (void *), void *data,
             __kmp_GOMP_serialized_parallel(&loc, gtid, task);                \
         }                                                                    \
                                                                              \
+        INCLUDE_IF_OMPT_SUPPORT(if(ompt_enabled) OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);)        \
         KMP_DISPATCH_INIT(&loc, gtid, (schedule), lb,                        \
           (str > 0) ? (ub - 1) : (ub + 1), str, chunk_sz,                    \
           (schedule) != kmp_sch_static);                                     \
         task(data);                                                          \
         xexpand(KMP_API_NAME_GOMP_PARALLEL_END)();                           \
-        ompt_post();                                                          \
+        ompt_post();                                                         \
                                                                              \
         KA_TRACE(20, ( #func " exit: T#%d\n", gtid));                        \
     }
