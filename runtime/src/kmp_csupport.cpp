@@ -528,6 +528,7 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
     KMP_DEBUG_ASSERT( serial_team -> t.t_threads[0] == this_thr );
 
 #if OMPT_SUPPORT
+    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
     if (ompt_enabled && this_thr->th.ompt_thread_info.state != ompt_state_overhead) {
         this_thr->th.th_current_task->ompt_task_info.frame.exit_runtime_frame = NULL;
         if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
@@ -548,7 +549,7 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
                 &(serial_team->t.ompt_team_info.parallel_data),
                 parent_task_data,
                 ompt_invoker_program,
-                OMPT_GET_RETURN_ADDRESS(0));
+                OMPT_LOAD_RETURN_ADDRESS(global_tid));
         }
         __ompt_lw_taskteam_unlink(this_thr);
         this_thr->th.ompt_thread_info.state = ompt_state_overhead;

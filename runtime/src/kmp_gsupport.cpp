@@ -441,9 +441,6 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
 
     va_list ap;
     va_start(ap, argc);
-#if OMPT_SUPPORT
-      OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
-#endif
 
     rc = __kmp_fork_call(loc, gtid, fork_context_gnu, argc,
 #if OMPT_SUPPORT
@@ -487,7 +484,6 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
 static void
 __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *))
 {
-    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
     __kmp_serialized_parallel(loc, gtid);
 }
 
@@ -504,6 +500,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_START)(void (*task)(void *), void *data, unsi
         __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL);
         parent_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
 #endif
 
     MKLOC(loc, "GOMP_parallel_start");
@@ -969,7 +966,8 @@ LOOP_NEXT_ULL(xexpand(KMP_API_NAME_GOMP_LOOP_ULL_ORDERED_RUNTIME_NEXT), \
     if (ompt_enabled) { \
         __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL); \
         parent_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1); \
-    }
+    } \
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
 
 
 #define OMPT_LOOP_POST() \
@@ -1188,6 +1186,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_SECTIONS_START)(void (*task) (void *), void *
         __ompt_get_task_info_internal(0, NULL, NULL, &parent_frame, NULL, NULL); \
         parent_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
 #endif
 
     MKLOC(loc, "GOMP_parallel_sections_start");
@@ -1272,6 +1271,7 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL)(void (*task)(void *), void *data, unsigned n
         parent_task_info = __ompt_get_task_info_object(0);
         parent_task_info->frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
 #endif
     if (__kmpc_ok_to_fork(&loc) && (num_threads != 1)) {
         if (num_threads != 0) {
@@ -1309,6 +1309,10 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_SECTIONS)(void (*task) (void *), void *data,
     int gtid = __kmp_entry_gtid();
     MKLOC(loc, "GOMP_parallel_sections");
     KA_TRACE(20, ("GOMP_parallel_sections: T#%d\n", gtid));
+
+#if OMPT_SUPPORT
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+#endif
 
     if (__kmpc_ok_to_fork(&loc) && (num_threads != 1)) {
         if (num_threads != 0) {
