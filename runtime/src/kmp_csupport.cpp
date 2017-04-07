@@ -779,6 +779,7 @@ __kmpc_master(ident_t *loc, kmp_int32 global_tid)
     }
 
 #if OMPT_SUPPORT && OMPT_OPTIONAL
+    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
     if (status) {
         if (ompt_enabled &&
             ompt_callbacks.ompt_callback(ompt_callback_master)) {
@@ -790,7 +791,7 @@ __kmpc_master(ident_t *loc, kmp_int32 global_tid)
                 ompt_scope_begin,
                 &(team->t.ompt_team_info.parallel_data),
                 &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
-                OMPT_GET_RETURN_ADDRESS(0));
+                OMPT_LOAD_RETURN_ADDRESS(global_tid));
         }
     }
 #endif
@@ -831,6 +832,7 @@ __kmpc_end_master(ident_t *loc, kmp_int32 global_tid)
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     kmp_info_t  *this_thr        = __kmp_threads[ global_tid ];
     kmp_team_t  *team            = this_thr -> th.th_team;
+    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_master)) {
         int  tid = __kmp_tid_from_gtid( global_tid );
@@ -838,7 +840,7 @@ __kmpc_end_master(ident_t *loc, kmp_int32 global_tid)
             ompt_scope_end,
             &(team->t.ompt_team_info.parallel_data),
             &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
-            OMPT_GET_RETURN_ADDRESS(0));
+            OMPT_LOAD_RETURN_ADDRESS(global_tid));
     }
 #endif
 
