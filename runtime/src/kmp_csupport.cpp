@@ -693,10 +693,12 @@ __kmpc_flush(ident_t *loc)
     #endif
 
     #if OMPT_SUPPORT && OMPT_OPTIONAL
+    kmp_int32 global_tid = __kmp_entry_gtid();
+    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
 	if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_flush)) { 
 	        ompt_callbacks.ompt_callback(ompt_callback_flush)(
 	            __ompt_get_thread_data_internal(), 
-		    OMPT_GET_RETURN_ADDRESS(0));
+		    OMPT_LOAD_RETURN_ADDRESS(global_tid));
 	}
     #endif
 
