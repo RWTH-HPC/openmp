@@ -412,6 +412,7 @@ __kmpc_fork_teams(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...)
         parent_team->t.t_implicit_task_taskdata[tid].
            ompt_task_info.frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
 #endif
 
     // check if __kmpc_push_num_teams called, set default number of teams otherwise
