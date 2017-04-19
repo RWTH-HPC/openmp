@@ -1,5 +1,5 @@
 // RUN: %libomp-compile && env OMP_PLACES=cores %libomp-run | FileCheck %s
-// REQUIRES: ompt linux
+// REQUIRES: ompt, linux
 #include "callback.h"
 #include <omp.h>
 #define __USE_GNU

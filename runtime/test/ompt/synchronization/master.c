@@ -1,5 +1,5 @@
 // RUN: %libomp-compile-and-run | FileCheck %s
-// REQUIRES: ompt master_callback
+// REQUIRES: ompt, master_callback
 #include "callback.h"
 #include <omp.h>
 
