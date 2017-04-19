@@ -1774,8 +1774,6 @@ __kmp_fork_barrier(int gtid, int tid)
                     0,
                     ds_tid);
             }
-            // not necessary for master, but avoid the branch here
-            pId->ptr=NULL;
             // return to idle state
             this_thr->th.ompt_thread_info.state = ompt_state_overhead;
         }
