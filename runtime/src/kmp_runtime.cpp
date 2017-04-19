@@ -1219,6 +1219,35 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
     this_thr->th.th_set_proc_bind = proc_bind_default;
 #endif /* OMP_40_ENABLED */
 
+#if OMPT_SUPPORT
+    ompt_parallel_data_t ompt_parallel_data;
+    ompt_task_data_t *implicit_task_data;
+    if (ompt_enabled && this_thr->th.ompt_thread_info.state != ompt_state_overhead) {
+
+        ompt_task_info_t *parent_task_info; 
+//        if (serial_team->t.t_level > 1) 
+            parent_task_info = &(this_thr->th.th_current_task->ompt_task_info);
+//        else
+//            parent_task_info = &(this_thr->th.th_current_task->td_parent->ompt_task_info);
+        
+        parent_task_info->frame.reenter_runtime_frame=OMPT_GET_FRAME_ADDRESS(1);
+        //printf("281474976710657: %p frame\n", OMPT_CUR_TASK_INFO(this_thr)->frame.exit_runtime_frame);
+        if ( ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
+            int team_size = 1;
+
+            ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
+                &(parent_task_info->task_data), 
+                &(parent_task_info->frame), 
+                &ompt_parallel_data,
+                team_size,
+                //master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
+                ompt_invoker_program,
+                OMPT_LOAD_RETURN_ADDRESS(global_tid));
+        }
+    }
+#endif //OMPT_SUPPORT
+
+
     if( this_thr->th.th_team != serial_team ) {
         // Nested level will be an index in the nested nthreads array
         int level = this_thr->th.th_team->t.t_level;
@@ -1362,30 +1391,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
         __kmp_push_parallel( global_tid, NULL );
 #if OMPT_SUPPORT
     if (ompt_enabled && this_thr->th.ompt_thread_info.state != ompt_state_overhead) {
-        ompt_parallel_data_t ompt_parallel_data;
-
-        ompt_task_info_t *parent_task_info; 
-        if (serial_team->t.t_level > 1) 
-            parent_task_info = &(this_thr->th.th_current_task->ompt_task_info);
-        else
-            parent_task_info = &(this_thr->th.th_current_task->td_parent->ompt_task_info);
-        
-        ompt_task_data_t *implicit_task_data;
-        parent_task_info->frame.reenter_runtime_frame=OMPT_GET_FRAME_ADDRESS(1);
         OMPT_CUR_TASK_INFO(this_thr)->frame.exit_runtime_frame=OMPT_GET_FRAME_ADDRESS(1);
-        //printf("281474976710657: %p frame\n", OMPT_CUR_TASK_INFO(this_thr)->frame.exit_runtime_frame);
-        if ( ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)) {
-            int team_size = 1;
-
-            ompt_callbacks.ompt_callback(ompt_callback_parallel_begin)(
-                &(parent_task_info->task_data), 
-                &(parent_task_info->frame), 
-                &ompt_parallel_data,
-                team_size,
-                //master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
-                ompt_invoker_program,
-                OMPT_LOAD_RETURN_ADDRESS(global_tid));
-        }
         void *dummy;
         void **exit_runtime_p;
 
