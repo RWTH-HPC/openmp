@@ -59,11 +59,6 @@ typedef struct ompt_lw_taskteam_s {
 //    void *parallel_function;          /* pointer to outlined function */
 //} ompt_parallel_info_t;
 
-void* __ompt_load_return_address(int gtid);
-
-#define OMPT_STORE_GOMP_RETURN_ADDRESS(gtid) __kmp_threads[gtid]->th.ompt_thread_info.gomp_return_address = __builtin_return_address(0)
-#define OMPT_STORE_KMP_RETURN_ADDRESS(gtid) __kmp_threads[gtid]->th.ompt_thread_info.kmp_return_address = __builtin_return_address(0)
-#define OMPT_LOAD_RETURN_ADDRESS(gtid) __ompt_load_return_address(gtid)
 
 typedef struct {
     ompt_thread_data_t    thread_data;

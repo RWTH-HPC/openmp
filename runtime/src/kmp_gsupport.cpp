@@ -484,6 +484,7 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
 static void
 __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *))
 {
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
     __kmp_serialized_parallel(loc, gtid);
 }
 
@@ -1054,6 +1055,7 @@ xexpand(KMP_API_NAME_GOMP_TASK)(void (*func)(void *), void *data, void (*copy_fu
 #endif
 
     if (if_cond) {
+        //TODO: Intel, why call kmpc and not kmp here?
         __kmpc_omp_task(&loc, gtid, task);
     }
     else {
