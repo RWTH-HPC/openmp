@@ -6,6 +6,7 @@
 
 int main()
 {
+  int condition=0;
   #pragma omp parallel num_threads(2)
   {
     int x = 0;
@@ -16,12 +17,14 @@ int main()
       if(i == 0)
       {
         x++;
+        OMPT_SIGNAL(condition);
         #pragma omp cancel for
       }
       else
       {
         x++;
-        usleep(100);
+        OMPT_WAIT(condition,1);
+        usleep(10000);
         #pragma omp cancellation point for
       }
     }
@@ -32,11 +35,13 @@ int main()
     {
       #pragma omp section
       {
+        OMPT_SIGNAL(condition);
         #pragma omp cancel sections
       }
       #pragma omp section
       {
-        usleep(100);
+        OMPT_WAIT(condition,2);
+        usleep(10000);
         #pragma omp cancellation point sections
       }
     }

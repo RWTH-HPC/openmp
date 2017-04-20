@@ -1826,7 +1826,7 @@ __kmp_fork_call(
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
                             &ompt_parallel_data, parent_task_data,
                             OMPT_INVOKER(call_context),
-                            return_address ? return_address : OMPT_LOAD_RETURN_ADDRESS(gtid));
+                            return_address);
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }
@@ -1934,7 +1934,7 @@ __kmp_fork_call(
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
                             &ompt_parallel_data, parent_task_data,
                             OMPT_INVOKER(call_context),
-                            return_address ? return_address : OMPT_LOAD_RETURN_ADDRESS(gtid));
+                            return_address);
                     }
                     master_th->th.ompt_thread_info.state = ompt_state_overhead;
                 }

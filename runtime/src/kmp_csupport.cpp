@@ -1691,7 +1691,6 @@ __kmpc_single(ident_t *loc, kmp_int32 global_tid)
                     &(team->t.t_implicit_task_taskdata[tid].ompt_task_info.task_data),
                     1,
                     OMPT_GET_RETURN_ADDRESS(0));
-                    //team->t.ompt_team_info.microtask); is the workshare function in tr2
             }
         } else {
             if (ompt_callbacks.ompt_callback(ompt_callback_work)) {

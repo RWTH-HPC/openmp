@@ -134,7 +134,7 @@ __kmp_for_static_init(
                 &(team_info->parallel_data),
                 &(task_info->task_data),
                 0,  //TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18)
-                team_info->microtask);
+                OMPT_GET_RETURN_ADDRESS(0));
         }
 #endif
         KMP_COUNT_VALUE (FOR_static_iterations, 0);
@@ -188,7 +188,7 @@ __kmp_for_static_init(
                 &(team_info->parallel_data),
                 &(task_info->task_data),
                 *pstride, //TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18)
-                team_info->microtask);
+                OMPT_GET_RETURN_ADDRESS(0));
         }
 #endif
         return;
@@ -221,7 +221,7 @@ __kmp_for_static_init(
                 &(team_info->parallel_data),
                 &(task_info->task_data),
                 *pstride,  //TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18)
-                team_info->microtask);
+                OMPT_GET_RETURN_ADDRESS(0));
         }
 #endif
         return;
@@ -380,7 +380,7 @@ __kmp_for_static_init(
             &(team_info->parallel_data),
             &(task_info->task_data),
             trip_count, //TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18; email discussion on count value semantics)
-            team_info->microtask);
+            OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
 
