@@ -1221,6 +1221,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
 
 #if OMPT_SUPPORT
     ompt_parallel_data_t ompt_parallel_data;
+    ompt_parallel_data.ptr = NULL;
     ompt_task_data_t *implicit_task_data;
     if (ompt_enabled && this_thr->th.ompt_thread_info.state != ompt_state_overhead) {
 
@@ -1493,6 +1494,7 @@ __kmp_fork_call(
 
 #if OMPT_SUPPORT
     ompt_parallel_data_t ompt_parallel_data;
+    ompt_parallel_data.ptr = NULL;
     ompt_task_data_t *parent_task_data;
     ompt_frame_t *ompt_frame;
     ompt_task_data_t *implicit_task_data;

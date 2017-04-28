@@ -365,6 +365,8 @@ on_ompt_callback_implicit_task(
   switch(endpoint)
   {
     case ompt_scope_begin:
+      if(task_data->ptr)
+        printf("%s\n", "0: task_data initially not null");
       task_data->value = ompt_get_unique_id();
       printf("%" PRIu64 ": ompt_event_implicit_task_begin: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", team_size=%" PRIu32 ", thread_num=%" PRIu32 "\n", ompt_get_thread_data()->value, parallel_data->value, task_data->value, team_size, thread_num);
       break;
@@ -508,6 +510,8 @@ on_ompt_callback_parallel_begin(
   ompt_invoker_t invoker,
   const void *codeptr_ra)
 {
+  if(parallel_data->ptr)
+    printf("%s\n", "0: parallel_data initially not null");
   parallel_data->value = ompt_get_unique_id();
   printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", parallel_function=%p, invoker=%d\n", ompt_get_thread_data()->value, parent_task_data->value, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_data->value, requested_team_size, codeptr_ra, invoker);
 }
@@ -531,6 +535,8 @@ on_ompt_callback_task_create(
     int has_dependences,
     const void *codeptr_ra)               /* pointer to outlined function */
 {
+  if(new_task_data->ptr)
+    printf("%s\n", "0: new_task_data initially not null");
   new_task_data->value = ompt_get_unique_id();
   printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", parallel_function=%p, task_type=%s=%d, has_dependences=%s\n", ompt_get_thread_data()->value, parent_task_data ? parent_task_data->value : 0, parent_frame ? parent_frame->exit_runtime_frame : NULL, parent_frame ? parent_frame->reenter_runtime_frame : NULL, new_task_data->value, codeptr_ra, ompt_task_type_t_values[type], type, has_dependences ? "yes" : "no");
 }
@@ -570,6 +576,8 @@ on_ompt_callback_thread_begin(
   ompt_thread_type_t thread_type,
   ompt_data_t *thread_data)
 {
+  if(thread_data->ptr)
+    printf("%s\n", "0: thread_data initially not null");
   thread_data->value = ompt_get_unique_id();
   printf("%" PRIu64 ": ompt_event_thread_begin: thread_type=%s=%d, thread_id=%" PRIu64 "\n", ompt_get_thread_data()->value, ompt_thread_type_t_values[thread_type], thread_type, thread_data->value);
 }

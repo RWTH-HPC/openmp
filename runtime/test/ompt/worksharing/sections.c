@@ -9,11 +9,11 @@ int main()
   {
     #pragma omp section
     {
-      printf("%uld: section 1\n", ompt_get_thread_data()->value);
+      printf("%lu: section 1\n", ompt_get_thread_data()->value);
     }
     #pragma omp section
     {
-      printf("%uld: section 2\n", ompt_get_thread_data()->value);
+      printf("%lu: section 2\n", ompt_get_thread_data()->value);
     }
   }
 

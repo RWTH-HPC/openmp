@@ -11,7 +11,7 @@ void ompt_signal(int* s)
 }
                 
 #define OMPT_WAIT(s,v) ompt_wait(&s,v)
-// wait for s == v
+// wait for s >= v
 //inline 
 void ompt_wait(int *s, int v)
 {
@@ -20,5 +20,5 @@ void ompt_wait(int *s, int v)
     usleep(10);
     #pragma atomic
 	  wait = (*s)+0;
-  }while(wait!=v);
+  }while(wait<v);
 }

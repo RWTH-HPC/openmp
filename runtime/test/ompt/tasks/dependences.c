@@ -35,6 +35,9 @@ int main()
   
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
 
+  // make sure initial data pointers are null
+  // CHECK-NOT: 0: new_task_data initially not null
+
   // CHECK: {{^}}{{[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter=[[NULL]], new_task_id=[[FIRST_TASK:[0-f]+]], parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=3, has_dependences=yes
   // CHECK: {{^}}{{[0-9]+}}: ompt_event_task_dependences: task_id=[[FIRST_TASK]], deps={{0x[0-f]+}}, ndeps=1
 

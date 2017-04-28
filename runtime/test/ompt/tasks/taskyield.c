@@ -39,6 +39,10 @@ int main()
 
 
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
+
+  // make sure initial data pointers are null
+  // CHECK-NOT: 0: new_task_data initially not null
+  
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_implicit_task_begin: parallel_id={{[0-9]+}}, task_id=[[IMPLICIT_TASK_ID:[0-9]+]], team_size={{[0-9]+}}, thread_num={{[0-9]+}}
 
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id=[[WORKER_TASK:[0-9]+]], parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=3, has_dependences=no
