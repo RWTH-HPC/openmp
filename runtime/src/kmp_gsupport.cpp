@@ -483,7 +483,9 @@ __kmp_GOMP_fork_call(ident_t *loc, int gtid, void (*unwrapped_task)(void *), mic
 static void
 __kmp_GOMP_serialized_parallel(ident_t *loc, kmp_int32 gtid, void (*task)(void *))
 {
+#if OMPT_SUPPORT
     OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+#endif
     __kmp_serialized_parallel(loc, gtid);
 }
 
