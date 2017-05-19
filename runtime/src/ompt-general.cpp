@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <execinfo.h>
+#include <dlfcn.h>
 
 
 /*****************************************************************************
@@ -207,6 +208,8 @@ void ompt_pre_init()
     else if (OMPT_STR_MATCH(ompt_env_var, "enabled"))
         tool_setting = omp_tool_enabled;
 
+    const char *ompt_tool_libraries = getenv("OMP_TOOL_LIBRARIES");
+    
 #if OMPT_DEBUG
     printf("ompt_pre_init(): tool_setting = %d\n", tool_setting);
 #endif
@@ -216,7 +219,23 @@ void ompt_pre_init()
 
     case omp_tool_unset:
     case omp_tool_enabled:
-        ompt_fns = ompt_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
+
+        //--------------------------------------------------
+        // Load tool iff specified in environment variable
+        //--------------------------------------------------
+
+        if(ompt_tool_libraries)
+        {
+            void *handle = dlopen(ompt_tool_libraries, RTLD_LAZY);
+            ompt_fns_t* (*loaded_start_tool)(unsigned int omp_version, const char *runtime_version) = (ompt_fns_t *(*)(unsigned int, const char *)) dlsym(handle, "ompt_start_tool");
+            if(loaded_start_tool)
+                ompt_fns = (*loaded_start_tool)(__kmp_openmp_version, ompt_get_runtime_version());
+            else
+                ompt_fns = ompt_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
+        }
+        else
+            ompt_fns = ompt_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
+
         if (ompt_fns) {
             ompt_enabled = 1;
         }
