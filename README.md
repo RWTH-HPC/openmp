@@ -14,7 +14,7 @@ the tests (see below) are run with every push.
 
 ## Make only minimal set of mandatory callbacks active:
     mkdir BUILD && cd BUILD
-    cmake ../ -DLIBOMP_OMPT_SUPPORT=on -DLIBOMP_OMPT_BLAME=off -DLIBOMP_OMPT_TRACE=off
+    cmake ../ -DLIBOMP_OMPT_SUPPORT=on -DLIBOMP_OMPT_OPTIONAL=off
     make
 
 ## Build & execute tests
@@ -24,12 +24,9 @@ The test tools of LLVM are needed, configure how to find them (these are built d
     make check-libomp
 
 # known issues of this branch:
-* codeptr_ra argument only works if runtime is compiled with optimization and the kmp interface is used.
 * for problems with frame addresses compile the application with -fno-omit-frame-pointer
 * not the whole interface is up-to-date yet. Inspect runtime/test/ompt/callback.h and runtime/src/include/45/ompt.h for reference
-  * callbacks for yield .. are missing
-  * some API functions follow the old spec (TR2)
   * state information follows the old spec (TR2)
-* ompt.h header file is only updated for LIBOMP_OMP_VERSION=45
-* gomp interface is not tested yet
-* tests broken for flush/master
+* gomp interface does not pass all tests
+
+* Cancellation is broken in Clang compiler < 4.0. Deadlocks!
