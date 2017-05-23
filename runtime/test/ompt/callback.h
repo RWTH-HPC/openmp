@@ -110,7 +110,7 @@ static void print_current_address()
   
     size = backtrace (array, real_level);
     if(size == real_level)
-      address = array[real_level-1]-5;
+      address = ((char*)array[real_level-1])-5;
     else
       address = NULL;
   printf("%" PRIu64 ": current_address=%p\n", ompt_get_thread_data()->value, address);
@@ -650,7 +650,7 @@ int ompt_initialize(
   register_callback(ompt_callback_task_dependence);
   register_callback(ompt_callback_thread_begin);
   register_callback(ompt_callback_thread_end);
-  printf("0: NULL_POINTER=%p\n", NULL);
+  printf("0: NULL_POINTER=%p\n", (void*)NULL);
   return 1; //success
 }
 
