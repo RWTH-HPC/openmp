@@ -9,8 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <execinfo.h>
+#if KMP_OS_UNIX
 #include <dlfcn.h>
-
+#endif
 
 /*****************************************************************************
  * ompt include files
@@ -184,6 +185,46 @@ ompt_initialize_t ompt_tool_windows()
 # error Either __attribute__((weak)) or psapi.dll are required for OMPT support
 #endif // OMPT_HAVE_WEAK_ATTRIBUTE
 
+static ompt_fns_t*
+ompt_try_start_tool(unsigned int omp_version, const char *runtime_version) {
+    ompt_fns_t *ret = NULL;
+#if KMP_OS_UNIX
+    ompt_fns_t *(*start_tool)(unsigned int, const char *) = NULL;
+
+    if ((ret = ompt_start_tool(omp_version, runtime_version)))
+        return ret;
+
+    // Try next visible symbol
+    start_tool = (ompt_fns_t *(*)(unsigned int, const char*))
+                 dlsym(RTLD_NEXT, "ompt_start_tool");
+    if (start_tool && (ret = (*start_tool)(omp_version, runtime_version)))
+        return ret;
+
+    /* Commenting this out since there is another commit for OMP_TOOL_LIBRARIES
+    // Try tool-libraries-var ICV
+    const char *tool_libs = getenv("OMP_TOOL_LIBRARIES");
+    if (tool_libs) {
+        const char *libs = __kmp_str_format("%s", tool_libs);
+        char *buf;
+        char *fname = __kmp_str_token((char *)libs, ",", &buf);
+        while (fname) {
+            void *h = dlopen(fname, RTLD_LAZY);
+            start_tool = (ompt_fns_t *(*)(unsigned int, const char *))
+                         dlsym(h, "ompt_start_tool");
+            if (start_tool &&
+                    (ret = (*start_tool)(omp_version, runtime_version)))
+                return ret;
+            fname = __kmp_str_token(NULL, ",", &buf);
+        }
+        __kmp_str_free(&libs);
+    }
+    */
+#elif KMP_OS_WINDOWS
+    // TODO
+#endif
+    return ret;
+}
+
 void ompt_pre_init()
 {
     //--------------------------------------------------
@@ -226,15 +267,17 @@ void ompt_pre_init()
 
         if(ompt_tool_libraries)
         {
+#if KMP_OS_UNIX
             void *handle = dlopen(ompt_tool_libraries, RTLD_LAZY);
             ompt_fns_t* (*loaded_start_tool)(unsigned int omp_version, const char *runtime_version) = (ompt_fns_t *(*)(unsigned int, const char *)) dlsym(handle, "ompt_start_tool");
             if(loaded_start_tool)
                 ompt_fns = (*loaded_start_tool)(__kmp_openmp_version, ompt_get_runtime_version());
             else
-                ompt_fns = ompt_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
+#endif
+                ompt_fns = ompt_try_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
         }
         else
-            ompt_fns = ompt_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
+            ompt_fns = ompt_try_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
 
         if (ompt_fns) {
             ompt_enabled = 1;
