@@ -200,7 +200,6 @@ ompt_try_start_tool(unsigned int omp_version, const char *runtime_version) {
     if (start_tool && (ret = (*start_tool)(omp_version, runtime_version)))
         return ret;
 
-    /* Commenting this out since there is another commit for OMP_TOOL_LIBRARIES
     // Try tool-libraries-var ICV
     const char *tool_libs = getenv("OMP_TOOL_LIBRARIES");
     if (tool_libs) {
@@ -218,7 +217,6 @@ ompt_try_start_tool(unsigned int omp_version, const char *runtime_version) {
         }
         __kmp_str_free(&libs);
     }
-    */
 #elif KMP_OS_WINDOWS
     // TODO
 #endif
@@ -249,8 +247,6 @@ void ompt_pre_init()
     else if (OMPT_STR_MATCH(ompt_env_var, "enabled"))
         tool_setting = omp_tool_enabled;
 
-    const char *ompt_tool_libraries = getenv("OMP_TOOL_LIBRARIES");
-    
 #if OMPT_DEBUG
     printf("ompt_pre_init(): tool_setting = %d\n", tool_setting);
 #endif
@@ -264,20 +260,7 @@ void ompt_pre_init()
         //--------------------------------------------------
         // Load tool iff specified in environment variable
         //--------------------------------------------------
-
-        if(ompt_tool_libraries)
-        {
-#if KMP_OS_UNIX
-            void *handle = dlopen(ompt_tool_libraries, RTLD_LAZY);
-            ompt_fns_t* (*loaded_start_tool)(unsigned int omp_version, const char *runtime_version) = (ompt_fns_t *(*)(unsigned int, const char *)) dlsym(handle, "ompt_start_tool");
-            if(loaded_start_tool)
-                ompt_fns = (*loaded_start_tool)(__kmp_openmp_version, ompt_get_runtime_version());
-            else
-#endif
-                ompt_fns = ompt_try_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
-        }
-        else
-            ompt_fns = ompt_try_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
+        ompt_fns = ompt_try_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
 
         if (ompt_fns) {
             ompt_enabled = 1;
