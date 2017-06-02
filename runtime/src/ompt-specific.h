@@ -75,8 +75,8 @@ inline void* __ompt_load_return_address(int gtid)
   return return_address;
 }
 
-#define OMPT_STORE_GOMP_RETURN_ADDRESS(gtid) __kmp_threads[gtid]->th.ompt_thread_info.gomp_return_address = __builtin_return_address(0)
-#define OMPT_STORE_KMP_RETURN_ADDRESS(gtid) __kmp_threads[gtid]->th.ompt_thread_info.kmp_return_address = __builtin_return_address(0)
+#define OMPT_STORE_GOMP_RETURN_ADDRESS(gtid) if(!__kmp_threads[gtid]->th.ompt_thread_info.gomp_return_address) __kmp_threads[gtid]->th.ompt_thread_info.gomp_return_address = __builtin_return_address(0)
+#define OMPT_STORE_KMP_RETURN_ADDRESS(gtid) if(!__kmp_threads[gtid]->th.ompt_thread_info.kmp_return_address) __kmp_threads[gtid]->th.ompt_thread_info.kmp_return_address = __builtin_return_address(0)
 #define OMPT_LOAD_RETURN_ADDRESS(gtid) __ompt_load_return_address(gtid)
 
 
