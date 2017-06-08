@@ -537,7 +537,7 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
     if (ompt_enabled) {
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             ompt_task_info_t * parent_info = &(current_task->ompt_task_info);
-            ompt_task_data_t task_data = ompt_task_id_none;
+            ompt_task_data_t task_data = ompt_data_none;
             ompt_callbacks.ompt_callback(ompt_callback_task_create)(
                 &(parent_info->task_data),
                 &(parent_info->frame),
@@ -1408,7 +1408,7 @@ __kmpc_omp_task_parts( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
 //        parent->ompt_task_info.frame.reenter_runtime_frame =
 //            OMPT_GET_FRAME_ADDRESS(1);
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
-            ompt_task_data_t task_data = ompt_task_id_none;
+            ompt_task_data_t task_data = ompt_data_none;
             ompt_callbacks.ompt_callback(ompt_callback_task_create)(
                 parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
@@ -1520,7 +1520,7 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
         if(!parent->ompt_task_info.frame.reenter_runtime_frame)
             parent->ompt_task_info.frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
-            ompt_task_data_t task_data = ompt_task_id_none;
+            ompt_task_data_t task_data = ompt_data_none;
             ompt_callbacks.ompt_callback(ompt_callback_task_create)(
                 parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,

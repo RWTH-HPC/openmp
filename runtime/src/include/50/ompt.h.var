@@ -149,19 +149,16 @@ typedef union ompt_data_u {
   void *ptr; /* pointer under tool control */
 } ompt_data_t;
 
+static const ompt_data_t ompt_data_none = {0};
+
 typedef ompt_data_t ompt_thread_data_t;
-#define ompt_thread_id_none {.value=0}     /* non-standard */
 
 typedef ompt_data_t ompt_task_data_t;
-//#define ompt_task_id_none ((ompt_task_data_t) 0)         /* non-standard */
-#define ompt_task_id_none {.value=0}         /* non-standard */
 
 typedef ompt_data_t ompt_parallel_data_t;
-//#define ompt_parallel_id_none ((ompt_parallel_data_t) 0) /* non-standard */
-#define ompt_parallel_id_none {.value=0} /* non-standard */
 
 typedef uint64_t ompt_wait_id_t;
-#define ompt_wait_id_none ((ompt_wait_id_t) 0)         /* non-standard */
+const ompt_wait_id_t ompt_wait_id_none = 0;
 
 
 /*---------------------

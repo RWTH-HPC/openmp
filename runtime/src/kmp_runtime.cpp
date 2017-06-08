@@ -2511,7 +2511,7 @@ __kmp_join_call(ident_t *loc, int gtid
         }
 
         task_info->frame.exit_runtime_frame = NULL;
-        task_info->task_data = ompt_task_id_none;
+        task_info->task_data = ompt_data_none;
     }
 #endif
 
@@ -3162,7 +3162,7 @@ __kmp_initialize_root( kmp_root_t *root )
             1,                                                         // new_nproc
             1,                                                         // max_nproc
 #if OMPT_SUPPORT
-            ompt_parallel_id_none, // root parallel id
+            ompt_data_none, // root parallel id
 #endif
 #if OMP_40_ENABLED
             __kmp_nested_proc_bind.bind_types[0],
@@ -3201,7 +3201,7 @@ __kmp_initialize_root( kmp_root_t *root )
             1,                                                         // new_nproc
             __kmp_dflt_team_nth_ub * 2,                                // max_nproc
 #if OMPT_SUPPORT
-            ompt_parallel_id_none, // root parallel id
+            ompt_data_none, // root parallel id
 #endif
 #if OMP_40_ENABLED
             __kmp_nested_proc_bind.bind_types[0],
@@ -3790,7 +3790,7 @@ __kmp_register_root( int initial_thread )
 
         root_thread->th.th_serial_team = __kmp_allocate_team( root, 1, 1,
 #if OMPT_SUPPORT
-          ompt_parallel_id_none, // root parallel id
+          ompt_data_none, // root parallel id
 #endif
 #if OMP_40_ENABLED
           proc_bind_default,
@@ -4340,7 +4340,7 @@ __kmp_allocate_thread( kmp_root_t *root, kmp_team_t *team, int new_tid )
     new_thr->th.th_serial_team = serial_team =
         (kmp_team_t*) __kmp_allocate_team( root, 1, 1,
 #if OMPT_SUPPORT
-                                           ompt_parallel_id_none, // root parallel id
+                                           ompt_data_none, // root parallel id
 #endif
 #if OMP_40_ENABLED
                                            proc_bind_default,
