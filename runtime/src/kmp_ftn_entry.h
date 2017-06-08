@@ -398,7 +398,7 @@ xexpand(FTN_GET_MAX_THREADS)( void )
     #endif
 }
 
-#if OMPT_SUPPORT
+#if OMP_50_ENABLED
 int FTN_STDCALL
 xexpand(FTN_CONTROL_TOOL)(uint64_t command, uint64_t modifier, void *arg)
 {
