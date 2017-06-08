@@ -205,15 +205,21 @@ ompt_try_start_tool(unsigned int omp_version, const char *runtime_version) {
     if (tool_libs) {
         const char *libs = __kmp_str_format("%s", tool_libs);
         char *buf;
-        char *fname = __kmp_str_token((char *)libs, ",", &buf);
+        char *fname = __kmp_str_token((char *)libs, ":", &buf);
         while (fname) {
             void *h = dlopen(fname, RTLD_LAZY);
-            start_tool = (ompt_fns_t *(*)(unsigned int, const char *))
-                         dlsym(h, "ompt_start_tool");
-            if (start_tool &&
-                    (ret = (*start_tool)(omp_version, runtime_version)))
-                return ret;
-            fname = __kmp_str_token(NULL, ",", &buf);
+            if(h)
+            {
+                start_tool = (ompt_fns_t *(*)(unsigned int, const char *))
+                             dlsym(h, "ompt_start_tool");
+                if (start_tool &&
+                        (ret = (*start_tool)(omp_version, runtime_version)))
+                {
+                    __kmp_str_free(&libs);
+                    return ret;
+                }
+            }
+            fname = __kmp_str_token(NULL, ":", &buf);
         }
         __kmp_str_free(&libs);
     }
