@@ -641,8 +641,8 @@ int ompt_initialize(
   register_callback(ompt_callback_cancel);
   register_callback(ompt_callback_idle);
   register_callback(ompt_callback_implicit_task);
-  register_callback(ompt_callback_lock_init);
-  register_callback(ompt_callback_lock_destroy);
+  register_callback_t(ompt_callback_lock_init, ompt_callback_mutex_acquire_t);
+  register_callback_t(ompt_callback_lock_destroy, ompt_callback_mutex_t);
   register_callback(ompt_callback_work);
   register_callback(ompt_callback_master);
   register_callback(ompt_callback_parallel_begin);
