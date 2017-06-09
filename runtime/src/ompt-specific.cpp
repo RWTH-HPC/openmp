@@ -295,7 +295,7 @@ __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_dat
     {
         *parallel_data = info ? &(info->parallel_data) : NULL;
     }
-    return info ? 1 : 0;
+    return info ? 2 : 0;
 }
 
 //----------------------------------------------------------
@@ -475,7 +475,7 @@ __ompt_get_task_info_internal(
         {
             *parallel_data = team_info ? &(team_info->parallel_data) : NULL;
         }
-        return info ? 1 : 0;
+        return info ? 2 : 0;
     }
     return 0;
 }
