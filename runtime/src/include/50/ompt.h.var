@@ -318,17 +318,29 @@ typedef void (*ompt_callback_parallel_end_t) (
 
 /* tasks */
 typedef enum ompt_task_type_e {
-    ompt_task_initial = 1,
+    ompt_task_initial  = 1,
     ompt_task_implicit = 2,
     ompt_task_explicit = 3,
-    ompt_task_target = 4
+    ompt_task_target   = 4
+} ompt_task_type_t;
+
+typedef enum ompt_task_type_e {
+    ompt_task_initial    = 0x1,
+    ompt_task_implicit   = 0x2,
+    ompt_task_explicit   = 0x4,
+    ompt_task_target     = 0x8,
+    ompt_task_undeferred = 0x8000000,
+    ompt_task_untied     = 0x10000000,
+    ompt_task_final      = 0x20000000,
+    ompt_task_mergeable  = 0x40000000,
+    ompt_task_merged     = 0x80000000
 } ompt_task_type_t;
 
 typedef enum ompt_task_status_e {
     ompt_task_complete = 1,
-    ompt_task_yield = 2,
-    ompt_task_cancel = 3,
-    ompt_task_others = 4
+    ompt_task_yield    = 2,
+    ompt_task_cancel   = 3,
+    ompt_task_others   = 4
 } ompt_task_status_t;
 
 typedef void (*ompt_callback_task_schedule_t) (
@@ -338,8 +350,8 @@ typedef void (*ompt_callback_task_schedule_t) (
 );
 
 typedef void (*ompt_callback_task_create_t) (
-    ompt_data_t *parent_task_data,    /* data of parent task         */
-    const ompt_frame_t *parent_frame,       /* frame data for parent task   */
+    ompt_data_t *parent_task_data,    /* data of parent task          */
+    const ompt_frame_t *parent_frame, /* frame data for parent task   */
     ompt_data_t *new_task_data,       /* data of created task         */
     ompt_task_type_t type,
     int has_dependences,
