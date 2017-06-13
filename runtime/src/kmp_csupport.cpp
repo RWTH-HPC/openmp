@@ -2298,7 +2298,7 @@ __kmpc_init_nest_lock( ident_t * loc, kmp_int32 gtid, void ** user_lock ) {
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_lock_init)) {
         ompt_callbacks.ompt_callback(ompt_callback_lock_init)(
-            ompt_mutex_lock,
+            ompt_mutex_nest_lock,
             omp_lock_hint_none,
             __ompt_get_mutex_impl_type(user_lock),
             (ompt_wait_id_t)user_lock,
