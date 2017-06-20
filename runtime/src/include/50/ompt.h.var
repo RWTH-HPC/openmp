@@ -318,13 +318,6 @@ typedef void (*ompt_callback_parallel_end_t) (
 
 /* tasks */
 typedef enum ompt_task_type_e {
-    ompt_task_initial  = 1,
-    ompt_task_implicit = 2,
-    ompt_task_explicit = 3,
-    ompt_task_target   = 4
-} ompt_task_type_t;
-
-typedef enum ompt_task_type_e {
     ompt_task_initial    = 0x1,
     ompt_task_implicit   = 0x2,
     ompt_task_explicit   = 0x4,
