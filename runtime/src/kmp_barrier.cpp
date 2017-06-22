@@ -1740,8 +1740,6 @@ __kmp_fork_barrier(int gtid, int tid)
         if (this_thr->th.ompt_thread_info.state == ompt_state_wait_barrier_implicit) {
             int ds_tid = this_thr->th.th_info.ds.ds_tid;
             ompt_task_data_t* tId = (team)? &(this_thr->th.th_current_task->ompt_task_info.task_data) : &(this_thr->th.ompt_thread_info.task_data);
-//            ompt_parallel_data_t* pId = (team)? &(team->t.ompt_team_info.parallel_data) : &(this_thr->th.ompt_thread_info.parallel_data);
-            ompt_parallel_data_t* pId = (team)? &(team->t.ompt_team_info.parallel_data) : NULL;
             this_thr->th.ompt_thread_info.state = ompt_state_overhead;
 #if OMPT_OPTIONAL
             void * codeptr = NULL;
@@ -1751,7 +1749,7 @@ __kmp_fork_barrier(int gtid, int tid)
                 ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                     ompt_sync_region_barrier,
                     ompt_scope_end,
-                    pId,
+                    NULL,
                     tId,
                     codeptr);
             }
@@ -1759,7 +1757,7 @@ __kmp_fork_barrier(int gtid, int tid)
                 ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                     ompt_sync_region_barrier,
                     ompt_scope_end,
-                    pId,
+                    NULL,
                     tId,
                     codeptr);
             }
@@ -1769,7 +1767,7 @@ __kmp_fork_barrier(int gtid, int tid)
                 // by the master thread behind the barrier (possible race)
                 ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                     ompt_scope_end,
-                    pId,
+                    NULL,
                     tId,
                     0,
                     ds_tid);

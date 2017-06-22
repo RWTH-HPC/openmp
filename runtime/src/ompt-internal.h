@@ -62,7 +62,6 @@ typedef struct ompt_lw_taskteam_s {
 
 typedef struct {
     ompt_thread_data_t    thread_data;
-    ompt_parallel_data_t  parallel_data; /* stored here from implicit barrier-begin until implicit-task-end */
     ompt_task_data_t      task_data; /* stored here from implicit barrier-begin until implicit-task-end */
     void                  *kmp_return_address; /* stored here on entry of runtime */
     void                  *gomp_return_address; /* stored here on entry of runtime */

@@ -5654,7 +5654,6 @@ __kmp_launch_thread( kmp_info_t *this_thr )
                 __ompt_get_task_info_object(0)->frame.exit_runtime_frame = NULL;
 
                 this_thr->th.ompt_thread_info.state = ompt_state_overhead;
-                this_thr->th.ompt_thread_info.parallel_data = (*pteam)->t.ompt_team_info.parallel_data;
                 this_thr->th.ompt_thread_info.task_data = *OMPT_CUR_TASK_DATA(this_thr);
             }
 #endif
