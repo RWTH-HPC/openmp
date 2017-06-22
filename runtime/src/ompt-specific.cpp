@@ -399,7 +399,7 @@ __ompt_task_id_new(int gtid)
 int
 __ompt_get_task_info_internal(
     int ancestor_level,
-    ompt_task_type_t *type,
+    int *type,
     ompt_data_t **task_data,
     ompt_frame_t **task_frame,
     ompt_data_t **parallel_data,
@@ -454,7 +454,7 @@ __ompt_get_task_info_internal(
             {
                 if(taskdata->td_parent)
                 {
-                    *type = taskdata->td_flags.tasktype ? ompt_task_explicit : ompt_task_implicit;
+                    *type = (taskdata->td_flags.tasktype ? ompt_task_explicit : ompt_task_implicit) | TASK_TYPE_DETAILS_FORMAT(taskdata);
                 }
                 else
                 {

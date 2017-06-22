@@ -542,7 +542,7 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
                 &(parent_info->task_data),
                 &(parent_info->frame),
                 &(taskdata->ompt_task_info.task_data),
-                ompt_task_explicit,
+                ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(taskdata),
                 0,
                 taskdata->ompt_task_info.function);
         }

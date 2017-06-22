@@ -38,7 +38,7 @@ int __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel
 
 int __ompt_get_task_info_internal(
     int ancestor_level,
-    ompt_task_type_t *type,
+    int *type,
     ompt_data_t **task_data,
     ompt_frame_t **task_frame,
     ompt_data_t **parallel_data,

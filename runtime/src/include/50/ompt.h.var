@@ -347,7 +347,7 @@ typedef void (*ompt_callback_task_create_t) (
     ompt_data_t *parent_task_data,    /* data of parent task          */
     const ompt_frame_t *parent_frame, /* frame data for parent task   */
     ompt_data_t *new_task_data,       /* data of created task         */
-    ompt_task_type_t type,
+    int type,
     int has_dependences,
     const void *codeptr_ra
 );
@@ -505,7 +505,7 @@ OMPT_API_FUNCTION(int, ompt_get_parallel_info, (
 /* task */
 OMPT_API_FUNCTION(int, ompt_get_task_info, (
     int ancestor_level,
-    ompt_task_type_t *type,
+    int *type,
     ompt_data_t **task_data,
     ompt_frame_t **task_frame,
     ompt_data_t **parallel_data,

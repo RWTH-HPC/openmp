@@ -453,7 +453,7 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
                 parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
                 &(new_taskdata->ompt_task_info.task_data),
-                ompt_task_explicit,
+                ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(new_taskdata),
                 1,
                 new_taskdata->ompt_task_info.function);
         }
