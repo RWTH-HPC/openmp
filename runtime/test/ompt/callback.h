@@ -17,14 +17,6 @@ static const char* ompt_thread_type_t_values[] = {
   "ompt_thread_other"
 };
 
-static const char* ompt_task_type_t_values[] = {
-  NULL,
-  "ompt_task_initial",
-  "ompt_task_implicit",
-  "ompt_task_explicit",
-  "ompt_task_target"
-};
-
 static const char* ompt_task_status_t_values[] = {
   NULL,
   "ompt_task_complete",
@@ -543,15 +535,15 @@ on_ompt_callback_task_create(
   char buffer[2048];
   char* progress = buffer;
 
-  if(type & ompt_task_initial) progress += sprintf(progress, "ompt_task_initial") - 1;
-  if(type & ompt_task_implicit) progress += sprintf(progress, "ompt_task_implicit") - 1;
+  if(type & ompt_task_initial) progress += sprintf(progress, "ompt_task_initial");
+  if(type & ompt_task_implicit) progress += sprintf(progress, "ompt_task_implicit");
   if(type & ompt_task_explicit) progress += sprintf(progress, "ompt_task_explicit");
-  if(type & ompt_task_target) progress += sprintf(progress, "ompt_task_target") - 1;
-  if(type & ompt_task_undeferred) progress += sprintf(progress, ",ompt_task_undeferred") - 1;
-  if(type & ompt_task_untied) progress += sprintf(progress, ",ompt_task_untied") - 1;
-  if(type & ompt_task_final) progress += sprintf(progress, ",ompt_task_final") - 1;
-  if(type & ompt_task_mergeable) progress += sprintf(progress, ",ompt_task_mergeable") - 1;
-  if(type & ompt_task_merged) progress += sprintf(progress, ",ompt_task_merged") - 1;
+  if(type & ompt_task_target) progress += sprintf(progress, "ompt_task_target");
+  if(type & ompt_task_undeferred) progress += sprintf(progress, ",ompt_task_undeferred");
+  if(type & ompt_task_untied) progress += sprintf(progress, ",ompt_task_untied");
+  if(type & ompt_task_final) progress += sprintf(progress, ",ompt_task_final");
+  if(type & ompt_task_mergeable) progress += sprintf(progress, ",ompt_task_mergeable");
+  if(type & ompt_task_merged) progress += sprintf(progress, ",ompt_task_merged");
 
   printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", parallel_function=%p, task_type=%s=%d, has_dependences=%s\n", ompt_get_thread_data()->value, parent_task_data ? parent_task_data->value : 0, parent_frame ? parent_frame->exit_runtime_frame : NULL, parent_frame ? parent_frame->reenter_runtime_frame : NULL, new_task_data->value, codeptr_ra, buffer, type, has_dependences ? "yes" : "no");
 }
