@@ -118,7 +118,7 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, omp_state_t omp_state, ompt_task_
                 // by the master thread behind the barrier (possible race)
                 ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                     ompt_scope_end,
-                    pId,
+                    NULL,
                     tId,
                     0,
                     ds_tid);

@@ -1617,7 +1617,7 @@ __kmp_fork_call(
                 if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
                     ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                         ompt_scope_end,
-                        &ompt_parallel_data,
+                        NULL,
                         implicit_task_data,
                         1,
                         __kmp_tid_from_gtid(gtid));
@@ -1817,7 +1817,7 @@ __kmp_fork_call(
                     if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
                         ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                             ompt_scope_end,
-                            OMPT_CUR_TEAM_DATA(master_th),
+                            NULL,
                             &(task_info->task_data),
                             1,
                             __kmp_tid_from_gtid(gtid));
@@ -1925,7 +1925,7 @@ __kmp_fork_call(
                     if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
                         ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                             ompt_scope_end,
-                            OMPT_CUR_TEAM_DATA(master_th),
+                            NULL,
                             &(task_info->task_data),
                             1,
                             __kmp_tid_from_gtid(gtid));
@@ -2504,7 +2504,7 @@ __kmp_join_call(ident_t *loc, int gtid
             int ompt_team_size = team->t.t_nproc;
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                parallel_data,
+                NULL,
                 &(task_info->task_data),
                 ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
@@ -7242,7 +7242,7 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
         if (!KMP_MASTER_TID(ds_tid) && ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                pId,
+                NULL,
                 tId,
                 0,
                 ds_tid);
