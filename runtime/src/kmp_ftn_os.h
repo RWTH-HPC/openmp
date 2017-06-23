@@ -174,9 +174,6 @@
 
     #define FTN_GET_NUM_KNOWN_THREADS            kmp_get_num_known_threads_
 
-#if OMPT_SUPPORT
-    #define FTN_CONTROL_TOOL                     omp_control_tool_
-#endif
     #define FTN_SET_NUM_THREADS                  omp_set_num_threads_
     #define FTN_GET_NUM_THREADS                  omp_get_num_threads_
     #define FTN_GET_MAX_THREADS                  omp_get_max_threads_
@@ -260,6 +257,10 @@
 # endif
 #endif
 
+#if OMP_50_ENABLED
+    #define FTN_CONTROL_TOOL                     OMP_CONTROL_TOOL
+#endif
+
 #endif /* KMP_FTN_APPEND */
 
 /* ------------------------------------------------------------------------ */
@@ -296,9 +297,6 @@
 
     #define FTN_GET_NUM_KNOWN_THREADS            KMP_GET_NUM_KNOWN_THREADS
 
-#if OMPT_SUPPORT
-    #define FTN_CONTROL_TOOL                     OMP_CONTROL_TOOL
-#endif
     #define FTN_SET_NUM_THREADS                  OMP_SET_NUM_THREADS
     #define FTN_GET_NUM_THREADS                  OMP_GET_NUM_THREADS
     #define FTN_GET_MAX_THREADS                  OMP_GET_MAX_THREADS
@@ -381,6 +379,11 @@
     #define FTN_TARGET_DISASSOCIATE_PTR          OMP_TARGET_DISASSOCIATE_PTR
 # endif
 #endif
+
+#if OMP_50_ENABLED
+    #define FTN_CONTROL_TOOL                     OMP_CONTROL_TOOL
+#endif
+
 
 #endif /* KMP_FTN_UPPER */
 

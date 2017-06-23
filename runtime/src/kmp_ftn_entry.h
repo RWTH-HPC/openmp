@@ -1425,9 +1425,6 @@ xaliasify(FTN_IS_INITIAL_DEVICE, 40);
 
 #if OMP_50_ENABLED
 // OMP_5.0 aliases
-#endif
-
-#if OMPT_SUPPORT
 xaliasify(FTN_CONTROL_TOOL, 50);
 #endif
 
@@ -1500,9 +1497,6 @@ xversionify(FTN_IS_INITIAL_DEVICE,  40, "OMP_4.0");
 
 #if OMP_50_ENABLED
 // OMP_5.0 versioned symbols
-#endif
-
-#if OMPT_SUPPORT
 xversionify(FTN_CONTROL_TOOL, 50, "OMP_5.0");
 #endif
 
