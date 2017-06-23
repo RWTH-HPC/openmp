@@ -3128,7 +3128,7 @@ extern kmp_info_t * __kmp_allocate_thread( kmp_root_t *root,
 #if OMP_40_ENABLED
 extern kmp_team_t * __kmp_allocate_team( kmp_root_t *root, int new_nproc, int max_nproc,
 #if OMPT_SUPPORT
-                                         ompt_parallel_data_t ompt_parallel_data,
+                                         ompt_data_t ompt_parallel_data,
 #endif
                                          kmp_proc_bind_t proc_bind,
                                          kmp_internal_control_t *new_icvs,

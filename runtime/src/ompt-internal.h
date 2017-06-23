@@ -35,7 +35,7 @@ typedef struct kmp_taskdata  kmp_taskdata_t;
 typedef struct {
     ompt_frame_t            frame;
     void*                   function;
-    ompt_task_data_t        task_data;
+    ompt_data_t             task_data;
     kmp_taskdata_t *        scheduling_parent;
 #if OMP_40_ENABLED
     int                     ndeps;
@@ -45,8 +45,8 @@ typedef struct {
 
 
 typedef struct {
-    ompt_parallel_data_t  parallel_data;
-    void                *microtask;
+    ompt_data_t     parallel_data;
+    void            *microtask;
 } ompt_team_info_t;
 
 
@@ -67,8 +67,8 @@ typedef struct ompt_lw_taskteam_s {
 
 
 typedef struct {
-    ompt_thread_data_t    thread_data;
-    ompt_task_data_t      task_data; /* stored here from implicit barrier-begin until implicit-task-end */
+    ompt_data_t           thread_data;
+    ompt_data_t           task_data; /* stored here from implicit barrier-begin until implicit-task-end */
     void                  *kmp_return_address; /* stored here on entry of runtime */
     void                  *gomp_return_address; /* stored here on entry of runtime */
     omp_state_t           state;

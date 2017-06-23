@@ -59,7 +59,7 @@ kmp_int32 __kmpc_cancel(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 cncl_kind) {
                     #if OMPT_SUPPORT && OMPT_OPTIONAL
                             if (ompt_enabled &&
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
-                                ompt_task_data_t *task_data;
+                                ompt_data_t *task_data;
                                 __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                                 ompt_cancel_flag_t type = ompt_cancel_parallel;
                                 if(cncl_kind == cancel_parallel)
@@ -97,7 +97,7 @@ kmp_int32 __kmpc_cancel(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 cncl_kind) {
                         #if OMPT_SUPPORT && OMPT_OPTIONAL
                             if (ompt_enabled &&
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
-                                ompt_task_data_t *task_data;
+                                ompt_data_t *task_data;
                                 __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)(
                                     task_data,
@@ -164,7 +164,7 @@ kmp_int32 __kmpc_cancellationpoint(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 c
                         #if OMPT_SUPPORT && OMPT_OPTIONAL
                             if (ompt_enabled &&
                                 ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
-                                ompt_task_data_t *task_data;
+                                ompt_data_t *task_data;
                                 __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                                 ompt_cancel_flag_t type = ompt_cancel_parallel;
                                 if(cncl_kind == cancel_parallel)
@@ -207,7 +207,7 @@ kmp_int32 __kmpc_cancellationpoint(ident_t* loc_ref, kmp_int32 gtid, kmp_int32 c
                     #if OMPT_SUPPORT && OMPT_OPTIONAL
                         if (ompt_enabled && !!taskgroup->cancel_request &&
                             ompt_callbacks.ompt_callback(ompt_callback_cancel)) {
-                            ompt_task_data_t *task_data;
+                            ompt_data_t *task_data;
                             __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
                             ompt_callbacks.ompt_callback(ompt_callback_cancel)(
                                 task_data,

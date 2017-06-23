@@ -1097,8 +1097,8 @@ __kmp_barrier(enum barrier_type bt, int gtid, int is_split, size_t reduce_size,
     register int status = 0;
     ident_t *loc = __kmp_threads[gtid]->th.th_ident;
 #if OMPT_SUPPORT
-    ompt_task_data_t* my_task_data;
-    ompt_parallel_data_t* my_parallel_data;
+    ompt_data_t* my_task_data;
+    ompt_data_t* my_parallel_data;
     void* return_address;
 #endif
 
@@ -1463,8 +1463,8 @@ __kmp_join_barrier(int gtid)
 
     ANNOTATE_BARRIER_BEGIN(&team->t.t_bar);
 #if OMPT_SUPPORT
-    ompt_task_data_t* my_task_data;
-    ompt_parallel_data_t* my_parallel_data;
+    ompt_data_t* my_task_data;
+    ompt_data_t* my_parallel_data;
     if (ompt_enabled) {
 #if OMPT_OPTIONAL
         my_task_data = OMPT_CUR_TASK_DATA(this_thr);
@@ -1644,8 +1644,8 @@ __kmp_fork_barrier(int gtid, int tid)
     void * itt_sync_obj = NULL;
 #endif /* USE_ITT_BUILD */
 #if 0 && OMPT_SUPPORT
-    ompt_task_data_t my_task_data={.ptr=NULL};
-    ompt_parallel_data_t my_parallel_data={.ptr=NULL};
+    ompt_data_t my_task_data={.ptr=NULL};
+    ompt_data_t my_parallel_data={.ptr=NULL};
 #if OMPT_OPTIONAL
     if (ompt_enabled) {
         if (team)
@@ -1739,7 +1739,7 @@ __kmp_fork_barrier(int gtid, int tid)
     {
         if (this_thr->th.ompt_thread_info.state == omp_state_wait_barrier_implicit) {
             int ds_tid = this_thr->th.th_info.ds.ds_tid;
-            ompt_task_data_t* tId = (team)? &(this_thr->th.th_current_task->ompt_task_info.task_data) : &(this_thr->th.ompt_thread_info.task_data);
+            ompt_data_t* tId = (team)? &(this_thr->th.th_current_task->ompt_task_info.task_data) : &(this_thr->th.ompt_thread_info.task_data);
             this_thr->th.ompt_thread_info.state = omp_state_overhead;
 #if OMPT_OPTIONAL
             void * codeptr = NULL;

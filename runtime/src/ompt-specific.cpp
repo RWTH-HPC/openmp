@@ -230,7 +230,7 @@ __ompt_thread_id_new()
     return NEXT_ID(&ompt_thread_id, 0);
 }
 
-ompt_thread_data_t *
+ompt_data_t *
 __ompt_get_thread_data_internal()
 {
     kmp_info_t *thread = ompt_get_thread();
@@ -305,7 +305,7 @@ __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_dat
 void
 __ompt_lw_taskteam_init(ompt_lw_taskteam_t *lwt, kmp_info_t *thr,
                         int gtid, void *microtask,
-                        ompt_parallel_data_t* ompt_pid)
+                        ompt_data_t* ompt_pid)
 {
     // initialize parallel_data with input, return address to parallel_data on exit
     lwt->ompt_team_info.parallel_data = *ompt_pid;
@@ -485,7 +485,7 @@ __ompt_get_task_info_internal(
 //----------------------------------------------------------
 
 void
-__ompt_team_assign_id(kmp_team_t *team, ompt_parallel_data_t ompt_pid)
+__ompt_team_assign_id(kmp_team_t *team, ompt_data_t ompt_pid)
 {
     team->t.ompt_team_info.parallel_data = ompt_pid;
 }

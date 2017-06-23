@@ -86,7 +86,7 @@ class kmp_flag {
 
 #if OMPT_SUPPORT
 static inline void
-__ompt_implicit_task_end(kmp_info_t *this_thr, omp_state_t omp_state, ompt_task_data_t* tId, ompt_parallel_data_t* pId)
+__ompt_implicit_task_end(kmp_info_t *this_thr, omp_state_t omp_state, ompt_data_t* tId, ompt_data_t* pId)
 {
     int ds_tid = this_thr->th.th_info.ds.ds_tid;
     if (omp_state == omp_state_wait_barrier_implicit) {
@@ -218,8 +218,8 @@ THIS function is called from
 */
 #if OMPT_SUPPORT
     omp_state_t ompt_entry_state;
-    ompt_parallel_data_t* pId=NULL;
-    ompt_task_data_t* tId;
+    ompt_data_t* pId=NULL;
+    ompt_data_t* tId;
     if (ompt_enabled) {
         ompt_entry_state = this_thr->th.ompt_thread_info.state;
         if (!final_spin || ompt_entry_state != omp_state_wait_barrier_implicit || KMP_MASTER_TID(this_thr->th.th_info.ds.ds_tid)) {

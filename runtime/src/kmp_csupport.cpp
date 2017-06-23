@@ -544,7 +544,7 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
         }
 
         // reset clear the task id only after unlinking the task
-        ompt_task_data_t * parent_task_data;
+        ompt_data_t * parent_task_data;
         __ompt_get_task_info_internal(1, NULL, &parent_task_data, NULL, NULL, NULL);
 
         if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {

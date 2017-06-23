@@ -98,7 +98,7 @@ static ompt_fns_t* ompt_fns = NULL;
 
 static ompt_interface_fn_t ompt_fn_lookup(const char *s);
 
-OMPT_API_ROUTINE ompt_thread_data_t* ompt_get_thread_data(void);
+OMPT_API_ROUTINE ompt_data_t* ompt_get_thread_data(void);
 
 
 /*****************************************************************************
@@ -463,7 +463,7 @@ OMPT_API_ROUTINE omp_state_t ompt_get_state(ompt_wait_id_t *wait_id)
  ****************************************************************************/
 
 
-OMPT_API_ROUTINE ompt_thread_data_t* ompt_get_thread_data(void)
+OMPT_API_ROUTINE ompt_data_t* ompt_get_thread_data(void)
 {
     return __ompt_get_thread_data_internal();
 }

@@ -1220,9 +1220,9 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
 #endif /* OMP_40_ENABLED */
 
 #if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data;
+    ompt_data_t ompt_parallel_data;
     ompt_parallel_data.ptr = NULL;
-    ompt_task_data_t *implicit_task_data;
+    ompt_data_t *implicit_task_data;
     if (ompt_enabled && this_thr->th.ompt_thread_info.state != omp_state_overhead) {
 
         ompt_task_info_t *parent_task_info;
@@ -1261,7 +1261,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
             __kmp_acquire_bootstrap_lock( &__kmp_forkjoin_lock );
 
 #if OMPT_SUPPORT
-            ompt_parallel_data_t ompt_parallel_data = {.value=__ompt_parallel_id_new(global_tid)};
+            ompt_data_t ompt_parallel_data = {.value=__ompt_parallel_id_new(global_tid)};
 #endif
 
             new_team = __kmp_allocate_team(this_thr->th.th_root, 1, 1,
@@ -1493,11 +1493,11 @@ __kmp_fork_call(
     master_set_numthreads = master_th->th.th_set_nproc;
 
 #if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data;
+    ompt_data_t ompt_parallel_data;
     ompt_parallel_data.ptr = NULL;
-    ompt_task_data_t *parent_task_data;
+    ompt_data_t *parent_task_data;
     ompt_frame_t *ompt_frame;
-    ompt_task_data_t *implicit_task_data;
+    ompt_data_t *implicit_task_data;
     void* return_address = NULL;
 
     if (ompt_enabled) {
@@ -2292,7 +2292,7 @@ __kmp_join_ompt(
     int gtid,
     kmp_info_t *thread,
     kmp_team_t *team,
-    ompt_parallel_data_t *parallel_data,
+    ompt_data_t *parallel_data,
     fork_context_e fork_context)
 {
     ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
@@ -2398,7 +2398,7 @@ __kmp_join_call(ident_t *loc, int gtid
     KMP_MB();
 
 #if OMPT_SUPPORT
-    ompt_parallel_data_t* parallel_data = &(team->t.ompt_team_info.parallel_data);
+    ompt_data_t* parallel_data = &(team->t.ompt_team_info.parallel_data);
 #endif
 
 #if USE_ITT_BUILD
@@ -4848,7 +4848,7 @@ __kmp_partition_places( kmp_team_t *team, int update_master_only )
 kmp_team_t *
 __kmp_allocate_team( kmp_root_t *root, int new_nproc, int max_nproc,
 #if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data,
+    ompt_data_t ompt_parallel_data,
 #endif
 #if OMP_40_ENABLED
     kmp_proc_bind_t new_proc_bind,
@@ -5568,7 +5568,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
     }
 
 #if OMPT_SUPPORT
-    ompt_thread_data_t *thread_data;
+    ompt_data_t *thread_data;
     if (ompt_enabled) {
         thread_data = &(this_thr->th.ompt_thread_info.thread_data);
         thread_data->ptr = NULL;
@@ -5612,7 +5612,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
         if ( TCR_SYNC_PTR(*pteam) && !TCR_4(__kmp_global.g.g_done) ) {
 #if 0 && OMPT_SUPPORT
             ompt_task_info_t *task_info;
-            ompt_parallel_data_t* my_parallel_data;
+            ompt_data_t* my_parallel_data;
             int ompt_team_size;
             if (ompt_enabled) {
                 task_info = __ompt_get_task_info_object(0);
@@ -6954,8 +6954,8 @@ __kmp_invoke_task_func( int gtid )
 #if OMPT_SUPPORT
     void *dummy;
     void **exit_runtime_p;
-    ompt_task_data_t *my_task_data;
-    ompt_parallel_data_t* my_parallel_data;
+    ompt_data_t *my_task_data;
+    ompt_data_t* my_parallel_data;
     int ompt_team_size;
 
     if (ompt_enabled) {
@@ -7218,8 +7218,8 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
 #if OMPT_SUPPORT
     int ds_tid = this_thr->th.th_info.ds.ds_tid;
     if (this_thr->th.ompt_thread_info.state == omp_state_wait_barrier_implicit) {
-        ompt_task_data_t* tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
-        ompt_parallel_data_t* pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
+        ompt_data_t* tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
+        ompt_data_t* pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
         this_thr->th.ompt_thread_info.state = omp_state_overhead;
 #if OMPT_OPTIONAL
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
