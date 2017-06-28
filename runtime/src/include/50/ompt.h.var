@@ -20,6 +20,7 @@
 
 #define FOREACH_OMPT_INQUIRY_FN(macro)      \
     macro (ompt_enumerate_states)           \
+    macro (ompt_enumerate_mutex_impls)      \
                                             \
     macro (ompt_set_callback)               \
     macro (ompt_get_callback)               \
@@ -80,6 +81,12 @@
     /* misc (112..127) */                                                                       \
     macro (ompt_state_undefined, 0x70)       /* undefined thread state */
 
+
+#define FOREACH_OMPT_MUTEX_IMPL(macro)                                                \
+    macro (ompt_mutex_impl_unknown, 0)      /* unknown implementatin */               \
+    macro (ompt_mutex_impl_spin, 1)         /* based on spin */                       \
+    macro (ompt_mutex_impl_queuing, 2)      /* based on some fair policy */           \
+    macro (ompt_mutex_impl_speculative, 3)  /* based on HW-supported speculation */
 
 #define FOREACH_OMPT_EVENT(macro)                                                                               \
                                                                                                                 \
@@ -226,6 +233,15 @@ typedef enum ompt_set_result_e {
     ompt_set_always = 4
 } ompt_set_result_t;
 
+
+/*----------------------
+ * mutex implementations
+ *----------------------*/
+typedef enum ompt_mutex_impl_e {
+#define ompt_mutex_impl_macro(impl, code) impl = code,
+    FOREACH_OMPT_MUTEX_IMPL(ompt_mutex_impl_macro)
+#undef ompt_mutex_impl_macro
+} ompt_mutex_impl_t;
 
 
 /*****************************************************************************
@@ -639,6 +655,13 @@ OMPT_API_FUNCTION(int, ompt_enumerate_states, (
     int current_state,
     int *next_state,
     const char **next_state_name
+));
+
+/* mutex implementation enumeration */
+OMPT_API_FUNCTION(int, ompt_enumerate_mutex_impls, (
+    int current_impl,
+    int *next_impl,
+    const char **next_impl_name
 ));
 
 /* get_unique_id */
