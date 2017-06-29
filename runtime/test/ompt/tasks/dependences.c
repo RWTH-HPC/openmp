@@ -25,7 +25,7 @@ int main()
     }
   }
 
-  printf("x = %d\n", x);
+  x++;
 
 
   // Check if libomp supports the callbacks for this test.
