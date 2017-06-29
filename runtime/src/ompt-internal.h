@@ -26,8 +26,8 @@ typedef struct ompt_callbacks_internal_s {
 
 typedef struct kmp_taskdata  kmp_taskdata_t;
 
-#define TASK_TYPE_DETAILS_FORMAT(info) (info->td_flags.task_serial ? ompt_task_undeferred : 0x0) | \
-                                       (info->td_flags.tiedness ? ompt_task_untied : 0x0) | \
+#define TASK_TYPE_DETAILS_FORMAT(info) ((info->td_flags.task_serial || info->td_flags.tasking_ser) ? ompt_task_undeferred : 0x0) | \
+                                       ((!(info->td_flags.tiedness)) ? ompt_task_untied : 0x0) | \
                                        (info->td_flags.final ? ompt_task_final : 0x0) | \
                                        (info->td_flags.merged_if0 ? ompt_task_mergeable : 0x0) /* | \*/ 
                                        /*(info->td_flags.mergeable ? ompt_task_merged : 0x0) */ 
