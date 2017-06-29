@@ -528,6 +528,8 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
                        gtid, counter, taskdata ) );
     }
 
+    taskdata -> td_flags.task_serial = 1;  // Execute this task immediately, not deferred.
+    
 #if OMPT_SUPPORT
     if (ompt_enabled && current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
         current_task->ompt_task_info.frame.reenter_runtime_frame =
@@ -551,7 +553,6 @@ __kmpc_omp_task_begin_if0( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * task )
 
  #endif
 
-    taskdata -> td_flags.task_serial = 1;  // Execute this task immediately, not deferred.
     __kmp_task_start( gtid, task, current_task );
 #if OMPT_SUPPORT
     __ompt_task_start( task, current_task, gtid );
@@ -1525,7 +1526,7 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
                 parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
                 &(new_taskdata->ompt_task_info.task_data),
-                ompt_task_explicit,
+                ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(new_taskdata),
                 0,
                 new_taskdata->ompt_task_info.function);
         }
