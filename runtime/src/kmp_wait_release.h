@@ -99,7 +99,7 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, omp_state_t omp_state, ompt_data_
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
-                pId,
+                NULL,
                 tId,
                 codeptr);
         }
@@ -107,7 +107,7 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, omp_state_t omp_state, ompt_data_
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
                 ompt_sync_region_barrier,
                 ompt_scope_end,
-                pId,
+                NULL,
                 tId,
                 codeptr);
         }
