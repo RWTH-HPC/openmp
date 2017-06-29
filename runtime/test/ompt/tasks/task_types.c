@@ -51,9 +51,9 @@ int main()
     {
       print_task_type(4);
       x++;
-    }*/
+    }
+*/
 
-    //TODO:not working
     //explicit task with final
     #pragma omp task final(1)
     {
