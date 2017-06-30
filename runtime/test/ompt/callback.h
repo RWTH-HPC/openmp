@@ -608,7 +608,7 @@ on_ompt_callback_control_tool(
   void *arg,
   const void *codeptr_ra)
 {
-  print_frame(2);
+  print_frame(3);
   ompt_frame_t* omptTaskFrame;
   ompt_get_task_info(0, NULL, (ompt_data_t**) NULL, &omptTaskFrame, NULL, NULL);
   printf("%" PRIu64 ": ompt_event_control_tool: command=%" PRIu64 ", modifier=%" PRIu64 ", arg=%p, codeptr_ra=%p, parent_task_frame.exit=%p, parent_task_frame.reenter=%p \n", ompt_get_thread_data()->value, command, modifier, arg, codeptr_ra, omptTaskFrame->exit_runtime_frame, omptTaskFrame->reenter_runtime_frame);
