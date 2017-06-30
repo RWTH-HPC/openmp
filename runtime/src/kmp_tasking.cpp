@@ -1515,7 +1515,7 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
                   gtid, loc_ref, new_taskdata ) );
 
 #if OMPT_SUPPORT
-    kmp_taskdata_t *parent;
+    kmp_taskdata_t *parent=NULL;
     if (ompt_enabled && !new_taskdata->td_flags.started) {
         parent = new_taskdata->td_parent;
         if(!parent->ompt_task_info.frame.reenter_runtime_frame)
@@ -1538,7 +1538,7 @@ __kmpc_omp_task( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_task)
     KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning TASK_CURRENT_NOT_QUEUED: loc=%p task=%p\n",
                   gtid, loc_ref, new_taskdata ) );
 #if OMPT_SUPPORT
-    if (ompt_enabled) {
+    if (ompt_enabled && parent!=NULL) {
         parent->ompt_task_info.frame.reenter_runtime_frame =
             NULL;
     }
