@@ -45,14 +45,12 @@ int main()
       x++;
     }
 
-/*    //TODO:not working
     //explicit task with untied
     #pragma omp task untied
     {
       print_task_type(4);
       x++;
     }
-*/
 
     //explicit task with final
     #pragma omp task final(1)
@@ -67,6 +65,7 @@ int main()
       }
     }
 
+/*
     //TODO:not working
     //explicit task with mergeable
     #pragma omp task mergeable
@@ -74,10 +73,10 @@ int main()
       print_task_type(7);
       x++;
     }
+*/
 
     //TODO: merged task
   }
-
 
 
   // Check if libomp supports the callbacks for this test.
@@ -96,8 +95,8 @@ int main()
   // CHECK: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred=134217732, has_dependences=no
   // CHECK: {{^[0-9]+}}: id=3 task_type=ompt_task_explicit|ompt_task_undeferred=134217732
 
-  // ___CHECK: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=4, has_dependences=no
-  // ___CHECK: {{^[0-9]+}}: id=4 task_type=ompt_task_explicit=4
+  // CHECK: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_untied=402653188, has_dependences=no
+  // CHECK: {{^[0-9]+}}: id=4 task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_untied=402653188
 
   // CHECK: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_final=671088644, has_dependences=no
   // CHECK: {{^[0-9]+}}: id=5 task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_final=671088644
@@ -105,8 +104,8 @@ int main()
   // CHECK: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_final=671088644, has_dependences=no
   // CHECK: {{^[0-9]+}}: id=6 task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_final=671088644
 
-  // CHECK: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred=134217732, has_dependences=no
-  // CHECK: {{^[0-9]+}}: id=7 task_type=ompt_task_explicit|ompt_task_undeferred=134217732
+  // ___CHECK: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred=134217732, has_dependences=no
+  // ___CHECK: {{^[0-9]+}}: id=7 task_type=ompt_task_explicit|ompt_task_undeferred=134217732
 
   return 0;
 }

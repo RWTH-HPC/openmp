@@ -47,7 +47,6 @@ int main()
       x++;
     }
 
-    //TODO:not working
     //explicit task with untied
     #pragma omp task untied
     {
@@ -99,7 +98,7 @@ int main()
   // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred=134217732, has_dependences=no
   // CHECK-DAG: {{^[0-9]+}}: id=3 task_type=ompt_task_explicit|ompt_task_undeferred=134217732
 
-  // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=4, has_dependences=no
+  // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_untied=268435460, has_dependences=no
   // CHECK-DAG: {{^[0-9]+}}: id=4 task_type=ompt_task_explicit|ompt_task_untied=268435460
 
   // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_final=536870916, has_dependences=no
