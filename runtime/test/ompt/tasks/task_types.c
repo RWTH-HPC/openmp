@@ -2,6 +2,8 @@
 // REQUIRES: ompt
 #include "callback.h"
 #include <omp.h>
+#include <math.h>
+
 
 void print_task_type(int id)
 {
@@ -45,14 +47,13 @@ int main()
       x++;
     }
 
-/*    //TODO:not working
+    //TODO:not working
     //explicit task with untied
     #pragma omp task untied
     {
       print_task_type(4);
       x++;
     }
-*/
 
     //explicit task with final
     #pragma omp task final(1)
@@ -69,11 +70,13 @@ int main()
 
     //TODO:not working
     //explicit task with mergeable
-    #pragma omp task mergeable
+    /*
+    #pragma omp task mergeable if((int)sin(0))
     {
       print_task_type(7);
       x++;
     }
+    */
 
     //TODO: merged task
   }
@@ -96,8 +99,8 @@ int main()
   // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred=134217732, has_dependences=no
   // CHECK-DAG: {{^[0-9]+}}: id=3 task_type=ompt_task_explicit|ompt_task_undeferred=134217732
 
-  // ___CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=4, has_dependences=no
-  // ___CHECK-DAG: {{^[0-9]+}}: id=4 task_type=ompt_task_explicit=4
+  // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=4, has_dependences=no
+  // CHECK-DAG: {{^[0-9]+}}: id=4 task_type=ompt_task_explicit|ompt_task_untied=268435460
 
   // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_final=536870916, has_dependences=no
   // CHECK-DAG: {{^[0-9]+}}: id=5 task_type=ompt_task_explicit|ompt_task_final=536870916
@@ -105,8 +108,8 @@ int main()
   // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_final=671088644, has_dependences=no
   // CHECK-DAG: {{^[0-9]+}}: id=6 task_type=ompt_task_explicit|ompt_task_undeferred|ompt_task_final=671088644
 
-  // CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=4, has_dependences=no
-  // CHECK-DAG: {{^[0-9]+}}: id=7 task_type=ompt_task_explicit=4
+  // ___CHECK-DAG: {{^[0-9]+}}: ompt_event_task_create: parent_task_id={{[0-9]+}}, parent_task_frame.exit={{0x[0-f]+}}, parent_task_frame.reenter={{0x[0-f]+}}, new_task_id={{[0-9]+}}, parallel_function={{0x[0-f]+}}, task_type=ompt_task_explicit=4, has_dependences=no
+  // ___CHECK-DAG: {{^[0-9]+}}: id=7 task_type=ompt_task_explicit=4
 
   return 0;
 }
