@@ -4671,6 +4671,22 @@ __kmp_stg_print_omp_cancellation( kmp_str_buf_t * buffer, char const * name, voi
 
 #endif
 
+#if OMP_50_ENABLED && LIBOMP_OMPT_SUPPORT
+
+static void
+__kmp_stg_parse_omp_tool_libraries( char const * name, char const * value, void * data )
+{
+    __kmp_stg_parse_str( name, value, & __kmp_tool_libraries );
+} // __kmp_stg_parse_omp_tool_libraries
+
+static void
+__kmp_stg_print_omp_tool_libraries( kmp_str_buf_t * buffer, char const * name, void * data )
+{
+    __kmp_stg_print_str( buffer, name, __kmp_tool_libraries );
+} // __kmp_stg_print_omp_tool_libraries
+
+#endif
+
 // -------------------------------------------------------------------------------------------------
 // Table.
 // -------------------------------------------------------------------------------------------------
@@ -4831,6 +4847,11 @@ static kmp_setting_t __kmp_stg_table[] = {
     { "OMP_DISPLAY_ENV",                   __kmp_stg_parse_omp_display_env,    __kmp_stg_print_omp_display_env,    NULL, 0, 0 },
     { "OMP_CANCELLATION",                  __kmp_stg_parse_omp_cancellation,   __kmp_stg_print_omp_cancellation,   NULL, 0, 0 },
 #endif
+
+# if OMP_50_ENABLED
+    { "OMP_TOOL_LIBRARIES",                __kmp_stg_parse_omp_tool_libraries,  __kmp_stg_print_omp_tool_libraries,  NULL, 0, 0 },
+#endif
+
     { "",                                  NULL,                               NULL,                               NULL, 0, 0 }
 }; // settings
 

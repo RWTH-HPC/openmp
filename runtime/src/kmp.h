@@ -779,6 +779,10 @@ extern int __kmp_place_num_cores;
 extern int __kmp_place_core_offset;
 extern int __kmp_place_num_threads_per_core;
 
+#if OMP_50_ENABLED && LIBOMP_OMPT_SUPPORT
+extern char const * __kmp_tool_libraries;
+#endif // OMP_50_ENABLED && LIBOMP_OMPT_SUPPORT
+
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 
