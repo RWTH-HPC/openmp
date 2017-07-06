@@ -4682,7 +4682,17 @@ __kmp_stg_parse_omp_tool_libraries( char const * name, char const * value, void 
 static void
 __kmp_stg_print_omp_tool_libraries( kmp_str_buf_t * buffer, char const * name, void * data )
 {
-    __kmp_stg_print_str( buffer, name, __kmp_tool_libraries );
+    if(__kmp_tool_libraries)
+        __kmp_stg_print_str( buffer, name, __kmp_tool_libraries );
+    else
+    {
+        if( __kmp_env_format ) {
+            KMP_STR_BUF_PRINT_NAME;
+        } else {
+            __kmp_str_buf_print( buffer, "   %s", name );
+        }
+        __kmp_str_buf_print( buffer, ": %s\n", KMP_I18N_STR( NotDefined ) );
+    }
 } // __kmp_stg_print_omp_tool_libraries
 
 #endif
