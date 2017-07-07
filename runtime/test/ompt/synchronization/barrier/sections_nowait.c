@@ -13,13 +13,16 @@ int main()
     //implicit barrier at end of sections
     #pragma omp sections nowait lastprivate(x)
     {
-      for (int i = 0; i < 4; i++)
+      #pragma omp section 
       {
-        #pragma omp section 
-        {
-          #pragma omp atomic
-          x++;
-        }
+        #pragma omp atomic
+        x++;
+      }
+      
+      #pragma omp section 
+      {
+        #pragma omp atomic
+        x++;
       }
     }
   }
