@@ -15,12 +15,12 @@ typedef kmp_info_t ompt_thread_t;
  * forward declarations
  ****************************************************************************/
 
-void __ompt_team_assign_id(kmp_team_t *team, ompt_parallel_data_t ompt_pid);
+void __ompt_team_assign_id(kmp_team_t *team, ompt_data_t ompt_pid);
 void __ompt_thread_assign_wait_id(void *variable);
 
 void __ompt_lw_taskteam_init(ompt_lw_taskteam_t *lwt, ompt_thread_t *thr,
                              int gtid, void *microtask,
-                             ompt_parallel_data_t* ompt_pid);
+                             ompt_data_t* ompt_pid);
 
 void __ompt_lw_taskteam_link(ompt_lw_taskteam_t *lwt,  ompt_thread_t *thr, int on_heap);
 
@@ -44,7 +44,7 @@ int __ompt_get_task_info_internal(
     ompt_data_t **parallel_data,
     int *thread_num);
 
-ompt_thread_data_t *__ompt_get_thread_data_internal();
+ompt_data_t *__ompt_get_thread_data_internal();
 
 static uint64_t __ompt_get_get_unique_id_internal();
 
@@ -100,7 +100,7 @@ ompt_get_thread()
 
 
 inline void
-ompt_set_thread_state(ompt_thread_t *thread, ompt_state_t state)
+ompt_set_thread_state(ompt_thread_t *thread, omp_state_t state)
 {
     thread->th.ompt_thread_info.state = state;
 }

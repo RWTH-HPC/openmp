@@ -15,8 +15,8 @@ int main()
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
 
-  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: __builtin_frame_address(2)=[[REENTER_FRAME:0x[0-f]*]]
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_control_tool: command=3, modifier=1, arg=(nil), codeptr_ra={{0x[0-f]*}}, parent_task_frame.exit={{0x[0-f]*}}, parent_task_frame.reenter=[[REENTER_FRAME]]
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: __builtin_frame_address(3)=[[REENTER_FRAME:0x[0-f]*]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_control_tool: command=3, modifier=1, arg=[[NULL]], codeptr_ra={{0x[0-f]*}}, parent_task_frame.exit={{0x[0-f]*}}, parent_task_frame.reenter=[[REENTER_FRAME]]
 
 
   return 0;

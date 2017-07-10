@@ -62,9 +62,9 @@ int main()
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_task_end: task_id=[[EXPLICIT_TASK_ID]]
 
 
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_implicit_task_end: parallel_id=[[NESTED_PARALLEL_ID]], task_id=[[NESTED_IMPLICIT_TASK_ID]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_implicit_task_end: parallel_id=0, task_id=[[NESTED_IMPLICIT_TASK_ID]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_parallel_end: parallel_id=[[NESTED_PARALLEL_ID]], task_id=[[IMPLICIT_TASK_ID]], invoker=[[PARALLEL_INVOKER]]
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_implicit_task_end: parallel_id=[[PARALLEL_ID]], task_id=[[IMPLICIT_TASK_ID]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_implicit_task_end: parallel_id=0, task_id=[[IMPLICIT_TASK_ID]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_parallel_end: parallel_id=[[PARALLEL_ID]], task_id=[[PARENT_TASK_ID]], invoker=[[PARALLEL_INVOKER]]
 
   return 0;

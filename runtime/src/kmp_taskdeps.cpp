@@ -18,6 +18,7 @@
 #include "kmp.h"
 #include "kmp_io.h"
 #include "kmp_wait_release.h"
+#include "ompt-specific.h"
 
 #if OMP_40_ENABLED
 
@@ -444,18 +445,20 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
     kmp_info_t *thread = __kmp_threads[ gtid ];
     kmp_taskdata_t * current_task = thread->th.th_current_task;
 
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+
 #if OMPT_SUPPORT
     if (ompt_enabled) {
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             kmp_taskdata_t *parent = new_taskdata->td_parent;
-            ompt_task_data_t task_data = ompt_data_none;
+            ompt_data_t task_data = ompt_data_none;
             ompt_callbacks.ompt_callback(ompt_callback_task_create)(
                 parent ? &(parent->ompt_task_info.task_data) : &task_data,
                 parent ? &(parent->ompt_task_info.frame) : NULL,
                 &(new_taskdata->ompt_task_info.task_data),
                 ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(new_taskdata),
                 1,
-                new_taskdata->ompt_task_info.function);
+                OMPT_LOAD_RETURN_ADDRESS(gtid));
         }
 
         new_taskdata->ompt_task_info.frame.reenter_runtime_frame =

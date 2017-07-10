@@ -1220,10 +1220,10 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
 #endif /* OMP_40_ENABLED */
 
 #if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data;
+    ompt_data_t ompt_parallel_data;
     ompt_parallel_data.ptr = NULL;
-    ompt_task_data_t *implicit_task_data;
-    if (ompt_enabled && this_thr->th.ompt_thread_info.state != ompt_state_overhead) {
+    ompt_data_t *implicit_task_data;
+    if (ompt_enabled && this_thr->th.ompt_thread_info.state != omp_state_overhead) {
 
         ompt_task_info_t *parent_task_info;
 //        if (serial_team->t.t_level > 1)
@@ -1261,7 +1261,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
             __kmp_acquire_bootstrap_lock( &__kmp_forkjoin_lock );
 
 #if OMPT_SUPPORT
-            ompt_parallel_data_t ompt_parallel_data = {.value=__ompt_parallel_id_new(global_tid)};
+            ompt_data_t ompt_parallel_data = {.value=__ompt_parallel_id_new(global_tid)};
 #endif
 
             new_team = __kmp_allocate_team(this_thr->th.th_root, 1, 1,
@@ -1391,7 +1391,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
     if ( __kmp_env_consistency_check )
         __kmp_push_parallel( global_tid, NULL );
 #if OMPT_SUPPORT
-    if (ompt_enabled && this_thr->th.ompt_thread_info.state != ompt_state_overhead) {
+    if (ompt_enabled && this_thr->th.ompt_thread_info.state != omp_state_overhead) {
         OMPT_CUR_TASK_INFO(this_thr)->frame.exit_runtime_frame=OMPT_GET_FRAME_ADDRESS(1);
         void *dummy;
         void **exit_runtime_p;
@@ -1417,7 +1417,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
         }
 
         /* OMPT state */
-        this_thr->th.ompt_thread_info.state = ompt_state_work_parallel;
+        this_thr->th.ompt_thread_info.state = omp_state_work_parallel;
         OMPT_CUR_TASK_INFO(this_thr)->frame.exit_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
     }
 #endif
@@ -1493,11 +1493,11 @@ __kmp_fork_call(
     master_set_numthreads = master_th->th.th_set_nproc;
 
 #if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data;
+    ompt_data_t ompt_parallel_data;
     ompt_parallel_data.ptr = NULL;
-    ompt_task_data_t *parent_task_data;
+    ompt_data_t *parent_task_data;
     ompt_frame_t *ompt_frame;
-    ompt_task_data_t *implicit_task_data;
+    ompt_data_t *implicit_task_data;
     void* return_address = NULL;
 
     if (ompt_enabled) {
@@ -1536,7 +1536,7 @@ __kmp_fork_call(
                 OMPT_INVOKER(call_context),
                 return_address);
         }
-        master_th->th.ompt_thread_info.state = ompt_state_overhead;
+        master_th->th.ompt_thread_info.state = omp_state_overhead;
     }
 #endif
 
@@ -1594,7 +1594,7 @@ __kmp_fork_call(
                 }
 
                 /* OMPT state */
-                master_th->th.ompt_thread_info.state = ompt_state_work_parallel;
+                master_th->th.ompt_thread_info.state = omp_state_work_parallel;
             } else {
                 exit_runtime_p = &dummy;
             }
@@ -1617,7 +1617,7 @@ __kmp_fork_call(
                 if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
                     ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                         ompt_scope_end,
-                        &ompt_parallel_data,
+                        NULL,
                         implicit_task_data,
                         1,
                         __kmp_tid_from_gtid(gtid));
@@ -1631,7 +1631,7 @@ __kmp_fork_call(
                         OMPT_INVOKER(call_context),
                         return_address);
                 }
-                master_th->th.ompt_thread_info.state = ompt_state_overhead;
+                master_th->th.ompt_thread_info.state = omp_state_overhead;
             }
 #endif
             return TRUE;
@@ -1795,7 +1795,7 @@ __kmp_fork_call(
                     }
 
                     /* OMPT state */
-                    master_th->th.ompt_thread_info.state = ompt_state_work_parallel;
+                    master_th->th.ompt_thread_info.state = omp_state_work_parallel;
                 } else {
                     exit_runtime_p = &dummy;
                 }
@@ -1817,7 +1817,7 @@ __kmp_fork_call(
                     if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
                         ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                             ompt_scope_end,
-                            OMPT_CUR_TEAM_DATA(master_th),
+                            NULL,
                             &(task_info->task_data),
                             1,
                             __kmp_tid_from_gtid(gtid));
@@ -1830,7 +1830,7 @@ __kmp_fork_call(
                             OMPT_INVOKER(call_context),
                             return_address);
                     }
-                    master_th->th.ompt_thread_info.state = ompt_state_overhead;
+                    master_th->th.ompt_thread_info.state = omp_state_overhead;
                 }
 #endif
             } else if ( microtask == (microtask_t)__kmp_teams_master ) {
@@ -1903,7 +1903,7 @@ __kmp_fork_call(
 
 
                     /* OMPT state */
-                    master_th->th.ompt_thread_info.state = ompt_state_work_parallel;
+                    master_th->th.ompt_thread_info.state = omp_state_work_parallel;
                 } else {
                     exit_runtime_p = &dummy;
                 }
@@ -1925,7 +1925,7 @@ __kmp_fork_call(
                     if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
                         ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                             ompt_scope_end,
-                            OMPT_CUR_TEAM_DATA(master_th),
+                            NULL,
                             &(task_info->task_data),
                             1,
                             __kmp_tid_from_gtid(gtid));
@@ -1938,7 +1938,7 @@ __kmp_fork_call(
                             OMPT_INVOKER(call_context),
                             return_address);
                     }
-                    master_th->th.ompt_thread_info.state = ompt_state_overhead;
+                    master_th->th.ompt_thread_info.state = omp_state_overhead;
                 }
 #endif
 #if OMP_40_ENABLED
@@ -2191,7 +2191,7 @@ __kmp_fork_call(
     __kmp_setup_icv_copy( team, nthreads, &master_th->th.th_current_task->td_icvs, loc );
 
 #if OMPT_SUPPORT
-    master_th->th.ompt_thread_info.state = ompt_state_work_parallel;
+    master_th->th.ompt_thread_info.state = omp_state_work_parallel;
 #endif
 
     __kmp_release_bootstrap_lock( &__kmp_forkjoin_lock );
@@ -2269,7 +2269,7 @@ __kmp_fork_call(
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        master_th->th.ompt_thread_info.state = ompt_state_overhead;
+        master_th->th.ompt_thread_info.state = omp_state_overhead;
     }
 #endif
 
@@ -2284,7 +2284,7 @@ __kmp_join_restore_state(
 {
     // restore state outside the region
     thread->th.ompt_thread_info.state = ((team->t.t_serialized) ?
-        ompt_state_work_serial : ompt_state_work_parallel);
+        omp_state_work_serial : omp_state_work_parallel);
 }
 
 static inline void
@@ -2292,7 +2292,7 @@ __kmp_join_ompt(
     int gtid,
     kmp_info_t *thread,
     kmp_team_t *team,
-    ompt_parallel_data_t *parallel_data,
+    ompt_data_t *parallel_data,
     fork_context_e fork_context)
 {
     ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
@@ -2338,7 +2338,7 @@ __kmp_join_call(ident_t *loc, int gtid
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        master_th->th.ompt_thread_info.state = ompt_state_overhead;
+        master_th->th.ompt_thread_info.state = omp_state_overhead;
     }
 #endif
 
@@ -2398,7 +2398,7 @@ __kmp_join_call(ident_t *loc, int gtid
     KMP_MB();
 
 #if OMPT_SUPPORT
-    ompt_parallel_data_t* parallel_data = &(team->t.ompt_team_info.parallel_data);
+    ompt_data_t* parallel_data = &(team->t.ompt_team_info.parallel_data);
 #endif
 
 #if USE_ITT_BUILD
@@ -2504,7 +2504,7 @@ __kmp_join_call(ident_t *loc, int gtid
             int ompt_team_size = team->t.t_nproc;
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                parallel_data,
+                NULL,
                 &(task_info->task_data),
                 ompt_team_size,
                 __kmp_tid_from_gtid(gtid));
@@ -3863,7 +3863,7 @@ __kmp_register_root( int initial_thread )
 
         ompt_thread_t *root_thread = ompt_get_thread();
 
-        ompt_set_thread_state(root_thread, ompt_state_overhead);
+        ompt_set_thread_state(root_thread, omp_state_overhead);
 
         if (ompt_callbacks.ompt_callback(ompt_callback_thread_begin)) {
             ompt_callbacks.ompt_callback(ompt_callback_thread_begin)(
@@ -3881,7 +3881,7 @@ __kmp_register_root( int initial_thread )
                 OMPT_GET_RETURN_ADDRESS(0));
         }
 
-        ompt_set_thread_state(root_thread, ompt_state_work_serial);
+        ompt_set_thread_state(root_thread, omp_state_work_serial);
     }
 #endif
 
@@ -4020,7 +4020,7 @@ __kmp_unregister_root_current_thread( int gtid )
    if ( task_team != NULL && task_team->tt.tt_found_proxy_tasks ) {
 #if OMPT_SUPPORT
         // the runtime is shutting down so we won't report any events
-        thread->th.ompt_thread_info.state = ompt_state_undefined;
+        thread->th.ompt_thread_info.state = omp_state_undefined;
 #endif
         __kmp_task_team_wait(thread, team USE_ITT_BUILD_ARG(NULL));
    }
@@ -4848,7 +4848,7 @@ __kmp_partition_places( kmp_team_t *team, int update_master_only )
 kmp_team_t *
 __kmp_allocate_team( kmp_root_t *root, int new_nproc, int max_nproc,
 #if OMPT_SUPPORT
-    ompt_parallel_data_t ompt_parallel_data,
+    ompt_data_t ompt_parallel_data,
 #endif
 #if OMP_40_ENABLED
     kmp_proc_bind_t new_proc_bind,
@@ -5568,12 +5568,12 @@ __kmp_launch_thread( kmp_info_t *this_thr )
     }
 
 #if OMPT_SUPPORT
-    ompt_thread_data_t *thread_data;
+    ompt_data_t *thread_data;
     if (ompt_enabled) {
         thread_data = &(this_thr->th.ompt_thread_info.thread_data);
         thread_data->ptr = NULL;
 
-        this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+        this_thr->th.ompt_thread_info.state = omp_state_overhead;
         this_thr->th.ompt_thread_info.wait_id = 0;
         this_thr->th.ompt_thread_info.idle_frame = OMPT_GET_FRAME_ADDRESS(0);
         if (ompt_callbacks.ompt_callback(ompt_callback_thread_begin)) {
@@ -5585,7 +5585,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 
 #if OMPT_SUPPORT
         if (ompt_enabled) {
-            this_thr->th.ompt_thread_info.state = ompt_state_idle;
+            this_thr->th.ompt_thread_info.state = omp_state_idle;
         }
 #endif
     /* This is the place where threads wait for work */
@@ -5602,7 +5602,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 
 #if OMPT_SUPPORT
         if (ompt_enabled) {
-            this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+            this_thr->th.ompt_thread_info.state = omp_state_overhead;
         }
 #endif
 
@@ -5612,7 +5612,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
         if ( TCR_SYNC_PTR(*pteam) && !TCR_4(__kmp_global.g.g_done) ) {
 #if 0 && OMPT_SUPPORT
             ompt_task_info_t *task_info;
-            ompt_parallel_data_t* my_parallel_data;
+            ompt_data_t* my_parallel_data;
             int ompt_team_size;
             if (ompt_enabled) {
                 task_info = __ompt_get_task_info_object(0);
@@ -5630,7 +5630,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 
 #if OMPT_SUPPORT
                 if (ompt_enabled) {
-                    this_thr->th.ompt_thread_info.state = ompt_state_work_parallel;
+                    this_thr->th.ompt_thread_info.state = omp_state_work_parallel;
                     // Initialize OMPT task id for implicit task.
 //                    int tid = __kmp_tid_from_gtid(gtid);
 //                    task_info->task_data.value = __ompt_task_id_new(tid);
@@ -5653,7 +5653,7 @@ __kmp_launch_thread( kmp_info_t *this_thr )
                 /* no frame set while outside task */
                 __ompt_get_task_info_object(0)->frame.exit_runtime_frame = NULL;
 
-                this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+                this_thr->th.ompt_thread_info.state = omp_state_overhead;
                 this_thr->th.ompt_thread_info.task_data = *OMPT_CUR_TASK_DATA(this_thr);
             }
 #endif
@@ -6954,8 +6954,8 @@ __kmp_invoke_task_func( int gtid )
 #if OMPT_SUPPORT
     void *dummy;
     void **exit_runtime_p;
-    ompt_task_data_t *my_task_data;
-    ompt_parallel_data_t* my_parallel_data;
+    ompt_data_t *my_task_data;
+    ompt_data_t* my_parallel_data;
     int ompt_team_size;
 
     if (ompt_enabled) {
@@ -7217,10 +7217,10 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
     __kmp_join_barrier( gtid );  /* wait for everyone */
 #if OMPT_SUPPORT
     int ds_tid = this_thr->th.th_info.ds.ds_tid;
-    if (this_thr->th.ompt_thread_info.state == ompt_state_wait_barrier_implicit) {
-        ompt_task_data_t* tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
-        ompt_parallel_data_t* pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
-        this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+    if (this_thr->th.ompt_thread_info.state == omp_state_wait_barrier_implicit) {
+        ompt_data_t* tId = &(this_thr->th.th_current_task->ompt_task_info.task_data);
+        ompt_data_t* pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
+        this_thr->th.ompt_thread_info.state = omp_state_overhead;
 #if OMPT_OPTIONAL
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
@@ -7242,13 +7242,13 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
         if (!KMP_MASTER_TID(ds_tid) && ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                pId,
+                NULL,
                 tId,
                 0,
                 ds_tid);
         }
         // return to idle state
-        this_thr->th.ompt_thread_info.state = ompt_state_overhead;
+        this_thr->th.ompt_thread_info.state = omp_state_overhead;
     }
 #endif
 
