@@ -86,12 +86,6 @@ ompt_mutex_impl_info_t ompt_mutex_impl_info[] = {
 #undef ompt_mutex_impl_macro
 };
 
-ompt_mutex_impl_info_t ompt_mutex_impl_info[] = {
-#define ompt_mutex_impl_macro(name, id) { #name, name },
-    FOREACH_OMPT_MUTEX_IMPL(ompt_mutex_impl_macro)
-#undef ompt_mutex_impl_macro
-};
-
 ompt_callbacks_internal_t ompt_callbacks;
 
 static ompt_fns_t* ompt_fns = NULL;
