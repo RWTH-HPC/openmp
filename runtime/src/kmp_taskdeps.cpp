@@ -18,7 +18,9 @@
 #include "kmp.h"
 #include "kmp_io.h"
 #include "kmp_wait_release.h"
+#if OMPT_SUPPORT
 #include "ompt-specific.h"
+#endif
 
 #if OMP_40_ENABLED
 
