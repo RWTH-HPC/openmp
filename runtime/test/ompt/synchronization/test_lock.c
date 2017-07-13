@@ -32,7 +32,7 @@ int main()
   int condition = 0;
   #pragma omp parallel num_threads(2)
   {
-    #pragma omp master
+/*    #pragma omp master
     #pragma omp task
     {
       OMPT_WAIT(condition,1);
@@ -48,7 +48,20 @@ int main()
       OMPT_WAIT(condition,2);
       omp_test_nest_lock(&nest_lock); //should fail
       OMPT_SIGNAL(condition);
+    }*/
+
+    #pragma omp master
+      omp_set_nest_lock(&nest_lock);
+    #pragma omp barrier
+    omp_test_nest_lock(&nest_lock); //should fail for non-master
+    #pragma omp barrier
+    #pragma omp master
+    {
+      omp_unset_nest_lock(&nest_lock);
+      omp_unset_nest_lock(&nest_lock);
     }
+
+
   }
 
   omp_destroy_nest_lock(&nest_lock);
@@ -83,11 +96,19 @@ int main()
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID]], codeptr_ra={{0x[0-f]+}}  
 
 
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID]], hint=0, impl={{[0-9]+}}, codeptr_ra={{0x[0-f]+}}   
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID]], hint=0
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_nest_lock_first: wait_id=[[WAIT_ID]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID]], hint=0
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_acquired_nest_lock_next: wait_id=[[WAIT_ID]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_release_nest_lock_prev: wait_id=[[WAIT_ID]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID]]
 
-  // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID]], hint=0, impl={{[0-9]+}}, codeptr_ra={{0x[0-f]+}}   
-  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_acquired_nest_lock_first: wait_id=[[WAIT_ID]], codeptr_ra={{0x[0-f]+}}   
-  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID]], codeptr_ra={{0x[0-f]+}}   
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_destroy_nest_lock: wait_id=[[WAIT_ID]]
+
+
+  // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_wait_nest_lock: wait_id=[[WAIT_ID]], hint=0
+  // ___CHECK: {{^}}[[THREAD_ID]]: ompt_event_acquired_nest_lock_first: wait_id=[[WAIT_ID]], codeptr_ra={{0x[0-f]+}}   
+  // ___CHECK: {{^}}[[THREAD_ID]]: ompt_event_release_nest_lock_last: wait_id=[[WAIT_ID]], codeptr_ra={{0x[0-f]+}}   
 
 
   return 0;
