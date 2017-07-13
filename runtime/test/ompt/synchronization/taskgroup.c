@@ -17,17 +17,8 @@ int main()
       {
         #pragma omp task
         {
-          OMPT_WAIT(condition,1);
           #pragma omp atomic
           x++;
-          OMPT_SIGNAL(condition);
-        }
-        #pragma omp task
-        {
-          OMPT_SIGNAL(condition);
-          #pragma omp atomic
-          x++;
-          OMPT_WAIT(condition,2);
         }
       }
     }
@@ -43,6 +34,12 @@ int main()
 
 
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
+
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_taskgroup_begin: parallel_id=[[PARALLEL_ID:[0-9]+]], task_id=[[TASK_ID:[0-9]+]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_taskgroup_begin: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_taskgroup_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_taskgroup_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
+
 
   return 0;
 }

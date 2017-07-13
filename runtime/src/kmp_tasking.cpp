@@ -1981,6 +1981,13 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
     kmp_taskgroup_t * taskgroup = taskdata->td_taskgroup;
     int thread_finished = FALSE;
 
+#if OMPT_SUPPORT
+    kmp_team_t *team = thread->th.th_team;
+    ompt_data_t my_task_data = taskdata->ompt_task_info.task_data;
+    // FIXME: I think this is wrong for lwt!
+    ompt_data_t my_parallel_data = team->t.ompt_team_info.parallel_data;
+#endif
+
     KA_TRACE(10, ("__kmpc_end_taskgroup(enter): T#%d loc=%p\n", gtid, loc) );
     KMP_DEBUG_ASSERT( taskgroup != NULL );
     KMP_SET_THREAD_STATE_BLOCK(TASKGROUP);
@@ -1992,6 +1999,21 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
         if ( itt_sync_obj != NULL )
             __kmp_itt_taskwait_starting( gtid, itt_sync_obj );
 #endif /* USE_ITT_BUILD */
+
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+        team = thread->th.th_team;
+        my_task_data = taskdata->ompt_task_info.task_data;
+        // FIXME: I think this is wrong for lwt!
+        my_parallel_data = team->t.ompt_team_info.parallel_data;
+        if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+            ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+                ompt_sync_region_taskgroup,
+                ompt_scope_begin,
+                &(my_parallel_data),
+                &(my_task_data),
+                OMPT_LOAD_RETURN_ADDRESS(gtid));
+        } 
+#endif
 
 #if OMP_45_ENABLED
         if ( ! taskdata->td_flags.team_serial || (thread->th.th_task_team != NULL && thread->th.th_task_team->tt.tt_found_proxy_tasks) )
@@ -2006,6 +2028,17 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
             }
         }
 
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+        if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+            ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+                ompt_sync_region_taskgroup,
+                ompt_scope_end,
+                &(my_parallel_data),
+                &(my_task_data),
+                OMPT_LOAD_RETURN_ADDRESS(gtid));
+        } 
+#endif
+        
 #if USE_ITT_BUILD
         if ( itt_sync_obj != NULL )
             __kmp_itt_taskwait_finished( gtid, itt_sync_obj );
@@ -2028,10 +2061,10 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled &&
         ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
-        kmp_team_t *team = thread->th.th_team;
-        ompt_data_t my_task_data = taskdata->ompt_task_info.task_data;
-        // FIXME: I think this is wrong for lwt!
-        ompt_data_t my_parallel_data = team->t.ompt_team_info.parallel_data;
+        //kmp_team_t *team = thread->th.th_team;
+        //ompt_data_t my_task_data = taskdata->ompt_task_info.task_data;
+        //// FIXME: I think this is wrong for lwt!
+        //ompt_data_t my_parallel_data = team->t.ompt_team_info.parallel_data;
 
         ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
         ompt_sync_region_taskgroup,
