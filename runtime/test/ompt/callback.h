@@ -557,6 +557,15 @@ on_ompt_callback_task_create(
 
   format_task_type(type, buffer);
 
+  //there is no paralllel_begin callback for implicit parallel region
+  //thus it is initialized in initial task
+  if(type & ompt_task_initial)
+  {
+    ompt_data_t *parallel_data;
+    ompt_get_parallel_info(0, &parallel_data, NULL);
+    parallel_data->value = ompt_get_unique_id();
+  }
+
   printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", parallel_function=%p, task_type=%s=%d, has_dependences=%s\n", ompt_get_thread_data()->value, parent_task_data ? parent_task_data->value : 0, parent_frame ? parent_frame->exit_runtime_frame : NULL, parent_frame ? parent_frame->reenter_runtime_frame : NULL, new_task_data->value, codeptr_ra, buffer, type, has_dependences ? "yes" : "no");
 }
 
