@@ -537,7 +537,7 @@ __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
         if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
             ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                 ompt_scope_end,
-                &(serial_team->t.ompt_team_info.parallel_data),
+                NULL,
                 &(this_thr->th.th_current_task->ompt_task_info.task_data),
                 1,
                 __kmp_tid_from_gtid(global_tid));
