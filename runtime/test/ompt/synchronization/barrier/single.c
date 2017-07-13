@@ -14,6 +14,11 @@ int main()
     {
       x++;
     }
+    //critical section to avoid merge of two barriers into one
+    #pragma omp critical
+    {
+      x++;
+    }
   }
 
 
