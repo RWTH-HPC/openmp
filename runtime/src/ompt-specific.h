@@ -27,9 +27,6 @@ void __ompt_lw_taskteam_link(ompt_lw_taskteam_t *lwt,  ompt_thread_t *thr, int o
 //ompt_lw_taskteam_t * 
 void __ompt_lw_taskteam_unlink(ompt_thread_t *thr);
 
-ompt_id_t __ompt_parallel_id_new(int gtid);
-ompt_id_t __ompt_task_id_new(int gtid);
-
 ompt_team_info_t *__ompt_get_teaminfo(int depth, int *size);
 
 ompt_task_info_t *__ompt_get_task_info_object(int depth);

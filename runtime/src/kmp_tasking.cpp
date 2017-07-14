@@ -863,7 +863,7 @@ static inline void
 __kmp_task_init_ompt( kmp_taskdata_t * task, int tid, void * function )
 {
     if (ompt_enabled) {
-        task->ompt_task_info.task_data.value = __ompt_task_id_new(tid);
+        task->ompt_task_info.task_data.value = 0;
         task->ompt_task_info.function = function;
         task->ompt_task_info.frame.exit_runtime_frame = NULL;
         task->ompt_task_info.frame.reenter_runtime_frame = NULL;

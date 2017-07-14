@@ -23,22 +23,6 @@
 
 #define OMPT_THREAD_ID_BITS 16
 
-// 2013 08 24 - John Mellor-Crummey
-//   ideally, a thread should assign its own ids based on thread private data.
-//   however, the way the intel runtime reinitializes thread data structures
-//   when it creates teams makes it difficult to maintain persistent thread
-//   data. using a shared variable instead is simple. I leave it to intel to
-//   sort out how to implement a higher performance version in their runtime.
-
-// when using fetch_and_add to generate the IDs, there isn't any reason to waste
-// bits for thread id.
-#if 0
-#define NEXT_ID(id_ptr,tid) \
-  ((KMP_TEST_THEN_INC64(id_ptr) << OMPT_THREAD_ID_BITS) | (tid))
-#else
-#define NEXT_ID(id_ptr,tid) (KMP_TEST_THEN_INC64((volatile kmp_int64 *)id_ptr))
-#endif
-
 //******************************************************************************
 // private operations
 //******************************************************************************
@@ -223,13 +207,6 @@ __ompt_get_scheduling_taskinfo(int depth)
 // thread support
 //----------------------------------------------------------
 
-ompt_id_t
-__ompt_thread_id_new()
-{
-    static uint64_t ompt_thread_id = 1;
-    return NEXT_ID(&ompt_thread_id, 0);
-}
-
 ompt_data_t *
 __ompt_get_thread_data_internal()
 {
@@ -266,18 +243,6 @@ __ompt_get_state_internal(ompt_wait_id_t *ompt_wait_id)
 //----------------------------------------------------------
 // parallel region support
 //----------------------------------------------------------
-
-ompt_id_t
-__ompt_parallel_id_new(int gtid)
-{
-#ifdef OMPT_INIT_IDS
-    static uint64_t ompt_parallel_id = 1;
-    return gtid >= 0 ? NEXT_ID(&ompt_parallel_id, gtid) : 0;
-#else
-    return 0;
-#endif
-}
-
 
 int
 __ompt_get_parallel_info_internal(int ancestor_level, ompt_data_t **parallel_data, int *team_size)
@@ -383,18 +348,6 @@ __ompt_lw_taskteam_unlink(kmp_info_t *thr)
 //----------------------------------------------------------
 // task support
 //----------------------------------------------------------
-
-ompt_id_t
-__ompt_task_id_new(int gtid)
-{
-#ifdef OMPT_INIT_IDS
-    static uint64_t ompt_task_id = 1;
-    return NEXT_ID(&ompt_task_id, gtid);
-#else
-    return 0;
-#endif
-}
-
 
 int
 __ompt_get_task_info_internal(

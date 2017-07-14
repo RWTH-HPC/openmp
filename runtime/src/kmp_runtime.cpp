@@ -1261,7 +1261,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
             __kmp_acquire_bootstrap_lock( &__kmp_forkjoin_lock );
 
 #if OMPT_SUPPORT
-            ompt_data_t ompt_parallel_data = {.value=__ompt_parallel_id_new(global_tid)};
+            ompt_data_t ompt_parallel_data = {.value=0};
 #endif
 
             new_team = __kmp_allocate_team(this_thr->th.th_root, 1, 1,
