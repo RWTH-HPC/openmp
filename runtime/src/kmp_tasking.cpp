@@ -3443,10 +3443,6 @@ __kmp_taskloop_linear(ident_t *loc, int gtid, kmp_task_t *task,
         KA_TRACE(20, ("__kmpc_taskloop(exit): T#%d zero-trip loop\n", gtid));
         // free the pattern task and exit
         __kmp_task_start( gtid, task, current_task );
-#if 0 && OMPT_SUPPORT
-        __ompt_task_start( task, current_task );
-        __ompt_task_finish( task, current_task );
-#endif
         // do not execute anything for zero-trip loop
         __kmp_task_finish( gtid, task, current_task );
         return;
@@ -3522,10 +3518,6 @@ __kmp_taskloop_linear(ident_t *loc, int gtid, kmp_task_t *task,
     }
     // free the pattern task and exit
     __kmp_task_start( gtid, task, current_task );
-#if 0 && OMPT_SUPPORT
-    __ompt_task_start( task, current_task );
-    __ompt_task_finish( task, current_task );
-#endif
     // do not execute the pattern task, just do bookkeeping
     __kmp_task_finish( gtid, task, current_task );
 }

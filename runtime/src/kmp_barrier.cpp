@@ -1643,20 +1643,6 @@ __kmp_fork_barrier(int gtid, int tid)
 #if USE_ITT_BUILD
     void * itt_sync_obj = NULL;
 #endif /* USE_ITT_BUILD */
-#if 0 && OMPT_SUPPORT
-    ompt_data_t my_task_data={.ptr=NULL};
-    ompt_data_t my_parallel_data={.ptr=NULL};
-#if OMPT_OPTIONAL
-    if (ompt_enabled) {
-        if (team)
-            my_parallel_data = team->t.ompt_team_info.parallel_data;
-        ompt_task_info_t* task_info = &(this_thr->th.th_current_task->ompt_task_info);
-        my_task_data = task_info->task_data;
-        task_info->frame.exit_runtime_frame = NULL;
-    }
-#endif
-    this_thr->th.ompt_thread_info.state = omp_state_wait_barrier_implicit;
-#endif
     if (team)
       ANNOTATE_BARRIER_END(&team->t.t_bar);
 

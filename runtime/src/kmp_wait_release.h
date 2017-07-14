@@ -93,8 +93,6 @@ __ompt_implicit_task_end(kmp_info_t *this_thr, omp_state_t omp_state, ompt_data_
         this_thr->th.ompt_thread_info.state = omp_state_overhead;
 #if OMPT_OPTIONAL
         void * codeptr = NULL;
-//        if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
-//            codeptr = OMPT_GET_RETURN_ADDRESS(2);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                 ompt_sync_region_barrier,
@@ -241,22 +239,6 @@ THIS function is called from
             if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
                 ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_begin);
             }
-        } 
-        else 
-#endif
-#if 0
-        if (ompt_entry_state == omp_state_overhead) {
-#if OMPT_OPTIONAL
-            if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
-                ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
-                    ompt_sync_region_barrier,
-                    ompt_scope_begin,
-                    pId,
-                    tId,
-                    OMPT_GET_RETURN_ADDRESS(3));
-            }
-#endif
-            this_thr->th.ompt_thread_info.state = omp_state_wait_barrier_implicit;
         } 
         else 
 #endif

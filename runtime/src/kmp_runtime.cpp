@@ -1576,7 +1576,6 @@ __kmp_fork_call(
             if (ompt_enabled) {
                 __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid,
                     unwrapped_task, &ompt_parallel_data);
-//                lw_taskteam.ompt_task_info.task_data.value = __ompt_task_id_new(gtid);
                 exit_runtime_p = &(lw_taskteam.ompt_task_info.frame.exit_runtime_frame);
 
                 __ompt_lw_taskteam_link(&lw_taskteam, master_th, 0);
@@ -5610,16 +5609,6 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 
         /* have we been allocated? */
         if ( TCR_SYNC_PTR(*pteam) && !TCR_4(__kmp_global.g.g_done) ) {
-#if 0 && OMPT_SUPPORT
-            ompt_task_info_t *task_info;
-            ompt_data_t* my_parallel_data;
-            int ompt_team_size;
-            if (ompt_enabled) {
-                task_info = __ompt_get_task_info_object(0);
-                my_parallel_data = &((*pteam)->t.ompt_team_info.parallel_data);
-                ompt_team_size = (*pteam)->t.t_nproc;
-            }
-#endif
             /* we were just woken up, so run our new task */
             if ( TCR_SYNC_PTR((*pteam)->t.t_pkfn) != NULL ) {
                 int rc;
@@ -5631,9 +5620,6 @@ __kmp_launch_thread( kmp_info_t *this_thr )
 #if OMPT_SUPPORT
                 if (ompt_enabled) {
                     this_thr->th.ompt_thread_info.state = omp_state_work_parallel;
-                    // Initialize OMPT task id for implicit task.
-//                    int tid = __kmp_tid_from_gtid(gtid);
-//                    task_info->task_data.value = __ompt_task_id_new(tid);
                 }
 #endif
 

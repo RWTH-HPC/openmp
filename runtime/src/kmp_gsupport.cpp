@@ -541,36 +541,6 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
     KA_TRACE(20, ("GOMP_parallel_end: T#%d\n", gtid));
 
 
-#if 0 && OMPT_SUPPORT
-    ompt_parallel_data_t *parallel_data;
-    ompt_task_data_t *serialized_task_data;
-    ompt_frame_t *ompt_frame = NULL;
-
-    if (ompt_enabled) {
-        parallel_data = OMPT_CUR_TEAM_DATA(thr);
-
-        ompt_task_info_t *task_info = OMPT_CUR_TASK_INFO(thr);
-        serialized_task_data = &(task_info->task_data);
-        // Record that we re-entered the runtime system in the implicit
-        // task frame representing the parallel region. 
-        task_info->frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(0);
-
-        if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
-            ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
-            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
-                ompt_scope_end,
-                parallel_data,
-                &(task_info->task_data),
-                ompt_team_size,
-                __kmp_tid_from_gtid(gtid));
-        }
-
-        // unlink if necessary. no-op if there is not a lightweight task.
-        // TODO: Don't we need the lwt for parallel_end? Shouldn't be the unlink after parellel end?
-    }
-#endif
-
     if (! thr->th.th_team->t.t_serialized) {
         __kmp_run_after_invoked_task(gtid, __kmp_tid_from_gtid(gtid), thr,
           thr->th.th_team);
@@ -591,43 +561,9 @@ xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void)
         );
     }
     else {
-#if 0 && OMPT_SUPPORT
-        if (ompt_enabled &&
-            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
-            ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
-                ompt_scope_end,
-                OMPT_CUR_TEAM_DATA(thr),
-                OMPT_CUR_TASK_DATA(thr),
-                ompt_team_size,
-                __kmp_tid_from_gtid(gtid));
-            thr->th.ompt_thread_info.state = omp_state_overhead;
-        }
-#endif
 
         __kmpc_end_serialized_parallel(&loc, gtid);
 
-#if 0 && OMPT_SUPPORT
-        if (ompt_enabled) {
-            // Record that we re-entered the runtime system in the frame that
-            // created the parallel region.
-            ompt_parallel_data_t *parallel_data = OMPT_CUR_TEAM_DATA(thr);
-            __ompt_lw_taskteam_unlink(thr);
-            ompt_task_info_t *parent_task_info = OMPT_CUR_TASK_INFO(thr);
-
-            if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
-                ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
-                    parallel_data, &(parent_task_info->task_data), 
-                    OMPT_INVOKER(fork_context_gnu),
-                    OMPT_GET_RETURN_ADDRESS(1));
-            }
-
-            parent_task_info->frame.reenter_runtime_frame = NULL;
-
-            thr->th.ompt_thread_info.state =
-                (((thr->th.th_team)->t.t_serialized) ?
-                omp_state_work_serial : omp_state_work_parallel);
-        }
-#endif
     }
 }
 
