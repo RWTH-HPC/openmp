@@ -1963,7 +1963,7 @@ __kmpc_taskgroup( ident_t* loc, int gtid )
         ompt_scope_begin,
         &(my_parallel_data),
         &(my_task_data),
-        OMPT_GET_RETURN_ADDRESS(1));
+        OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
 }
@@ -2071,7 +2071,7 @@ __kmpc_end_taskgroup( ident_t* loc, int gtid )
         ompt_scope_end,
         &(my_parallel_data),
         &(my_task_data),
-        OMPT_GET_RETURN_ADDRESS(1));
+        OMPT_GET_RETURN_ADDRESS(0));
     }
 #endif
 }

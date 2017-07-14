@@ -7208,13 +7208,16 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
         ompt_data_t* pId = &(this_thr->th.th_team->t.ompt_team_info.parallel_data);
         this_thr->th.ompt_thread_info.state = omp_state_overhead;
 #if OMPT_OPTIONAL
+        void * codeptr = NULL;
+        if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
+            codeptr = OMPT_GET_RETURN_ADDRESS(1); // For worker threads there is no application code to return to
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
             ompt_sync_region_barrier,
             ompt_scope_end,
             pId,
             tId,
-            OMPT_GET_RETURN_ADDRESS(1));
+            codeptr);
         }
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
@@ -7222,7 +7225,7 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
             ompt_scope_end,
             pId,
             tId,
-            OMPT_GET_RETURN_ADDRESS(1));
+            codeptr);
         }
 #endif
         if (!KMP_MASTER_TID(ds_tid) && ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {

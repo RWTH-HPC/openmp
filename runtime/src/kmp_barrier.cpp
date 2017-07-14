@@ -1467,6 +1467,10 @@ __kmp_join_barrier(int gtid)
     ompt_data_t* my_parallel_data;
     if (ompt_enabled) {
 #if OMPT_OPTIONAL
+        void * codeptr = NULL;
+        int ds_tid = this_thr->th.th_info.ds.ds_tid;
+        if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
+            codeptr = OMPT_GET_RETURN_ADDRESS(1);  // For worker threads there is no application code to return to
         my_task_data = OMPT_CUR_TASK_DATA(this_thr);
         my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
@@ -1475,7 +1479,7 @@ __kmp_join_barrier(int gtid)
                 ompt_scope_begin,
                 my_parallel_data,
                 my_task_data,
-                OMPT_GET_RETURN_ADDRESS(1));
+                codeptr);
         }
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
@@ -1483,7 +1487,7 @@ __kmp_join_barrier(int gtid)
                 ompt_scope_begin,
                 my_parallel_data,
                 my_task_data,
-                OMPT_GET_RETURN_ADDRESS(1));
+                codeptr);
         }
 #endif
         this_thr->th.ompt_thread_info.state = omp_state_wait_barrier_implicit;
@@ -1730,7 +1734,7 @@ __kmp_fork_barrier(int gtid, int tid)
 #if OMPT_OPTIONAL
             void * codeptr = NULL;
             if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
-                codeptr = OMPT_GET_RETURN_ADDRESS(1);
+                codeptr = OMPT_GET_RETURN_ADDRESS(1);  // For worker threads there is no application code to return to
             if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
                 ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                     ompt_sync_region_barrier,
