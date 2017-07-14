@@ -447,9 +447,9 @@ __kmpc_omp_task_with_deps( ident_t *loc_ref, kmp_int32 gtid, kmp_task_t * new_ta
     kmp_info_t *thread = __kmp_threads[ gtid ];
     kmp_taskdata_t * current_task = thread->th.th_current_task;
 
+#if OMPT_SUPPORT
     OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
 
-#if OMPT_SUPPORT
     if (ompt_enabled) {
         if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
             kmp_taskdata_t *parent = new_taskdata->td_parent;
