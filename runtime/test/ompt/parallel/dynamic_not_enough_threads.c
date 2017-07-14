@@ -1,4 +1,4 @@
-// RUN: %libomp-compile && env OMP_THREAD_LIMIT=2 %libomp-run | FileCheck %s
+// RUN: %libomp-compile && env OMP_THREAD_LIMIT=2 %libomp-run | %filecheck %s
 // REQUIRES: ompt
 #include "callback.h"
 

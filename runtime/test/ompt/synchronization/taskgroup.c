@@ -1,4 +1,4 @@
-// RUN:  %libomp-compile-and-run | %sort-threads | FileCheck %s
+// RUN:  %libomp-compile-and-run | %sort-threads | %filecheck %s
 // REQUIRES: ompt, cancel, taskgroup
 
 #include "callback.h"
@@ -36,8 +36,8 @@ int main()
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
 
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_taskgroup_begin: parallel_id=[[PARALLEL_ID:[0-9]+]], task_id=[[TASK_ID:[0-9]+]]
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_taskgroup_begin: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_wait_taskgroup_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
+  // CHECK-WAIT: {{^}}[[MASTER_ID]]: ompt_event_wait_taskgroup_begin: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
+  // CHECK-WAIT: {{^}}[[MASTER_ID]]: ompt_event_wait_taskgroup_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_taskgroup_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]]
 
 

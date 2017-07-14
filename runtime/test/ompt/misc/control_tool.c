@@ -1,4 +1,4 @@
-// RUN: %libomp-compile-and-run | FileCheck %s
+// RUN: %libomp-compile-and-run | %filecheck %s
 // REQUIRES: ompt
 #include "callback.h"
 #include <omp.h>
