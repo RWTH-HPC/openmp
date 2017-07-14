@@ -2291,14 +2291,15 @@ __kmp_join_ompt(
     kmp_info_t *thread,
     kmp_team_t *team,
     ompt_data_t *parallel_data,
-    fork_context_e fork_context)
+    fork_context_e fork_context,
+    void* codeptr)
 {
     ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
     if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
             parallel_data, &(task_info->task_data),
             OMPT_INVOKER(fork_context),
-            OMPT_LOAD_RETURN_ADDRESS(gtid));
+            codeptr);
     }
 
     task_info->frame.reenter_runtime_frame = NULL;
@@ -2397,6 +2398,7 @@ __kmp_join_call(ident_t *loc, int gtid
 
 #if OMPT_SUPPORT
     ompt_data_t* parallel_data = &(team->t.ompt_team_info.parallel_data);
+    void * codeptr = team->t.ompt_team_info.master_return_address;
 #endif
 
 #if USE_ITT_BUILD
@@ -2465,7 +2467,7 @@ __kmp_join_call(ident_t *loc, int gtid
 
 #if OMPT_SUPPORT
         if (ompt_enabled) {
-            __kmp_join_ompt(gtid, master_th, parent_team, parallel_data, fork_context);
+            __kmp_join_ompt(gtid, master_th, parent_team, parallel_data, fork_context, codeptr);
         }
 #endif
 
@@ -2574,7 +2576,7 @@ __kmp_join_call(ident_t *loc, int gtid
 
 #if OMPT_SUPPORT
     if (ompt_enabled) {
-        __kmp_join_ompt(gtid, master_th, parent_team, parallel_data, fork_context);
+        __kmp_join_ompt(gtid, master_th, parent_team, parallel_data, fork_context, codeptr);
     }
 #endif
 

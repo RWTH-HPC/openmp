@@ -5,24 +5,23 @@
 
 int main()
 {
-    #pragma omp parallel num_threads(2)
-    {
-	int tid = omp_get_thread_num();
-	
-	#pragma omp flush
-	print_current_address();
-	
-    }
+  #pragma omp parallel num_threads(2)
+  {
+    int tid = omp_get_thread_num();
+    
+    #pragma omp flush
+    print_current_address(1);
+  }
 
   // Check if libomp supports the callbacks for this test.
   // CHECK-NOT: {{^}}0: Could not register callback 'ompt_callback_flush'
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_flush: codeptr_ra=[[RETURN_ADDRESS:0x[0-f]+]]
-  // ___CHECK: {{^}}[[MASTER_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
+  // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
   //
   // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_flush: codeptr_ra=[[RETURN_ADDRESS:0x[0-f]+]]
-  // ___CHECK: {{^}}[[THREAD_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
+  // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: current_address=[[RETURN_ADDRESS]]
 
 
 

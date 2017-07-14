@@ -95,6 +95,12 @@ do {\
   printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data()->value, level, __builtin_frame_address(level));\
 } while(0)
 
+#define print_current_address(id)\
+asm ("nop"); /* provide an instruction as jump target (compiler would insert an instruction if label is target of a jmp ) */ \
+ompt_label_##id:\
+    printf("%" PRIu64 ": current_address=%p\n", ompt_get_thread_data()->value, (char*)(&& ompt_label_##id)-1) /* "&& label" returns the address of the label (GNU extension); works with gcc, clang, icc */
+
+/*
 static void print_current_address()
 {
     int real_level = 2;
@@ -109,6 +115,7 @@ static void print_current_address()
       address = NULL;
   printf("%" PRIu64 ": current_address=%p\n", ompt_get_thread_data()->value, address);
 }
+*/
 
 static void format_task_type(int type, char* buffer)
 {
