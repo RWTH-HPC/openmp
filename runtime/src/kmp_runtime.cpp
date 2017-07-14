@@ -1223,6 +1223,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
     ompt_data_t ompt_parallel_data;
     ompt_parallel_data.ptr = NULL;
     ompt_data_t *implicit_task_data;
+    void * codeptr = OMPT_LOAD_RETURN_ADDRESS(global_tid);
     if (ompt_enabled && this_thr->th.ompt_thread_info.state != omp_state_overhead) {
 
         ompt_task_info_t *parent_task_info;
@@ -1243,7 +1244,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
                 team_size,
                 //master_set_numthreads ? master_set_numthreads : get__nproc_2( parent_team, master_tid ),
                 ompt_invoker_program,
-                OMPT_LOAD_RETURN_ADDRESS(global_tid));
+                codeptr);
         }
     }
 #endif //OMPT_SUPPORT
@@ -1259,10 +1260,6 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
             kmp_team_t *new_team;
 
             __kmp_acquire_bootstrap_lock( &__kmp_forkjoin_lock );
-
-#if OMPT_SUPPORT
-            ompt_data_t ompt_parallel_data = {.value=0};
-#endif
 
             new_team = __kmp_allocate_team(this_thr->th.th_root, 1, 1,
 #if OMPT_SUPPORT
@@ -1391,6 +1388,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
     if ( __kmp_env_consistency_check )
         __kmp_push_parallel( global_tid, NULL );
 #if OMPT_SUPPORT
+    serial_team->t.ompt_team_info.master_return_address = codeptr;
     if (ompt_enabled && this_thr->th.ompt_thread_info.state != omp_state_overhead) {
         OMPT_CUR_TASK_INFO(this_thr)->frame.exit_runtime_frame=OMPT_GET_FRAME_ADDRESS(1);
         void *dummy;
@@ -1399,7 +1397,7 @@ __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid)
         ompt_lw_taskteam_t lw_taskteam;
 
         __ompt_lw_taskteam_init(&lw_taskteam, this_thr, global_tid,
-                NULL, &ompt_parallel_data);
+                NULL, &ompt_parallel_data, codeptr);
 //        exit_runtime_p = &(lw_taskteam.ompt_task_info.frame.exit_runtime_frame);
 
         __ompt_lw_taskteam_link(&lw_taskteam, this_thr, 1);
@@ -1575,7 +1573,7 @@ __kmp_fork_call(
 
             if (ompt_enabled) {
                 __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid,
-                    unwrapped_task, &ompt_parallel_data);
+                    unwrapped_task, &ompt_parallel_data, return_address);
                 exit_runtime_p = &(lw_taskteam.ompt_task_info.frame.exit_runtime_frame);
 
                 __ompt_lw_taskteam_link(&lw_taskteam, master_th, 0);
@@ -1586,7 +1584,7 @@ __kmp_fork_call(
                 if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
                     ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
                         ompt_scope_begin,
-                        &ompt_parallel_data,
+                        OMPT_CUR_TEAM_DATA(master_th),
                         implicit_task_data,
                         1,
                         __kmp_tid_from_gtid(gtid));
@@ -1621,12 +1619,11 @@ __kmp_fork_call(
                         1,
                         __kmp_tid_from_gtid(gtid));
                 }
-                ompt_parallel_data=*OMPT_CUR_TEAM_DATA(master_th);
                 __ompt_lw_taskteam_unlink(master_th);
 
                 if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                     ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
-                        &(ompt_parallel_data), OMPT_CUR_TASK_DATA(master_th),
+                        OMPT_CUR_TEAM_DATA(master_th), OMPT_CUR_TASK_DATA(master_th),
                         OMPT_INVOKER(call_context),
                         return_address);
                 }
@@ -1777,7 +1774,7 @@ __kmp_fork_call(
 
                 if (ompt_enabled) {
                     __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid,
-                        unwrapped_task, &ompt_parallel_data);
+                        unwrapped_task, &ompt_parallel_data, return_address);
 
                     __ompt_lw_taskteam_link(&lw_taskteam, master_th, 0);
                     // don't use lw_taskteam after linking. content was swaped
@@ -1825,7 +1822,7 @@ __kmp_fork_call(
                     __ompt_lw_taskteam_unlink(master_th);
                     if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
-                            &ompt_parallel_data, parent_task_data,
+                            OMPT_CUR_TEAM_DATA(master_th), parent_task_data,
                             OMPT_INVOKER(call_context),
                             return_address);
                     }
@@ -1883,7 +1880,7 @@ __kmp_fork_call(
 
                 if (ompt_enabled) {
                     __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid,
-                        unwrapped_task, &ompt_parallel_data);
+                        unwrapped_task, &ompt_parallel_data, return_address);
                     __ompt_lw_taskteam_link(&lw_taskteam, master_th, 0);
                     // don't use lw_taskteam after linking. content was swaped
                     task_info = OMPT_CUR_TASK_INFO(master_th);
@@ -1930,6 +1927,7 @@ __kmp_fork_call(
                             __kmp_tid_from_gtid(gtid));
                     }
 
+                    ompt_parallel_data = *OMPT_CUR_TEAM_DATA(master_th);
                     __ompt_lw_taskteam_unlink(master_th);
                     if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
                         ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
@@ -1948,7 +1946,7 @@ __kmp_fork_call(
 #if OMPT_SUPPORT
             ompt_lw_taskteam_t lwt;
             __ompt_lw_taskteam_init(&lwt, master_th, gtid,
-                unwrapped_task, &ompt_parallel_data);
+                unwrapped_task, &ompt_parallel_data, return_address);
 
             lwt.ompt_task_info.frame.exit_runtime_frame = NULL;
             __ompt_lw_taskteam_link(&lwt, master_th, 1);
@@ -2071,6 +2069,7 @@ __kmp_fork_call(
     KMP_CHECK_UPDATE_SYNC(team->t.t_pkfn, microtask);
 #if OMPT_SUPPORT
     KMP_CHECK_UPDATE_SYNC(team->t.ompt_team_info.microtask, unwrapped_task);
+    KMP_CHECK_UPDATE_SYNC(team->t.ompt_team_info.master_return_address, return_address);
 #endif
     KMP_CHECK_UPDATE(team->t.t_invoke, invoker);  /* TODO move this to root, maybe */
     // TODO: parent_team->t.t_level == INT_MAX ???
@@ -3877,7 +3876,7 @@ __kmp_register_root( int initial_thread )
                 task_data,
                 ompt_task_initial,
                 0,
-                OMPT_GET_RETURN_ADDRESS(0));
+                NULL); // initial task has nothing to return to
         }
 
         ompt_set_thread_state(root_thread, omp_state_work_serial);
@@ -7210,7 +7209,8 @@ __kmp_internal_join( ident_t *id, int gtid, kmp_team_t *team )
 #if OMPT_OPTIONAL
         void * codeptr = NULL;
         if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
-            codeptr = OMPT_GET_RETURN_ADDRESS(1); // For worker threads there is no application code to return to
+            codeptr = OMPT_LOAD_RETURN_ADDRESS(gtid);
+
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
             ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
             ompt_sync_region_barrier,

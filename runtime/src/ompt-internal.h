@@ -46,7 +46,8 @@ typedef struct {
 
 typedef struct {
     ompt_data_t     parallel_data;
-    void            *microtask;
+    void           *microtask;
+    void           *master_return_address;
 } ompt_team_info_t;
 
 

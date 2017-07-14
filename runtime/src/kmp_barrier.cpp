@@ -1470,7 +1470,7 @@ __kmp_join_barrier(int gtid)
         void * codeptr = NULL;
         int ds_tid = this_thr->th.th_info.ds.ds_tid;
         if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
-            codeptr = OMPT_GET_RETURN_ADDRESS(1);  // For worker threads there is no application code to return to
+            codeptr = team->t.ompt_team_info.master_return_address;
         my_task_data = OMPT_CUR_TASK_DATA(this_thr);
         my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
         if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
@@ -1734,7 +1734,7 @@ __kmp_fork_barrier(int gtid, int tid)
 #if OMPT_OPTIONAL
             void * codeptr = NULL;
             if (KMP_MASTER_TID(ds_tid) && (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) || ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
-                codeptr = OMPT_GET_RETURN_ADDRESS(1);  // For worker threads there is no application code to return to
+                codeptr = team->t.ompt_team_info.master_return_address;
             if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
                 ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
                     ompt_sync_region_barrier,
