@@ -32,6 +32,8 @@
         integer, parameter :: kmp_affinity_mask_kind = int_ptr_kind()
         integer, parameter :: kmp_cancel_kind        = omp_integer_kind
         integer, parameter :: omp_lock_hint_kind     = omp_integer_kind
+        integer, parameter :: omp_control_tool_kind  = omp_integer_kind
+        integer, parameter :: omp_control_tool_result_kind = omp_integer_kind
 
       end module omp_lib_kinds
 
@@ -518,6 +520,13 @@
             integer (kind=omp_lock_hint_kind) hint
           end subroutine omp_init_nest_lock_with_hint
 
+          function omp_control_tool(command, modifier)
+            use omp_lib_kinds
+            integer (kind=omp_integer_kind) omp_control_tool
+            integer (kind=omp_control_tool_kind) command
+            integer (kind=omp_control_tool_kind) modifier
+          end function omp_control_tool
+
         end interface
 
 !dec$ if defined(_WIN32)
@@ -607,6 +616,8 @@
 
 !dec$ attributes alias:'KMP_GET_CANCELLATION_STATUS' :: kmp_get_cancellation_status
 
+!dec$ attributes alias:'OMP_CONTROL_TOOL' :: omp_control_tool
+
 !dec$   else
 
 !***
@@ -686,6 +697,8 @@
 !dec$ attributes alias:'_KMP_SET_WARNINGS_OFF'::kmp_set_warnings_off
 
 !dec$ attributes alias:'_KMP_GET_CANCELLATION_STATUS' :: kmp_get_cancellation_status
+
+!dec$ attributes alias:'_OMP_CONTROL_TOOL' :: omp_control_tool
 
 !dec$   endif
 !dec$ endif
@@ -769,6 +782,8 @@
 !dec$ attributes alias:'kmp_set_warnings_off_'::kmp_set_warnings_off
 !dec$ attributes alias:'kmp_get_cancellation_status_'::kmp_get_cancellation_status
 
+!dec$ attributes alias:'omp_control_tool_'::omp_control_tool
+
 !dec$ endif
 
 !dec$ if defined(__APPLE__)
@@ -848,6 +863,8 @@
 !dec$ attributes alias:'_kmp_set_warnings_off_'::kmp_set_warnings_off
 
 !dec$ attributes alias:'_kmp_get_cancellation_status_'::kmp_get_cancellation_status
+
+!dec$ attributes alias:'_omp_control_tool_'::omp_control_tool
 
 !dec$ endif
 
