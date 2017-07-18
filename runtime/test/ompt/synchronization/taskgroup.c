@@ -15,12 +15,14 @@ int main()
     {
       #pragma omp taskgroup
       {
+        print_current_address(1);
         #pragma omp task
         {
           #pragma omp atomic
           x++;
         }
       }
+      print_current_address(2);
     }
   }
 
