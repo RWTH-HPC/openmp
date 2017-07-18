@@ -22,7 +22,6 @@
 #endif
 
 #include "kmp_i18n.h"
-#include "ompt-specific.h"
 
 #ifdef __cplusplus
 extern "C" {
