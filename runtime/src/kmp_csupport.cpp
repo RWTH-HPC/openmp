@@ -316,11 +316,6 @@ void __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...) {
     SSC_MARK_JOINING();
 #endif
 
-#if OMPT_SUPPORT
-    if (ompt_enabled) {
-      OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
-    }
-#endif
     __kmp_join_call(loc, gtid
 #if OMPT_SUPPORT
                     ,
@@ -495,7 +490,6 @@ void __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid) {
   KMP_DEBUG_ASSERT(serial_team->t.t_threads[0] == this_thr);
 
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
   if (ompt_enabled &&
       this_thr->th.ompt_thread_info.state != omp_state_overhead) {
     this_thr->th.th_current_task->ompt_task_info.frame.exit_runtime_frame =
@@ -514,7 +508,8 @@ void __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid) {
     if (ompt_callbacks.ompt_callback(ompt_callback_parallel_end)) {
       ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
           &(serial_team->t.ompt_team_info.parallel_data), parent_task_data,
-          ompt_invoker_program, OMPT_LOAD_RETURN_ADDRESS(global_tid));
+          ompt_invoker_program, 
+          OMPT_GET_RETURN_ADDRESS(0));
     }
     __ompt_lw_taskteam_unlink(this_thr);
     this_thr->th.ompt_thread_info.state = omp_state_overhead;
@@ -1130,6 +1125,9 @@ This function blocks until the executing thread can enter the critical section.
 void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
                      kmp_critical_name *crit) {
 #if KMP_USE_DYNAMIC_LOCK
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+#endif // OMPT_SUPPORT
   __kmpc_critical_with_hint(loc, global_tid, crit, omp_lock_hint_none);
 #else
   KMP_COUNT_BLOCK(OMP_CRITICAL);
@@ -1351,6 +1349,9 @@ void __kmpc_critical_with_hint(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   omp_state_t prev_state = omp_state_undefined;
   ompt_thread_info_t ti;
+  // This is the case, if called from __kmpc_critical:
+  void* codeptr = OMPT_LOAD_RETURN_ADDRESS(global_tid);
+  if (!codeptr) codeptr = OMPT_GET_RETURN_ADDRESS(0);
 #endif
 
   KC_TRACE(10, ("__kmpc_critical: called T#%d\n", global_tid));
@@ -1391,7 +1392,7 @@ void __kmpc_critical_with_hint(ident_t *loc, kmp_int32 global_tid,
         ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
             ompt_mutex_critical, (unsigned int)hint,
             __ompt_get_mutex_impl_type(crit), (ompt_wait_id_t)crit,
-            OMPT_GET_RETURN_ADDRESS(0));
+            codeptr);
       }
     }
 #endif
@@ -1430,7 +1431,7 @@ void __kmpc_critical_with_hint(ident_t *loc, kmp_int32 global_tid,
         ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
             ompt_mutex_critical, (unsigned int)hint,
             __ompt_get_mutex_impl_type(0, ilk), (ompt_wait_id_t)crit,
-            OMPT_GET_RETURN_ADDRESS(0));
+            codeptr);
       }
     }
 #endif
@@ -1450,7 +1451,7 @@ void __kmpc_critical_with_hint(ident_t *loc, kmp_int32 global_tid,
     if (ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
       ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
           ompt_mutex_critical, (ompt_wait_id_t)crit,
-          OMPT_GET_RETURN_ADDRESS(0));
+          codeptr);
     }
   }
 #endif
