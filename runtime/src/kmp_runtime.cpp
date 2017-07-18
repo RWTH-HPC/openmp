@@ -7138,7 +7138,7 @@ void __kmp_internal_join(ident_t *id, int gtid, kmp_team_t *team) {
     if (KMP_MASTER_TID(ds_tid) &&
         (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) ||
         ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
-        codeptr = OMPT_LOAD_RETURN_ADDRESS(gtid);
+        codeptr = this_thr->th.th_team->t.ompt_team_info.master_return_address;
 
     if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
