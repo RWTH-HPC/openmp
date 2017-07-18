@@ -315,8 +315,14 @@ endif()
 # OMPT-support
 set(LIBOMP_OMPT_DEBUG FALSE CACHE BOOL
   "Trace OMPT initialization?")
-set(LIBOMP_OMPT_SUPPORT FALSE CACHE BOOL
-  "OMPT-support?")
+if (NOT (WIN32 OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
+  # Activate OMPT-SUPPORT by default on Linux machines
+  set(LIBOMP_OMPT_SUPPORT TRUE CACHE BOOL
+    "OMPT-support?")
+else()
+  set(LIBOMP_OMPT_SUPPORT FALSE CACHE BOOL
+    "OMPT-support?")
+endif()
 set(LIBOMP_OMPT_OPTIONAL TRUE CACHE BOOL
   "OMPT-optional?")
 if(LIBOMP_OMPT_SUPPORT AND (NOT LIBOMP_HAVE_OMPT_SUPPORT))
