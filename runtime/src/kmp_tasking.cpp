@@ -539,7 +539,7 @@ void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
           &(parent_info->task_data), &(parent_info->frame),
           &(taskdata->ompt_task_info.task_data),
           ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(taskdata), 0,
-          taskdata->ompt_task_info.function);
+          OMPT_GET_RETURN_ADDRESS(0));
     }
   }
 
@@ -1307,7 +1307,7 @@ static void __kmp_invoke_task(kmp_int32 gtid, kmp_task_t *task,
             ((taskgroup && taskgroup->cancel_request) ? ompt_cancel_taskgroup
                                                       : ompt_cancel_parallel) |
                 ompt_cancel_discarded_task,
-            OMPT_GET_RETURN_ADDRESS(0));
+            NULL);
       }
 #endif
       KMP_COUNT_BLOCK(TASK_cancelled);
@@ -1428,7 +1428,7 @@ kmp_int32 __kmpc_omp_task_parts(ident_t *loc_ref, kmp_int32 gtid,
           parent ? &(parent->ompt_task_info.task_data) : &task_data,
           parent ? &(parent->ompt_task_info.frame) : NULL,
           &(new_taskdata->ompt_task_info.task_data), ompt_task_explicit, 0,
-          new_taskdata->ompt_task_info.function);
+          OMPT_GET_RETURN_ADDRESS(0));
     }
   }
 #endif
@@ -1473,13 +1473,6 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
                          bool serialize_immediate) {
   kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
 
-#if OMPT_SUPPORT
-  if (ompt_enabled) {
-    new_taskdata->td_parent->ompt_task_info.frame.reenter_runtime_frame =
-        OMPT_GET_FRAME_ADDRESS(1);
-  }
-#endif
-
 /* Should we execute the new task or queue it? For now, let's just always try to
    queue it.  If the queue fills up, then we'll execute it.  */
 #if OMP_45_ENABLED
@@ -1494,12 +1487,6 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
       new_taskdata->td_flags.task_serial = 1;
     __kmp_invoke_task(gtid, new_task, current_task);
   }
-
-#if OMPT_SUPPORT
-  if (ompt_enabled) {
-    new_taskdata->td_parent->ompt_task_info.frame.reenter_runtime_frame = NULL;
-  }
-#endif
 
   ANNOTATE_HAPPENS_BEFORE(new_task);
   return TASK_CURRENT_NOT_QUEUED;
@@ -1542,7 +1529,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           parent ? &(parent->ompt_task_info.frame) : NULL,
           &(new_taskdata->ompt_task_info.task_data),
           ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(new_taskdata), 0,
-          new_taskdata->ompt_task_info.function);
+          OMPT_GET_RETURN_ADDRESS(0));
     }
   }
 #endif
@@ -1582,10 +1569,10 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     if (ompt_enabled) {
       my_task_data = &(taskdata->ompt_task_info.task_data);
       my_parallel_data = &(thread->th.th_team->t.ompt_team_info.parallel_data);
-      return_address = OMPT_LOAD_RETURN_ADDRESS(gtid);
+      return_address = OMPT_GET_RETURN_ADDRESS(0);
 
       taskdata->ompt_task_info.frame.reenter_runtime_frame =
-          OMPT_GET_FRAME_ADDRESS(0);
+          OMPT_GET_FRAME_ADDRESS(1);
       if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
         ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
             ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
@@ -1943,6 +1930,8 @@ void __kmpc_taskgroup(ident_t *loc, int gtid) {
 
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+    void * codeptr = OMPT_LOAD_RETURN_ADDRESS(gtid);
+    if (!codeptr) codeptr = OMPT_GET_RETURN_ADDRESS(0);
     kmp_team_t *team = thread->th.th_team;
     ompt_data_t my_task_data = taskdata->ompt_task_info.task_data;
     // FIXME: I think this is wrong for lwt!
@@ -1950,7 +1939,7 @@ void __kmpc_taskgroup(ident_t *loc, int gtid) {
 
     ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
         ompt_sync_region_taskgroup, ompt_scope_begin, &(my_parallel_data),
-        &(my_task_data), OMPT_GET_RETURN_ADDRESS(0));
+        &(my_task_data), codeptr);
   }
 #endif
 }
@@ -1968,6 +1957,8 @@ void __kmpc_end_taskgroup(ident_t *loc, int gtid) {
   ompt_data_t my_task_data = taskdata->ompt_task_info.task_data;
   // FIXME: I think this is wrong for lwt!
   ompt_data_t my_parallel_data = team->t.ompt_team_info.parallel_data;
+  void * codeptr = OMPT_LOAD_RETURN_ADDRESS(gtid);
+  if (!codeptr) codeptr = OMPT_GET_RETURN_ADDRESS(0);
 #endif
 
   KA_TRACE(10, ("__kmpc_end_taskgroup(enter): T#%d loc=%p\n", gtid, loc));
@@ -1994,7 +1985,7 @@ void __kmpc_end_taskgroup(ident_t *loc, int gtid) {
             ompt_scope_begin,
             &(my_parallel_data),
             &(my_task_data),
-            OMPT_LOAD_RETURN_ADDRESS(gtid));
+            codeptr);
     }
 #endif
 
@@ -2021,7 +2012,7 @@ void __kmpc_end_taskgroup(ident_t *loc, int gtid) {
             ompt_scope_end,
             &(my_parallel_data),
             &(my_task_data),
-            OMPT_LOAD_RETURN_ADDRESS(gtid));
+            codeptr);
     }
 #endif
 
@@ -2054,7 +2045,7 @@ void __kmpc_end_taskgroup(ident_t *loc, int gtid) {
 
     ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
         ompt_sync_region_taskgroup, ompt_scope_end, &(my_parallel_data),
-        &(my_task_data), OMPT_GET_RETURN_ADDRESS(0));
+        &(my_task_data), codeptr);
   }
 #endif
 }
@@ -3619,15 +3610,24 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
     taskdata->td_flags.tiedness = TASK_TIED; // AC: serial task cannot be untied
   }
   if (nogroup == 0) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+#endif
     __kmpc_taskgroup(loc, gtid);
   }
 
   if (1 /* AC: use some heuristic here to choose task scheduling method */) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+#endif
     __kmp_taskloop_linear(loc, gtid, task, lb, ub, st, sched, grainsize,
                           task_dup);
   }
 
   if (nogroup == 0) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+#endif
     __kmpc_end_taskgroup(loc, gtid);
   }
   KA_TRACE(10, ("__kmpc_taskloop(exit): T#%d\n", gtid));

@@ -306,7 +306,7 @@ void ompt_post_init() {
     if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
       ompt_callbacks.ompt_callback(ompt_callback_task_create)(
           NULL, NULL, task_data, ompt_task_initial, 0,
-          OMPT_GET_RETURN_ADDRESS(0));
+          NULL);
     }
 
     ompt_set_thread_state(root_thread, omp_state_work_serial);
