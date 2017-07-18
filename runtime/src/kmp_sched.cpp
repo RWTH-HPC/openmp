@@ -46,7 +46,11 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
                                   T *plower, T *pupper,
                                   typename traits_t<T>::signed_t *pstride,
                                   typename traits_t<T>::signed_t incr,
-                                  typename traits_t<T>::signed_t chunk) {
+                                  typename traits_t<T>::signed_t chunk
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                  , void * codeptr
+#endif
+                                  ) {
   KMP_COUNT_BLOCK(OMP_FOR_static);
   KMP_TIME_PARTITIONED_BLOCK(FOR_static_scheduling);
 
@@ -129,7 +133,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
           ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
           &(task_info->task_data),
           0, // TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18)
-          OMPT_GET_RETURN_ADDRESS(0));
+          codeptr);
     }
 #endif
     KMP_COUNT_VALUE(FOR_static_iterations, 0);
@@ -185,7 +189,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
           &(task_info->task_data),
           *pstride, // TODO: OMPT: verify loop count value (OpenMP-spec
                     // 4.6.2.18)
-          OMPT_GET_RETURN_ADDRESS(0));
+          codeptr);
     }
 #endif
     return;
@@ -218,7 +222,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
           &(task_info->task_data),
           *pstride, // TODO: OMPT: verify loop count value (OpenMP-spec
                     // 4.6.2.18)
-          OMPT_GET_RETURN_ADDRESS(0));
+          codeptr);
     }
 #endif
     return;
@@ -379,7 +383,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
         &(task_info->task_data),
         trip_count, // TODO: OMPT: verify loop count value (OpenMP-spec
                     // 4.6.2.18; email discussion on count value semantics)
-        OMPT_GET_RETURN_ADDRESS(0));
+        codeptr);
   }
 #endif
 
@@ -767,7 +771,11 @@ void __kmpc_for_static_init_4(ident_t *loc, kmp_int32 gtid, kmp_int32 schedtype,
                               kmp_int32 *pupper, kmp_int32 *pstride,
                               kmp_int32 incr, kmp_int32 chunk) {
   __kmp_for_static_init<kmp_int32>(loc, gtid, schedtype, plastiter, plower,
-                                   pupper, pstride, incr, chunk);
+                                   pupper, pstride, incr, chunk
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                   , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                   );
 }
 
 /*!
@@ -779,7 +787,11 @@ void __kmpc_for_static_init_4u(ident_t *loc, kmp_int32 gtid,
                                kmp_int32 *pstride, kmp_int32 incr,
                                kmp_int32 chunk) {
   __kmp_for_static_init<kmp_uint32>(loc, gtid, schedtype, plastiter, plower,
-                                    pupper, pstride, incr, chunk);
+                                    pupper, pstride, incr, chunk
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                    , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                    );
 }
 
 /*!
@@ -790,7 +802,11 @@ void __kmpc_for_static_init_8(ident_t *loc, kmp_int32 gtid, kmp_int32 schedtype,
                               kmp_int64 *pupper, kmp_int64 *pstride,
                               kmp_int64 incr, kmp_int64 chunk) {
   __kmp_for_static_init<kmp_int64>(loc, gtid, schedtype, plastiter, plower,
-                                   pupper, pstride, incr, chunk);
+                                   pupper, pstride, incr, chunk
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                   , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                   );
 }
 
 /*!
@@ -802,7 +818,11 @@ void __kmpc_for_static_init_8u(ident_t *loc, kmp_int32 gtid,
                                kmp_int64 *pstride, kmp_int64 incr,
                                kmp_int64 chunk) {
   __kmp_for_static_init<kmp_uint64>(loc, gtid, schedtype, plastiter, plower,
-                                    pupper, pstride, incr, chunk);
+                                    pupper, pstride, incr, chunk
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                    , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                    );
 }
 /*!
 @}
