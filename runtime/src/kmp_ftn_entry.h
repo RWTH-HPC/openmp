@@ -897,11 +897,12 @@ void FTN_STDCALL FTN_INIT_LOCK_WITH_HINT(void **user_lock,
 #ifdef KMP_STUB
   *((kmp_stub_lock_t *)user_lock) = UNLOCKED;
 #else
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
-#endif
   __kmpc_init_lock_with_hint(NULL, __kmp_entry_gtid(), user_lock,
-                             KMP_DEREF hint);
+                             KMP_DEREF hint
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                             , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                             );
 #endif
 }
 
@@ -910,11 +911,12 @@ void FTN_STDCALL FTN_INIT_NEST_LOCK_WITH_HINT(void **user_lock,
 #ifdef KMP_STUB
   *((kmp_stub_lock_t *)user_lock) = UNLOCKED;
 #else
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
-#endif
   __kmpc_init_nest_lock_with_hint(NULL, __kmp_entry_gtid(), user_lock,
-                                  KMP_DEREF hint);
+                                  KMP_DEREF hint
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                  , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                  );
 #endif
 }
 #endif
@@ -924,10 +926,11 @@ void FTN_STDCALL xexpand(FTN_INIT_LOCK)(void **user_lock) {
 #ifdef KMP_STUB
   *((kmp_stub_lock_t *)user_lock) = UNLOCKED;
 #else
+  __kmpc_init_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                   , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_init_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -936,10 +939,11 @@ void FTN_STDCALL xexpand(FTN_INIT_NEST_LOCK)(void **user_lock) {
 #ifdef KMP_STUB
   *((kmp_stub_lock_t *)user_lock) = UNLOCKED;
 #else
+  __kmpc_init_nest_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                        , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_init_nest_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -947,10 +951,11 @@ void FTN_STDCALL xexpand(FTN_DESTROY_LOCK)(void **user_lock) {
 #ifdef KMP_STUB
   *((kmp_stub_lock_t *)user_lock) = UNINIT;
 #else
+  __kmpc_destroy_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                      , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_destroy_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -958,10 +963,11 @@ void FTN_STDCALL xexpand(FTN_DESTROY_NEST_LOCK)(void **user_lock) {
 #ifdef KMP_STUB
   *((kmp_stub_lock_t *)user_lock) = UNINIT;
 #else
+  __kmpc_destroy_nest_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                           , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_destroy_nest_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -975,10 +981,11 @@ void FTN_STDCALL xexpand(FTN_SET_LOCK)(void **user_lock) {
   }; // if
   *((kmp_stub_lock_t *)user_lock) = LOCKED;
 #else
+  __kmpc_set_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                  , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_set_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -989,10 +996,11 @@ void FTN_STDCALL xexpand(FTN_SET_NEST_LOCK)(void **user_lock) {
   }; // if
   (*((int *)user_lock))++;
 #else
+  __kmpc_set_nest_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                       , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_set_nest_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -1006,10 +1014,11 @@ void FTN_STDCALL xexpand(FTN_UNSET_LOCK)(void **user_lock) {
   }; // if
   *((kmp_stub_lock_t *)user_lock) = UNLOCKED;
 #else
+  __kmpc_unset_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                    , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_unset_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -1023,10 +1032,11 @@ void FTN_STDCALL xexpand(FTN_UNSET_NEST_LOCK)(void **user_lock) {
   }; // if
   (*((int *)user_lock))--;
 #else
+  __kmpc_unset_nest_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                         , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  __kmpc_unset_nest_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -1041,10 +1051,11 @@ int FTN_STDCALL xexpand(FTN_TEST_LOCK)(void **user_lock) {
   *((kmp_stub_lock_t *)user_lock) = LOCKED;
   return 1;
 #else
+  return __kmpc_test_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                          , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  return __kmpc_test_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
@@ -1055,10 +1066,11 @@ int FTN_STDCALL xexpand(FTN_TEST_NEST_LOCK)(void **user_lock) {
   }; // if
   return ++(*((int *)user_lock));
 #else
+  return __kmpc_test_nest_lock(NULL, __kmp_entry_gtid(), user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(__kmp_entry_gtid());
+                               , OMPT_GET_RETURN_ADDRESS(0)
 #endif
-  return __kmpc_test_nest_lock(NULL, __kmp_entry_gtid(), user_lock);
+  );
 #endif
 }
 
