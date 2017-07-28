@@ -1408,7 +1408,7 @@ static void __kmp_dispatch_finish_chunk(int gtid, ident_t *loc) {
       ompt_task_info_t *task_info = __ompt_get_task_info_object(0);            \
       ompt_callbacks.ompt_callback(ompt_callback_work)(                        \
           ompt_work_loop, ompt_scope_end, &(team_info->parallel_data),         \
-          &(task_info->task_data), 0, OMPT_GET_RETURN_ADDRESS(0));             \
+          &(task_info->task_data), 0, codeptr);             \
     }                                                                          \
   }
 // TODO: implement count
@@ -1419,7 +1419,11 @@ static void __kmp_dispatch_finish_chunk(int gtid, ident_t *loc) {
 template <typename T>
 static int __kmp_dispatch_next(ident_t *loc, int gtid, kmp_int32 *p_last,
                                T *p_lb, T *p_ub,
-                               typename traits_t<T>::signed_t *p_st) {
+                               typename traits_t<T>::signed_t *p_st
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                               , void * codeptr
+#endif
+                               ) {
 
   typedef typename traits_t<T>::unsigned_t UT;
   typedef typename traits_t<T>::signed_t ST;
@@ -2656,7 +2660,11 @@ If there is no more work, then the lb,ub and stride need not be modified.
 */
 int __kmpc_dispatch_next_4(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                            kmp_int32 *p_lb, kmp_int32 *p_ub, kmp_int32 *p_st) {
-  return __kmp_dispatch_next<kmp_int32>(loc, gtid, p_last, p_lb, p_ub, p_st);
+  return __kmp_dispatch_next<kmp_int32>(loc, gtid, p_last, p_lb, p_ub, p_st
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                       , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                       );
 }
 
 /*!
@@ -2665,7 +2673,11 @@ See @ref __kmpc_dispatch_next_4
 int __kmpc_dispatch_next_4u(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                             kmp_uint32 *p_lb, kmp_uint32 *p_ub,
                             kmp_int32 *p_st) {
-  return __kmp_dispatch_next<kmp_uint32>(loc, gtid, p_last, p_lb, p_ub, p_st);
+  return __kmp_dispatch_next<kmp_uint32>(loc, gtid, p_last, p_lb, p_ub, p_st
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                        , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                        );
 }
 
 /*!
@@ -2673,7 +2685,11 @@ See @ref __kmpc_dispatch_next_4
 */
 int __kmpc_dispatch_next_8(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                            kmp_int64 *p_lb, kmp_int64 *p_ub, kmp_int64 *p_st) {
-  return __kmp_dispatch_next<kmp_int64>(loc, gtid, p_last, p_lb, p_ub, p_st);
+  return __kmp_dispatch_next<kmp_int64>(loc, gtid, p_last, p_lb, p_ub, p_st
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                       , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                       );
 }
 
 /*!
@@ -2682,7 +2698,11 @@ See @ref __kmpc_dispatch_next_4
 int __kmpc_dispatch_next_8u(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                             kmp_uint64 *p_lb, kmp_uint64 *p_ub,
                             kmp_int64 *p_st) {
-  return __kmp_dispatch_next<kmp_uint64>(loc, gtid, p_last, p_lb, p_ub, p_st);
+  return __kmp_dispatch_next<kmp_uint64>(loc, gtid, p_last, p_lb, p_ub, p_st
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                        , OMPT_GET_RETURN_ADDRESS(0)
+#endif
+                                        );
 }
 
 /*!
