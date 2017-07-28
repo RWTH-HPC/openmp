@@ -51,6 +51,18 @@
 #define ompt_callback_implicit_task_implemented ompt_event_MAY_ALWAYS
 
 /*----------------------------------------------------------------------------
+ | Target Related Events (not yet implemented)
+ +--------------------------------------------------------------------------*/
+
+#define ompt_callback_target_implemented ompt_event_UNIMPLEMENTED
+#define ompt_callback_target_data_op_implemented ompt_event_UNIMPLEMENTED
+#define ompt_callback_target_submit_implemented ompt_event_UNIMPLEMENTED
+#define ompt_callback_device_initialize_implemented ompt_event_UNIMPLEMENTED
+#define ompt_callback_device_finalize_implemented ompt_event_UNIMPLEMENTED
+
+#define ompt_callback_target_map_implemented ompt_event_UNIMPLEMENTED
+
+/*----------------------------------------------------------------------------
  | Optional Events (blame shifting)
  +--------------------------------------------------------------------------*/
 

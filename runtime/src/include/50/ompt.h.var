@@ -106,16 +106,16 @@
     macro (ompt_callback_task_schedule,         ompt_callback_task_schedule_t,  6) /* task schedule */          \
     macro (ompt_callback_implicit_task,         ompt_callback_implicit_task_t,  7) /* implicit task   */        \
                                                                                                                 \
-    /*macro (ompt_callback_target,                ompt_callback_target_t,         8)*/ /* target */                 \
-    /*macro (ompt_callback_target_data_op         ompt_callback_target_data_op_t, 9)*/ /* target data op*/          \
-    /*macro (ompt_callback_target_submit,         ompt_callback_target_submit_t, 10)*/ /* target  submit*/          \
+    macro (ompt_callback_target,                ompt_callback_target_t,         8) /* target */                 \
+    macro (ompt_callback_target_data_op,        ompt_callback_target_data_op_t, 9) /* target data op*/          \
+    macro (ompt_callback_target_submit,         ompt_callback_target_submit_t, 10) /* target  submit*/          \
                                                                                                                 \
     macro (ompt_callback_control_tool,          ompt_callback_control_tool_t,  11) /* control tool */           \
                                                                                                                 \
-    /*macro (ompt_callback_device_initialize,     ompt_callback_device_initialize_t, 12)*/ /* device initialize */  \
+    macro (ompt_callback_device_initialize,     ompt_callback_device_initialize_t, 12) /* device initialize */  \
+    macro (ompt_callback_device_finalize,       ompt_callback_device_finalize_t, 13)   /* device finalize   */  \
                                                                                                                 \
     /*--- Optional Events (blame shifting, ompt_event_unimplemented) ---*/                                      \
-    macro (ompt_callback_idle,                  ompt_callback_idle_t,          13) /* begin or end idle state */\
                                                                                                                 \
     macro (ompt_callback_sync_region_wait,      ompt_callback_sync_region_t,   14) /* sync region wait begin or end*/  \
                                                                                                                 \
@@ -130,7 +130,7 @@
                                                                                                                 \
     macro (ompt_callback_master,                ompt_callback_master_t,        19) /* task at master begin or end */\
                                                                                                                 \
-    /*macro (ompt_callback_target_map,            ompt_callback_target_map_t,    20)*/ /* target map */             \
+    macro (ompt_callback_target_map,            ompt_callback_target_map_t,    20) /* target map */             \
                                                                                                                 \
     macro (ompt_callback_sync_region,           ompt_callback_sync_region_t,   21) /* sync region begin or end */ \
                                                                                                                 \
@@ -145,6 +145,7 @@
     macro (ompt_callback_flush,                 ompt_callback_flush_t,         27) /* after executing flush */  \
                                                                                                                 \
     macro (ompt_callback_cancel,                ompt_callback_cancel_t,        28) /*cancel innermost binding region*/\
+    macro (ompt_callback_idle,                  ompt_callback_idle_t,          29) /* begin or end idle state */\
 
 
 
@@ -169,6 +170,7 @@ static const ompt_data_t ompt_data_none = {0};
 typedef uint64_t ompt_wait_id_t;
 static const ompt_wait_id_t ompt_wait_id_none = 0;
 
+typedef void ompt_device_t;
 
 /*---------------------
  * ompt_frame_t
@@ -360,12 +362,70 @@ typedef void (*ompt_callback_task_dependence_t) (
     ompt_data_t *sink_task_data
 );
 
+typedef enum ompt_target_type_e {
+    ompt_target = 1,
+    ompt_target_enter_data = 2,
+    ompt_target_exit_data = 3,
+    ompt_target_update = 4
+} ompt_target_type_t;
+
+typedef void (*ompt_callback_target_t) (
+    ompt_target_type_t kind,
+    ompt_scope_endpoint_t endpoint,
+    uint64_t device_num,
+    ompt_data_t *task_data,
+    ompt_id_t target_id,
+    const void *codeptr_ra
+);
+
+typedef enum ompt_target_data_op_e {
+    ompt_target_data_alloc = 1,
+    ompt_target_data_transfer_to_dev = 2,
+    ompt_target_data_transfer_from_dev = 3,
+    ompt_target_data_delete = 4
+} ompt_target_data_op_t;
+
+typedef void (*ompt_callback_target_data_op_t) (
+    ompt_id_t target_id,
+    ompt_id_t host_op_id,
+    ompt_target_data_op_t optype,
+    void *host_addr,
+    void *device_addr,
+    size_t bytes
+);
+
+typedef void (*ompt_callback_target_submit_t) (
+    ompt_id_t target_id,
+    ompt_id_t host_op_id
+);
+
+typedef void (*ompt_callback_target_map_t) (
+    ompt_id_t target_id,
+    unsigned int nitems,
+    void **host_addr,
+    void **device_addr,
+    size_t *bytes,
+    unsigned int *mapping_flags
+);
+
 /* control_tool */
 typedef int (*ompt_callback_control_tool_t) (
     uint64_t command,                 /* command of control call      */
     uint64_t modifier,                /* modifier of control call     */
     void *arg,
     const void *codeptr_ra
+);
+
+typedef void (*ompt_callback_device_initialize_t) (
+    uint64_t device_num,
+    const char *type,
+    ompt_device_t *device,
+    ompt_function_lookup_t lookup,
+    const char *documentation
+);
+
+typedef void (*ompt_callback_device_finalize_t) (
+    uint64_t device_num
 );
 
 typedef void (*ompt_callback_t)(void);
