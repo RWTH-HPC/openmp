@@ -35,7 +35,6 @@ typedef struct kmp_taskdata kmp_taskdata_t;
 
 typedef struct {
   ompt_frame_t frame;
-  void *function;
   ompt_data_t task_data;
   kmp_taskdata_t *scheduling_parent;
 #if OMP_40_ENABLED
@@ -46,7 +45,6 @@ typedef struct {
 
 typedef struct {
   ompt_data_t parallel_data;
-  void *microtask;
   void *master_return_address;
 } ompt_team_info_t;
 
@@ -56,13 +54,6 @@ typedef struct ompt_lw_taskteam_s {
   int heap;
   struct ompt_lw_taskteam_s *parent;
 } ompt_lw_taskteam_t;
-
-// typedef struct ompt_parallel_info_s {
-//    ompt_task_data_t* parent_task_data;    /* data of parent task */
-//    ompt_parallel_data_t* parallel_data;   /* data of parallel region */
-//    ompt_frame_t *parent_task_frame;  /* frame data of parent task    */
-//    void *parallel_function;          /* pointer to outlined function */
-//} ompt_parallel_info_t;
 
 typedef struct {
   ompt_data_t thread_data;

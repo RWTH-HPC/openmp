@@ -1360,7 +1360,7 @@ void __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid) {
 
     ompt_lw_taskteam_t lw_taskteam;
 
-    __ompt_lw_taskteam_init(&lw_taskteam, this_thr, global_tid, NULL,
+    __ompt_lw_taskteam_init(&lw_taskteam, this_thr, global_tid, 
                             &ompt_parallel_data, codeptr);
     // exit_runtime_p =
     //     &(lw_taskteam.ompt_task_info.frame.exit_runtime_frame);
@@ -1390,9 +1390,6 @@ void __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid) {
 int __kmp_fork_call(ident_t *loc, int gtid,
                     enum fork_context_e call_context, // Intel, GNU, ...
                     kmp_int32 argc,
-#if OMPT_SUPPORT
-                    void *unwrapped_task,
-#endif
                     microtask_t microtask, launch_t invoker,
 /* TODO: revert workaround for Intel(R) 64 tracker #96 */
 #if (KMP_ARCH_X86_64 || KMP_ARCH_ARM || KMP_ARCH_AARCH64) && KMP_OS_LINUX
@@ -1535,7 +1532,7 @@ int __kmp_fork_call(ident_t *loc, int gtid,
         ompt_lw_taskteam_t lw_taskteam;
 
         if (ompt_enabled) {
-          __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid, unwrapped_task,
+          __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid,
                                   &ompt_parallel_data, return_address);
           exit_runtime_p =
               &(lw_taskteam.ompt_task_info.frame.exit_runtime_frame);
@@ -1592,9 +1589,6 @@ int __kmp_fork_call(ident_t *loc, int gtid,
       }
 
       parent_team->t.t_pkfn = microtask;
-#if OMPT_SUPPORT
-      parent_team->t.ompt_team_info.microtask = unwrapped_task;
-#endif
       parent_team->t.t_invoke = invoker;
       KMP_TEST_THEN_INC32((kmp_int32 *)&root->r.r_in_parallel);
       parent_team->t.t_active_level++;
@@ -1752,7 +1746,7 @@ int __kmp_fork_call(ident_t *loc, int gtid,
 
           if (ompt_enabled) {
             __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid,
-                                    unwrapped_task, &ompt_parallel_data,
+                                    &ompt_parallel_data,
                                     return_address);
 
             __ompt_lw_taskteam_link(&lw_taskteam, master_th, 0);
@@ -1855,7 +1849,7 @@ int __kmp_fork_call(ident_t *loc, int gtid,
 
           if (ompt_enabled) {
             __ompt_lw_taskteam_init(&lw_taskteam, master_th, gtid,
-                                    unwrapped_task, &ompt_parallel_data,
+                                    &ompt_parallel_data,
                                     return_address);
             __ompt_lw_taskteam_link(&lw_taskteam, master_th, 0);
             // don't use lw_taskteam after linking. content was swaped
@@ -1913,7 +1907,7 @@ int __kmp_fork_call(ident_t *loc, int gtid,
       } else if (call_context == fork_context_gnu) {
 #if OMPT_SUPPORT
         ompt_lw_taskteam_t lwt;
-        __ompt_lw_taskteam_init(&lwt, master_th, gtid, unwrapped_task,
+        __ompt_lw_taskteam_init(&lwt, master_th, gtid,
                                 &ompt_parallel_data, return_address);
 
         lwt.ompt_task_info.frame.exit_runtime_frame = NULL;
@@ -2042,7 +2036,6 @@ int __kmp_fork_call(ident_t *loc, int gtid,
     KMP_CHECK_UPDATE(team->t.t_parent, parent_team);
     KMP_CHECK_UPDATE_SYNC(team->t.t_pkfn, microtask);
 #if OMPT_SUPPORT
-    KMP_CHECK_UPDATE_SYNC(team->t.ompt_team_info.microtask, unwrapped_task);
     KMP_CHECK_UPDATE_SYNC(
         team->t.ompt_team_info.master_return_address, return_address);
 #endif
@@ -6947,9 +6940,6 @@ void __kmp_teams_master(int gtid) {
   SSC_MARK_FORKING();
 #endif
   __kmp_fork_call(loc, gtid, fork_context_intel, team->t.t_argc,
-#if OMPT_SUPPORT
-                  (void *)thr->th.th_teams_microtask, // "unwrapped" task
-#endif
                   (microtask_t)thr->th.th_teams_microtask, // "wrapped" task
                   VOLATILE_CAST(launch_t) __kmp_invoke_task_func, NULL);
 #if INCLUDE_SSC_MARKS

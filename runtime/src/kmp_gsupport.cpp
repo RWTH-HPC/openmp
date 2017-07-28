@@ -371,9 +371,6 @@ static
   va_start(ap, argc);
 
   rc = __kmp_fork_call(loc, gtid, fork_context_gnu, argc,
-#if OMPT_SUPPORT
-                       VOLATILE_CAST(void *) unwrapped_task,
-#endif
                        wrapper, __kmp_invoke_task_func,
 #if (KMP_ARCH_X86_64 || KMP_ARCH_ARM || KMP_ARCH_AARCH64) && KMP_OS_LINUX
                        &ap

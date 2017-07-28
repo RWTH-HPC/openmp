@@ -300,9 +300,6 @@ void __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...) {
     SSC_MARK_FORKING();
 #endif
     __kmp_fork_call(loc, gtid, fork_context_intel, argc,
-#if OMPT_SUPPORT
-                    VOLATILE_CAST(void *) microtask, // "unwrapped" task
-#endif
                     VOLATILE_CAST(microtask_t) microtask, // "wrapped" task
                     VOLATILE_CAST(launch_t) __kmp_invoke_task_func,
 /* TODO: revert workaround for Intel(R) 64 tracker #96 */
@@ -392,9 +389,6 @@ void __kmpc_fork_teams(ident_t *loc, kmp_int32 argc, kmpc_micro microtask,
   KMP_DEBUG_ASSERT(this_thr->th.th_teams_size.nth >= 1);
 
   __kmp_fork_call(loc, gtid, fork_context_intel, argc,
-#if OMPT_SUPPORT
-                  VOLATILE_CAST(void *) microtask, // "unwrapped" task
-#endif
                   VOLATILE_CAST(microtask_t)
                       __kmp_teams_master, // "wrapped" task
                   VOLATILE_CAST(launch_t) __kmp_invoke_teams_master,

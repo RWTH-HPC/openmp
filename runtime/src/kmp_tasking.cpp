@@ -857,11 +857,9 @@ void __kmpc_omp_task_complete(ident_t *loc_ref, kmp_int32 gtid,
 //   Initialize OMPT fields maintained by a task. This will only be called after
 //   ompt_tool, so we already know whether ompt is enabled or not.
 
-static inline void __kmp_task_init_ompt(kmp_taskdata_t *task, int tid,
-                                        void *function) {
+static inline void __kmp_task_init_ompt(kmp_taskdata_t *task, int tid) {
   if (ompt_enabled) {
     task->ompt_task_info.task_data.value = 0;
-    task->ompt_task_info.function = function;
     task->ompt_task_info.frame.exit_runtime_frame = NULL;
     task->ompt_task_info.frame.reenter_runtime_frame = NULL;
 #if OMP_40_ENABLED
@@ -936,7 +934,7 @@ void __kmp_init_implicit_task(ident_t *loc_ref, kmp_info_t *this_thr,
   }
 
 #if OMPT_SUPPORT
-  __kmp_task_init_ompt(task, tid, NULL);
+  __kmp_task_init_ompt(task, tid);
 #endif
 
   KF_TRACE(10, ("__kmp_init_implicit_task(exit): T#:%d team=%p task=%p\n", tid,
@@ -1183,7 +1181,7 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
   ANNOTATE_HAPPENS_BEFORE(task);
 
 #if OMPT_SUPPORT
-  __kmp_task_init_ompt(taskdata, gtid, (void *)task_entry);
+  __kmp_task_init_ompt(taskdata, gtid);
 #endif
 
   return task;
@@ -3440,8 +3438,7 @@ kmp_task_t *__kmp_task_dup_alloc(kmp_info_t *thread, kmp_task_t *task_src) {
            ("__kmp_task_dup_alloc(exit): Th %p, created task %p, parent=%p\n",
             thread, taskdata, taskdata->td_parent));
 #if OMPT_SUPPORT
-  __kmp_task_init_ompt(taskdata, thread->th.th_info.ds.ds_gtid,
-                       (void *)task->routine);
+  __kmp_task_init_ompt(taskdata, thread->th.th_info.ds.ds_gtid);
 #endif
   return task;
 }

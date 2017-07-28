@@ -255,18 +255,16 @@ int __ompt_get_parallel_info_internal(int ancestor_level,
 //----------------------------------------------------------
 
 void __ompt_lw_taskteam_init(ompt_lw_taskteam_t *lwt, kmp_info_t *thr, int gtid,
-                             void *microtask, ompt_data_t* ompt_pid,
+                             ompt_data_t* ompt_pid,
                              void* codeptr) {
   // initialize parallel_data with input, return address to parallel_data on
   // exit
   lwt->ompt_team_info.parallel_data = *ompt_pid;
   lwt->ompt_team_info.master_return_address = codeptr;
-  lwt->ompt_team_info.microtask = microtask;
   lwt->ompt_task_info.task_data.value = 0;
   lwt->ompt_task_info.frame.reenter_runtime_frame = NULL;
   lwt->ompt_task_info.frame.exit_runtime_frame = NULL;
   lwt->ompt_task_info.scheduling_parent = NULL;
-  lwt->ompt_task_info.function = NULL;
   lwt->ompt_task_info.deps = NULL;
   lwt->ompt_task_info.ndeps = 0;
   lwt->heap = 0;
