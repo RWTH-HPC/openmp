@@ -320,14 +320,6 @@ on_ompt_callback_sync_region_wait(
 }
 
 static void
-on_ompt_event_control(
-  uint64_t command,
-  uint64_t modifier)
-{
-  printf("%" PRIu64 ": ompt_event_control: command=%" PRIu64 ", modifier=%" PRIu64 "\n", ompt_get_thread_data()->value, command, modifier);
-}
-
-static void
 on_ompt_callback_flush(
     ompt_data_t *thread_data,
     const void *codeptr_ra)
