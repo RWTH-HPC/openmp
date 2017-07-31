@@ -336,13 +336,11 @@ static void __kmp_stg_parse_size(char const *name, char const *value,
   }; // if
 } // __kmp_stg_parse_size
 
-#if KMP_AFFINITY_SUPPORTED
 static void __kmp_stg_parse_str(char const *name, char const *value,
                                 char const **out) {
   __kmp_str_free(out);
   *out = __kmp_str_format("%s", value);
 } // __kmp_stg_parse_str
-#endif
 
 static void __kmp_stg_parse_int(
     char const
