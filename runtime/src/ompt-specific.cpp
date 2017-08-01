@@ -336,6 +336,9 @@ int __ompt_get_task_info_internal(int ancestor_level, int *type,
                                   ompt_frame_t **task_frame,
                                   ompt_data_t **parallel_data,
                                   int *thread_num) {
+  if (ancestor_level < 0) 
+    return 0;
+
   // copied from __ompt_get_scheduling_taskinfo
   ompt_task_info_t *info = NULL;
   ompt_team_info_t *team_info = NULL;
