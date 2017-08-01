@@ -548,7 +548,7 @@ OMPT_API_ROUTINE int ompt_get_partition_place_nums(int place_nums_size,
  ****************************************************************************/
 
 OMPT_API_ROUTINE int ompt_get_proc_id(void) {
-#ifdef KMP_OS_LINUX
+#if KMP_OS_LINUX
   return sched_getcpu();
 #else
   return -1;
