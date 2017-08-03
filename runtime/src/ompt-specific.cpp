@@ -11,8 +11,19 @@
 #include <libunwind.h>
 #endif
 
+#if KMP_OS_UNIX
 #include <dlfcn.h>
+#endif
+
+#if KMP_OS_LINUX
 #include <execinfo.h>
+#endif
+
+#if KMP_OS_WINDOWS
+#define THREAD_LOCAL __declspec(thread)
+#else
+#define THREAD_LOCAL __thread
+#endif
 
 //******************************************************************************
 // macros
@@ -424,14 +435,15 @@ void __ompt_team_assign_id(kmp_team_t *team, ompt_data_t ompt_pid) {
 
 static uint64_t __ompt_get_unique_id_internal() {
   static uint64_t thread = 1;
-  static __thread uint64_t ID = 0;
+  THREAD_LOCAL static uint64_t ID = 0;
   if (ID == 0) {
-    uint64_t new_thread = __sync_fetch_and_add(&thread, 1);
+    uint64_t new_thread = KMP_TEST_THEN_INC64((kmp_int64 *)&thread);
     ID = new_thread << (sizeof(uint64_t) * 8 - OMPT_THREAD_ID_BITS);
   }
   return ++ID;
 }
 
+#if KMP_OS_LINUX
 void *__ompt_get_return_address_backtrace(int level) {
 
   int real_level = level + 2;
@@ -444,6 +456,7 @@ void *__ompt_get_return_address_backtrace(int level) {
   else
     return NULL;
 }
+#endif
 
 #ifdef OMPT_USE_LIBUNWIND
 
