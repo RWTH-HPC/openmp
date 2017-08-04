@@ -640,6 +640,9 @@ typedef struct ompt_fns_t {
 } ompt_fns_t;
 
 /* initialization interface to be defined by tool */
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 ompt_fns_t * ompt_start_tool(
     unsigned int omp_version, 
     const char * runtime_version
