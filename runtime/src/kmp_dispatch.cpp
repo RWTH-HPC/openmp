@@ -1237,7 +1237,7 @@ __kmp_dispatch_init(ident_t *loc, int gtid, enum sched_type schedule, T lb,
 // TODO for intel: need to be able to distinguish between sections and loops for
 // ompt callback
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_work)) {
+  if (ompt_enabled.ompt_callback_work) {
     ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
     ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
     kmp_info_t *thr = __kmp_threads[gtid];
@@ -1403,7 +1403,7 @@ static void __kmp_dispatch_finish_chunk(int gtid, ident_t *loc) {
 #if OMPT_SUPPORT && OMPT_OPTIONAL
 #define OMPT_LOOP_END                                                          \
   if (status == 0) {                                                           \
-    if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_work)) {    \
+    if (ompt_enabled.ompt_callback_work) {    \
       ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);              \
       ompt_task_info_t *task_info = __ompt_get_task_info_object(0);            \
       ompt_callbacks.ompt_callback(ompt_callback_work)(                        \

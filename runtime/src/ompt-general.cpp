@@ -64,7 +64,8 @@ typedef void (*ompt_finalize_t)(struct ompt_fns_t *fns);
  * global variables
  ****************************************************************************/
 
-int ompt_enabled = 0;
+//int ompt_enabled = 0;
+ompt_callbacks_active_t ompt_enabled;
 
 omp_state_info_t omp_state_info[] = {
 #define omp_state_macro(state, code) {#state, state},
@@ -259,9 +260,10 @@ void ompt_pre_init() {
     ompt_fns =
         ompt_try_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
 
-    if (ompt_fns) {
+    memset(&ompt_enabled, 0, sizeof(ompt_enabled));
+/*    if (ompt_fns) {
       ompt_enabled = 1;
-    }
+    }*/
     break;
 
   case omp_tool_error:
@@ -290,20 +292,20 @@ void ompt_post_init() {
   //--------------------------------------------------
   // Initialize the tool if so indicated.
   //--------------------------------------------------
-  if (ompt_enabled) {
+  if (ompt_fns) {
     ompt_fns->initialize(ompt_fn_lookup, ompt_fns);
 
     ompt_thread_t *root_thread = ompt_get_thread();
 
     ompt_set_thread_state(root_thread, omp_state_overhead);
 
-    if (ompt_callbacks.ompt_callback(ompt_callback_thread_begin)) {
+    if (ompt_enabled.ompt_callback_thread_begin) {
       ompt_callbacks.ompt_callback(ompt_callback_thread_begin)(
           ompt_thread_initial, __ompt_get_thread_data_internal());
     }
     ompt_data_t *task_data;
     __ompt_get_task_info_internal(0, NULL, &task_data, NULL, NULL, NULL);
-    if (ompt_callbacks.ompt_callback(ompt_callback_task_create)) {
+    if (ompt_enabled.ompt_callback_task_create) {
       ompt_callbacks.ompt_callback(ompt_callback_task_create)(
           NULL, NULL, task_data, ompt_task_initial, 0,
           NULL);
@@ -314,11 +316,12 @@ void ompt_post_init() {
 }
 
 void ompt_fini() {
-  if (ompt_enabled) {
+  if (ompt_enabled.enabled) {
     ompt_fns->finalize(ompt_fns);
   }
 
-  ompt_enabled = 0;
+//  ompt_enabled = 0;
+    memset(&ompt_enabled, 0, sizeof(ompt_enabled));
 }
 
 /*****************************************************************************
@@ -373,6 +376,8 @@ OMPT_API_ROUTINE int ompt_set_callback(ompt_callbacks_t which,
   case event_name:                                                             \
     if (ompt_event_implementation_status(event_name)) {                        \
       ompt_callbacks.ompt_callback(event_name) = (callback_type)callback;      \
+      ompt_enabled.event_name = 1;                                             \
+      ompt_enabled.enabled = 1;                                                \
     }                                                                          \
     return ompt_event_implementation_status(event_name);
 
@@ -620,8 +625,8 @@ OMPT_API_ROUTINE int ompt_get_ompt_version() { return OMPT_VERSION; }
  ---------------------------------------------------------------------------*/
 
 int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg) {
-  if (ompt_enabled) {
-    if (ompt_callbacks.ompt_callback(ompt_callback_control_tool)) {
+  if (ompt_enabled.enabled) {
+    if (ompt_enabled.ompt_callback_control_tool) {
       return ompt_callbacks.ompt_callback(ompt_callback_control_tool)(
           command, modifier, arg, OMPT_GET_RETURN_ADDRESS(0));
     } else {

@@ -68,7 +68,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
   ompt_team_info_t *team_info = NULL;
   ompt_task_info_t *task_info = NULL;
 
-  if (ompt_enabled) {
+  if (ompt_enabled.enabled) {
     // Only fully initialize variables needed by OMPT if OMPT is enabled.
     team_info = __ompt_get_teaminfo(0, NULL);
     task_info = __ompt_get_task_info_object(0);
@@ -128,7 +128,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 // TODO for intel: need to be able to distinguish between sections and loops for
 // ompt callback
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-    if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_work)) {
+    if (ompt_enabled.ompt_callback_work) {
       ompt_callbacks.ompt_callback(ompt_callback_work)(
           ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
           &(task_info->task_data),
@@ -183,7 +183,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 
 // TODO for intel: (see first ompt callback in this function)
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-    if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_work)) {
+    if (ompt_enabled.ompt_callback_work) {
       ompt_callbacks.ompt_callback(ompt_callback_work)(
           ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
           &(task_info->task_data),
@@ -216,7 +216,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 
 // TODO for intel: (see first ompt callback in this function)
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-    if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_work)) {
+    if (ompt_enabled.ompt_callback_work) {
       ompt_callbacks.ompt_callback(ompt_callback_work)(
           ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
           &(task_info->task_data),
@@ -377,7 +377,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 
 // TODO for intel: (see first ompt callback in this function)
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  if (ompt_enabled && ompt_callbacks.ompt_callback(ompt_callback_work)) {
+  if (ompt_enabled.ompt_callback_work) {
     ompt_callbacks.ompt_callback(ompt_callback_work)(
         ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
         &(task_info->task_data),

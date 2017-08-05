@@ -22,6 +22,16 @@ typedef struct ompt_callbacks_internal_s {
 #undef ompt_event_macro
 } ompt_callbacks_internal_t;
 
+typedef struct ompt_callbacks_active_s {
+  unsigned int enabled : 1;
+#define ompt_event_macro(event, callback, eventid)                             \
+  unsigned int event : 1;
+
+  FOREACH_OMPT_EVENT(ompt_event_macro)
+
+#undef ompt_event_macro
+} ompt_callbacks_active_t;
+
 typedef struct kmp_taskdata kmp_taskdata_t;
 
 #define TASK_TYPE_DETAILS_FORMAT(info)                                         \
@@ -102,7 +112,8 @@ void *__ompt_get_return_address_backtrace(int level);
 
 int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg);
 
-extern int ompt_enabled;
+//extern int ompt_enabled;
+extern ompt_callbacks_active_t ompt_enabled;
 
 #ifdef __cplusplus
 };
