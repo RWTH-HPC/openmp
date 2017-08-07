@@ -13,9 +13,6 @@
 
 #if KMP_OS_UNIX
 #include <dlfcn.h>
-#endif
-
-#if KMP_OS_LINUX
 #include <execinfo.h>
 #endif
 
@@ -435,7 +432,7 @@ void __ompt_team_assign_id(kmp_team_t *team, ompt_data_t ompt_pid) {
 
 static uint64_t __ompt_get_unique_id_internal() {
   static uint64_t thread = 1;
-  THREAD_LOCAL static uint64_t ID = 0;
+  static THREAD_LOCAL uint64_t ID = 0;
   if (ID == 0) {
     uint64_t new_thread = KMP_TEST_THEN_INC64((kmp_int64 *)&thread);
     ID = new_thread << (sizeof(uint64_t) * 8 - OMPT_THREAD_ID_BITS);
@@ -443,7 +440,7 @@ static uint64_t __ompt_get_unique_id_internal() {
   return ++ID;
 }
 
-#if KMP_OS_LINUX
+#if KMP_OS_UNIX
 void *__ompt_get_return_address_backtrace(int level) {
 
   int real_level = level + 2;
