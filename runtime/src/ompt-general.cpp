@@ -64,7 +64,6 @@ typedef void (*ompt_finalize_t)(struct ompt_fns_t *fns);
  * global variables
  ****************************************************************************/
 
-//int ompt_enabled = 0;
 ompt_callbacks_active_t ompt_enabled;
 
 omp_state_info_t omp_state_info[] = {
@@ -261,9 +260,6 @@ void ompt_pre_init() {
         ompt_try_start_tool(__kmp_openmp_version, ompt_get_runtime_version());
 
     memset(&ompt_enabled, 0, sizeof(ompt_enabled));
-/*    if (ompt_fns) {
-      ompt_enabled = 1;
-    }*/
     break;
 
   case omp_tool_error:
@@ -320,8 +316,7 @@ void ompt_fini() {
     ompt_fns->finalize(ompt_fns);
   }
 
-//  ompt_enabled = 0;
-    memset(&ompt_enabled, 0, sizeof(ompt_enabled));
+  memset(&ompt_enabled, 0, sizeof(ompt_enabled));
 }
 
 /*****************************************************************************

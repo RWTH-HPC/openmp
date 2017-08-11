@@ -112,7 +112,6 @@ void *__ompt_get_return_address_backtrace(int level);
 
 int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg);
 
-//extern int ompt_enabled;
 extern ompt_callbacks_active_t ompt_enabled;
 
 #ifdef __cplusplus
