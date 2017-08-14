@@ -549,6 +549,7 @@ void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
   taskdata->td_flags.task_serial =
       1; // Execute this task immediately, not deferred.
 
+  __kmp_task_start(gtid, task, current_task);
 #if OMPT_SUPPORT
   if (__builtin_expect(ompt_enabled.enabled,0)){
     if (current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
@@ -565,12 +566,8 @@ void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
           ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(taskdata), 0,
           OMPT_GET_RETURN_ADDRESS(0));
     }
+    __ompt_task_start(task, current_task, gtid);
   }
-#endif
-
-  __kmp_task_start(gtid, task, current_task);
-#if OMPT_SUPPORT
-  if (__builtin_expect(ompt_enabled.enabled,0)) __ompt_task_start(task, current_task, gtid);
 #endif
 
   KA_TRACE(10, ("__kmpc_omp_task_begin_if0(exit): T#%d loc=%p task=%p,\n", gtid,
@@ -839,9 +836,6 @@ void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
   KA_TRACE(10, ("__kmpc_omp_task_complete_if0(enter): T#%d loc=%p task=%p\n",
                 gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
 
-#if OMPT_SUPPORT
-  if (__builtin_expect(ompt_enabled.enabled,0)) __ompt_task_finish(task, NULL);
-#endif
   // this routine will provide task to resume
   __kmp_task_finish(gtid, task, NULL);
 
@@ -850,6 +844,7 @@ void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
 
 #if OMPT_SUPPORT
   if (__builtin_expect(ompt_enabled.enabled,0)) {
+    __ompt_task_finish(task, NULL);
     ompt_frame_t *ompt_frame;
     __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
     ompt_frame->reenter_runtime_frame = NULL;
