@@ -521,15 +521,10 @@ static inline void __ompt_task_finish(kmp_task_t *task, kmp_taskdata_t *resumed_
 }
 #endif
 
-
-// __kmpc_omp_task_begin_if0: report that a given serialized task has started
-// execution
-//
-// loc_ref: source location information; points to beginning of task block.
-// gtid: global thread number.
-// task: task thunk for the started task.
-void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
-                               kmp_task_t *task) {
+#if OMPT_SUPPORT
+OMPT_NOINLINE
+static void __ompt_enabled_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
+    kmp_task_t *task, void *frame_address, void *return_address) {
   kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
   kmp_taskdata_t *current_task = __kmp_threads[gtid]->th.th_current_task;
 
@@ -550,25 +545,62 @@ void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
       1; // Execute this task immediately, not deferred.
 
   __kmp_task_start(gtid, task, current_task);
+
+  if (current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
+    current_task->ompt_task_info.frame.reenter_runtime_frame =
+        taskdata->ompt_task_info.frame.exit_runtime_frame = frame_address;
+  }
+  if (ompt_enabled.ompt_callback_task_create) {
+    ompt_task_info_t *parent_info = &(current_task->ompt_task_info);
+    ompt_data_t task_data = ompt_data_none;
+    ompt_callbacks.ompt_callback(ompt_callback_task_create)(
+        &(parent_info->task_data), &(parent_info->frame),
+        &(taskdata->ompt_task_info.task_data),
+        ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(taskdata), 0,
+        return_address);
+  }
+  __ompt_task_start(task, current_task, gtid);
+
+  KA_TRACE(10, ("__kmpc_omp_task_begin_if0(exit): T#%d loc=%p task=%p,\n", gtid,
+                loc_ref, taskdata));
+}
+#endif // OMPT_SUPPORT
+
+// __kmpc_omp_task_begin_if0: report that a given serialized task has started
+// execution
+//
+// loc_ref: source location information; points to beginning of task block.
+// gtid: global thread number.
+// task: task thunk for the started task.
+void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
+                               kmp_task_t *task) {
 #if OMPT_SUPPORT
-  if (__builtin_expect(ompt_enabled.enabled,0)){
-    if (current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
-      current_task->ompt_task_info.frame.reenter_runtime_frame =
-          taskdata->ompt_task_info.frame.exit_runtime_frame =
-              OMPT_GET_FRAME_ADDRESS(1);
-    }
-    if (ompt_enabled.ompt_callback_task_create) {
-      ompt_task_info_t *parent_info = &(current_task->ompt_task_info);
-      ompt_data_t task_data = ompt_data_none;
-      ompt_callbacks.ompt_callback(ompt_callback_task_create)(
-          &(parent_info->task_data), &(parent_info->frame),
-          &(taskdata->ompt_task_info.task_data),
-          ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(taskdata), 0,
-          OMPT_GET_RETURN_ADDRESS(0));
-    }
-    __ompt_task_start(task, current_task, gtid);
+  if (UNLIKELY(ompt_enabled.enabled)) {
+    __ompt_enabled_task_begin_if0(loc_ref, gtid, task,
+      OMPT_GET_FRAME_ADDRESS(1), OMPT_GET_RETURN_ADDRESS(0));
+    return;
   }
 #endif
+  kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
+  kmp_taskdata_t *current_task = __kmp_threads[gtid]->th.th_current_task;
+
+  KA_TRACE(10, ("__kmpc_omp_task_begin_if0(enter): T#%d loc=%p task=%p "
+                "current_task=%p\n",
+                gtid, loc_ref, taskdata, current_task));
+
+  if (taskdata->td_flags.tiedness == TASK_UNTIED) {
+    // untied task needs to increment counter so that the task structure is not
+    // freed prematurely
+    kmp_int32 counter = 1 + KMP_TEST_THEN_INC32(&taskdata->td_untied_count);
+    KA_TRACE(20, ("__kmpc_omp_task_begin_if0: T#%d untied_count (%d) "
+                  "incremented for task %p\n",
+                  gtid, counter, taskdata));
+  }
+
+  taskdata->td_flags.task_serial =
+      1; // Execute this task immediately, not deferred.
+
+  __kmp_task_start(gtid, task, current_task);
 
   KA_TRACE(10, ("__kmpc_omp_task_begin_if0(exit): T#%d loc=%p task=%p,\n", gtid,
                 loc_ref, taskdata));
@@ -822,13 +854,10 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   return;
 }
 
-// __kmpc_omp_task_complete_if0: report that a task has completed execution
-//
-// loc_ref: source location information; points to end of task block.
-// gtid: global thread number.
-// task: task thunk for the completed task.
-void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
-                                  kmp_task_t *task) {
+#if OMPT_SUPPORT
+OMPT_NOINLINE
+static void __ompt_enabled_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
+                                             kmp_task_t *task) {
   KA_TRACE(10, ("__kmpc_omp_task_complete_if0(enter): T#%d loc=%p task=%p\n",
                 gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
 
@@ -838,14 +867,37 @@ void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
   KA_TRACE(10, ("__kmpc_omp_task_complete_if0(exit): T#%d loc=%p task=%p\n",
                 gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
 
+  __ompt_task_finish(task, NULL);
+  ompt_frame_t *ompt_frame;
+  __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+  ompt_frame->reenter_runtime_frame = NULL;
+
+  return;
+}
+#endif
+
+// __kmpc_omp_task_complete_if0: report that a task has completed execution
+//
+// loc_ref: source location information; points to end of task block.
+// gtid: global thread number.
+// task: task thunk for the completed task.
+void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
+                                  kmp_task_t *task) {
 #if OMPT_SUPPORT
-  if (__builtin_expect(ompt_enabled.enabled,0)) {
-    __ompt_task_finish(task, NULL);
-    ompt_frame_t *ompt_frame;
-    __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-    ompt_frame->reenter_runtime_frame = NULL;
+  if (UNLIKELY(ompt_enabled.enabled)) {
+    __ompt_enabled_task_complete_if0(loc_ref, gtid, task);
+    return;
   }
 #endif
+  KA_TRACE(10, ("__kmpc_omp_task_complete_if0(enter): T#%d loc=%p task=%p\n",
+                gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
+
+  // this routine will provide task to resume
+  __kmp_task_finish(gtid, task, NULL);
+
+  KA_TRACE(10, ("__kmpc_omp_task_complete_if0(exit): T#%d loc=%p task=%p\n",
+                gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
+
   return;
 }
 
@@ -1538,9 +1590,10 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   return res;
 }
 
-// __kmpc_omp_taskwait: Wait until all tasks generated by the current task are
-// complete
-kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
+#if OMPT_SUPPORT
+OMPT_NOINLINE
+static kmp_int32 __ompt_enabled_taskwait(ident_t *loc_ref, kmp_int32 gtid,
+    void *frame_address, void *return_address) {
   kmp_taskdata_t *taskdata;
   kmp_info_t *thread;
   int thread_finished = FALSE;
@@ -1552,31 +1605,25 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     thread = __kmp_threads[gtid];
     taskdata = thread->th.th_current_task;
 
-#if OMPT_SUPPORT && OMPT_OPTIONAL
     ompt_data_t *my_task_data;
     ompt_data_t *my_parallel_data;
-    void *return_address;
 
-    if (__builtin_expect(ompt_enabled.enabled,0)) {
-      my_task_data = &(taskdata->ompt_task_info.task_data);
-      my_parallel_data = &(thread->th.th_team->t.ompt_team_info.parallel_data);
-      return_address = OMPT_GET_RETURN_ADDRESS(0);
+    my_task_data = &(taskdata->ompt_task_info.task_data);
+    my_parallel_data = &(thread->th.th_team->t.ompt_team_info.parallel_data);
 
-      taskdata->ompt_task_info.frame.reenter_runtime_frame =
-          OMPT_GET_FRAME_ADDRESS(1);
-      if (ompt_enabled.ompt_callback_sync_region) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
-            ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
-            my_task_data, return_address);
-      }
+    taskdata->ompt_task_info.frame.reenter_runtime_frame = frame_address;
 
-      if (ompt_enabled.ompt_callback_sync_region_wait) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
-            ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
-            my_task_data, return_address);
-      }
+    if (ompt_enabled.ompt_callback_sync_region) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+          ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
+          my_task_data, return_address);
     }
-#endif
+
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+          ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
+          my_task_data, return_address);
+    }
 
 // Debugger: The taskwait is active. Store location and thread encountered the
 // taskwait.
@@ -1619,21 +1666,90 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     // negated.
     taskdata->td_taskwait_thread = -taskdata->td_taskwait_thread;
 
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-    if (__builtin_expect(ompt_enabled.enabled,0)) {
-      if (ompt_enabled.ompt_callback_sync_region_wait) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
-            ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
-            my_task_data, return_address);
-      }
-      if (ompt_enabled.ompt_callback_sync_region) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
-            ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
-            my_task_data, return_address);
-      }
-      taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+          ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
+          my_task_data, return_address);
     }
+    if (ompt_enabled.ompt_callback_sync_region) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+          ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
+          my_task_data, return_address);
+    }
+    taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
+
+    ANNOTATE_HAPPENS_AFTER(taskdata);
+  }
+
+  KA_TRACE(10, ("__kmpc_omp_taskwait(exit): T#%d task %p finished waiting, "
+                "returning TASK_CURRENT_NOT_QUEUED\n",
+                gtid, taskdata));
+
+  return TASK_CURRENT_NOT_QUEUED;
+}
+#endif // OMPT_SUPPORT && OMPT_OPTIONAL
+
+// __kmpc_omp_taskwait: Wait until all tasks generated by the current task are
+// complete
+kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  if (UNLIKELY(ompt_enabled.enabled)) {
+    return __ompt_enabled_taskwait(loc_ref, gtid,
+        OMPT_GET_FRAME_ADDRESS(1), OMPT_GET_RETURN_ADDRESS(0));
+  }
 #endif
+  kmp_taskdata_t *taskdata;
+  kmp_info_t *thread;
+  int thread_finished = FALSE;
+  KMP_SET_THREAD_STATE_BLOCK(TASKWAIT);
+
+  KA_TRACE(10, ("__kmpc_omp_taskwait(enter): T#%d loc=%p\n", gtid, loc_ref));
+
+  if (__kmp_tasking_mode != tskm_immediate_exec) {
+    thread = __kmp_threads[gtid];
+    taskdata = thread->th.th_current_task;
+
+// Debugger: The taskwait is active. Store location and thread encountered the
+// taskwait.
+#if USE_ITT_BUILD
+// Note: These values are used by ITT events as well.
+#endif /* USE_ITT_BUILD */
+    taskdata->td_taskwait_counter += 1;
+    taskdata->td_taskwait_ident = loc_ref;
+    taskdata->td_taskwait_thread = gtid + 1;
+
+#if USE_ITT_BUILD
+    void *itt_sync_obj = __kmp_itt_taskwait_object(gtid);
+    if (itt_sync_obj != NULL)
+      __kmp_itt_taskwait_starting(gtid, itt_sync_obj);
+#endif /* USE_ITT_BUILD */
+
+    bool must_wait =
+        !taskdata->td_flags.team_serial && !taskdata->td_flags.final;
+
+#if OMP_45_ENABLED
+    must_wait = must_wait || (thread->th.th_task_team != NULL &&
+                              thread->th.th_task_team->tt.tt_found_proxy_tasks);
+#endif
+    if (must_wait) {
+      kmp_flag_32 flag(
+          RCAST(volatile kmp_uint32 *, &taskdata->td_incomplete_child_tasks),
+          0U);
+      while (TCR_4(taskdata->td_incomplete_child_tasks) != 0) {
+        flag.execute_tasks(thread, gtid, FALSE,
+                           &thread_finished USE_ITT_BUILD_ARG(itt_sync_obj),
+                           __kmp_task_stealing_constraint);
+      }
+    }
+#if USE_ITT_BUILD
+    if (itt_sync_obj != NULL)
+      __kmp_itt_taskwait_finished(gtid, itt_sync_obj);
+#endif /* USE_ITT_BUILD */
+
+    // Debugger:  The taskwait is completed. Location remains, but thread is
+    // negated.
+    taskdata->td_taskwait_thread = -taskdata->td_taskwait_thread;
+
     ANNOTATE_HAPPENS_AFTER(taskdata);
   }
 
