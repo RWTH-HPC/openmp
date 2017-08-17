@@ -364,8 +364,7 @@ typedef kmp_queuing_lock_t kmp_atomic_lock_t;
 static inline void __kmp_acquire_atomic_lock(kmp_atomic_lock_t *lck,
                                              kmp_int32 gtid) {
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  if (ompt_enabled &&
-      ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)) {
+  if (ompt_enabled.ompt_callback_mutex_acquire) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
         ompt_mutex_atomic, 0, ompt_mutex_impl_queuing, (ompt_wait_id_t)lck,
         OMPT_GET_RETURN_ADDRESS(0));
@@ -375,8 +374,7 @@ static inline void __kmp_acquire_atomic_lock(kmp_atomic_lock_t *lck,
   __kmp_acquire_queuing_lock(lck, gtid);
 
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  if (ompt_enabled &&
-      ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)) {
+  if (ompt_enabled.ompt_callback_mutex_acquired) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
         ompt_mutex_atomic, (ompt_wait_id_t)lck, OMPT_GET_RETURN_ADDRESS(0));
   }
@@ -392,8 +390,7 @@ static inline void __kmp_release_atomic_lock(kmp_atomic_lock_t *lck,
                                              kmp_int32 gtid) {
   __kmp_release_queuing_lock(lck, gtid);
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  if (ompt_enabled &&
-      ompt_callbacks.ompt_callback(ompt_callback_mutex_released)) {
+  if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
         ompt_mutex_atomic, (ompt_wait_id_t)lck, OMPT_GET_RETURN_ADDRESS(0));
   }

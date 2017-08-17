@@ -1240,17 +1240,17 @@ int __kmp_barrier(enum barrier_type bt, int gtid, int is_split,
 
   ANNOTATE_BARRIER_BEGIN(&team->t.t_bar);
 #if OMPT_SUPPORT
-  if (ompt_enabled) {
+  if (ompt_enabled.enabled) {
 #if OMPT_OPTIONAL
     my_task_data = OMPT_CUR_TASK_DATA(this_thr);
     my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
     return_address = OMPT_LOAD_RETURN_ADDRESS(gtid);
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+    if (ompt_enabled.ompt_callback_sync_region) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
           ompt_sync_region_barrier, ompt_scope_begin, my_parallel_data,
           my_task_data, return_address);
     }
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
           ompt_sync_region_barrier, ompt_scope_begin, my_parallel_data,
           my_task_data, return_address);
@@ -1494,14 +1494,14 @@ int __kmp_barrier(enum barrier_type bt, int gtid, int is_split,
                 __kmp_tid_from_gtid(gtid), status));
 
 #if OMPT_SUPPORT
-  if (ompt_enabled) {
+  if (ompt_enabled.enabled) {
 #if OMPT_OPTIONAL
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
           ompt_sync_region_barrier, ompt_scope_end, my_parallel_data,
           my_task_data, return_address);
     }
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+    if (ompt_enabled.ompt_callback_sync_region) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
           ompt_sync_region_barrier, ompt_scope_end, my_parallel_data,
           my_task_data, return_address);
@@ -1606,7 +1606,7 @@ void __kmp_join_barrier(int gtid) {
 #if OMPT_SUPPORT
   ompt_data_t *my_task_data;
   ompt_data_t *my_parallel_data;
-  if (ompt_enabled) {
+  if (ompt_enabled.enabled) {
 #if OMPT_OPTIONAL
     void *codeptr = NULL;
     int ds_tid = this_thr->th.th_info.ds.ds_tid;
@@ -1616,12 +1616,12 @@ void __kmp_join_barrier(int gtid) {
         codeptr = team->t.ompt_team_info.master_return_address;
     my_task_data = OMPT_CUR_TASK_DATA(this_thr);
     my_parallel_data = OMPT_CUR_TEAM_DATA(this_thr);
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+    if (ompt_enabled.ompt_callback_sync_region) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
           ompt_sync_region_barrier, ompt_scope_begin, my_parallel_data,
           my_task_data, codeptr);
     }
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
           ompt_sync_region_barrier, ompt_scope_begin, my_parallel_data,
           my_task_data, codeptr);
@@ -1884,7 +1884,7 @@ void __kmp_fork_barrier(int gtid, int tid) {
   }
 
 #if OMPT_SUPPORT
-  if (ompt_enabled) {
+  if (ompt_enabled.enabled) {
     if (this_thr->th.ompt_thread_info.state ==
         omp_state_wait_barrier_implicit) {
       int ds_tid = this_thr->th.th_info.ds.ds_tid;
@@ -1898,17 +1898,17 @@ void __kmp_fork_barrier(int gtid, int tid) {
           (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait) ||
            ompt_callbacks.ompt_callback(ompt_callback_sync_region)))
         codeptr = team->t.ompt_team_info.master_return_address;
-      if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+      if (ompt_enabled.ompt_callback_sync_region_wait) {
         ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
             ompt_sync_region_barrier, ompt_scope_end, NULL, tId, codeptr);
       }
-      if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+      if (ompt_enabled.ompt_callback_sync_region) {
         ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
             ompt_sync_region_barrier, ompt_scope_end, NULL, tId, codeptr);
       }
 #endif
       if (!KMP_MASTER_TID(ds_tid) &&
-          ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+          ompt_enabled.ompt_callback_implicit_task) {
         // don't access *pteam here: it may have already been freed
         // by the master thread behind the barrier (possible race)
         ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(

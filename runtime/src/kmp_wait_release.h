@@ -97,24 +97,24 @@ static inline void __ompt_implicit_task_end(kmp_info_t *this_thr,
     this_thr->th.ompt_thread_info.state = omp_state_overhead;
 #if OMPT_OPTIONAL
     void *codeptr = NULL;
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)) {
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
           ompt_sync_region_barrier, ompt_scope_end, NULL, tId, codeptr);
     }
-    if (ompt_callbacks.ompt_callback(ompt_callback_sync_region)) {
+    if (ompt_enabled.ompt_callback_sync_region) {
       ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
           ompt_sync_region_barrier, ompt_scope_end, NULL, tId, codeptr);
     }
 #endif
     if (!KMP_MASTER_TID(ds_tid)) {
-      if (ompt_callbacks.ompt_callback(ompt_callback_implicit_task)) {
+      if (ompt_enabled.ompt_callback_implicit_task) {
         // don't access *pteam here: it may have already been freed
         // by the master thread behind the barrier (possible race)
         ompt_callbacks.ompt_callback(ompt_callback_implicit_task)(
             ompt_scope_end, NULL, tId, 0, ds_tid);
       }
 #if OMPT_OPTIONAL
-      if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
+      if (ompt_enabled.ompt_callback_idle) {
         ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_begin);
       }
 #endif
@@ -212,7 +212,7 @@ final_spin=FALSE)
   omp_state_t ompt_entry_state;
   ompt_data_t *pId = NULL;
   ompt_data_t *tId;
-  if (ompt_enabled) {
+  if (ompt_enabled.enabled) {
     ompt_entry_state = this_thr->th.ompt_thread_info.state;
     if (!final_spin || ompt_entry_state != omp_state_wait_barrier_implicit ||
         KMP_MASTER_TID(this_thr->th.th_info.ds.ds_tid)) {
@@ -232,7 +232,7 @@ final_spin=FALSE)
     }
 #if OMPT_OPTIONAL
     if (ompt_entry_state == omp_state_idle) {
-      if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
+      if (ompt_enabled.ompt_callback_idle) {
         ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_begin);
       }
     } else
@@ -309,7 +309,7 @@ final_spin=FALSE)
           KMP_DEBUG_ASSERT(!KMP_MASTER_TID(this_thr->th.th_info.ds.ds_tid));
 #if OMPT_SUPPORT
           // task-team is done now, other cases should be catched above
-          if (final_spin && ompt_enabled)
+          if (final_spin && ompt_enabled.enabled)
             __ompt_implicit_task_end(this_thr, ompt_entry_state, tId, pId);
 #endif
           this_thr->th.th_task_team = NULL;
@@ -401,7 +401,7 @@ final_spin=FALSE)
 
 #if OMPT_SUPPORT
   omp_state_t ompt_exit_state = this_thr->th.ompt_thread_info.state;
-  if (ompt_enabled && ompt_exit_state != omp_state_undefined) {
+  if (ompt_enabled.enabled && ompt_exit_state != omp_state_undefined) {
 #if OMPT_OPTIONAL
     if (final_spin) {
       __ompt_implicit_task_end(this_thr, ompt_exit_state, tId, pId);
@@ -410,7 +410,7 @@ final_spin=FALSE)
 #endif
     if (ompt_exit_state == omp_state_idle) {
 #if OMPT_OPTIONAL
-      if (ompt_callbacks.ompt_callback(ompt_callback_idle)) {
+      if (ompt_enabled.ompt_callback_idle) {
         ompt_callbacks.ompt_callback(ompt_callback_idle)(ompt_scope_end);
       }
 #endif
