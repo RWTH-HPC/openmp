@@ -107,10 +107,11 @@ typedef ompt_fns_t *(*ompt_start_tool_t)(unsigned int, const char*);
 
 #if KMP_OS_UNIX
 
-#ifdef KMP_DYNAMIC_LIB
-_OMP_EXTERN
-#elif OMPT_HAVE_WEAK_ATTRIBUTE
+#if OMPT_HAVE_WEAK_ATTRIBUTE
 _OMP_EXTERN __attribute__((weak))
+#elif defined KMP_DYNAMIC_LIB
+_OMP_EXTERN
+#warning Activation of OMPT is might fail for tools statically linked into the application.
 #else
 #error Activation of OMPT is not supported on this platform.
 #endif
