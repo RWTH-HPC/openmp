@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <execinfo.h>
 #if KMP_OS_UNIX
+#include <execinfo.h>
 #include <dlfcn.h>
 #endif
 
@@ -102,35 +102,56 @@ OMPT_API_ROUTINE ompt_data_t *ompt_get_thread_data(void);
  * ompt_tool symbol across all modules loaded by a process. If ompt_tool is
  * found, ompt_tool's return value is used to initialize the tool. Otherwise,
  * NULL is returned and OMPT won't be enabled */
-#if OMPT_HAVE_WEAK_ATTRIBUTE
+
+typedef ompt_fns_t *(*ompt_start_tool_t)(unsigned int, const char*);
+
+#if KMP_OS_UNIX
+
+#ifdef KMP_DYNAMIC_LIB
 _OMP_EXTERN
-__attribute__((weak)) ompt_fns_t *ompt_start_tool(unsigned int omp_version,
-                                                  const char *runtime_version) {
+#elif OMPT_HAVE_WEAK_ATTRIBUTE
+_OMP_EXTERN __attribute__((weak))
+#else
+#error Activation of OMPT is not supported on this platform.
+#endif
+ompt_fns_t *ompt_start_tool(unsigned int omp_version,
+                            const char *runtime_version) {
+#ifdef KMP_DYNAMIC_LIB
+  ompt_fns_t *ret = NULL;
+  // Try next symbol in the address space
+  ompt_start_tool_t next_tool = NULL;
+  *(void **)(&next_tool) = dlsym(RTLD_NEXT, "ompt_start_tool");
+  if (next_tool)
+    ret = (next_tool)(omp_version, runtime_version);
+  return ret;
+#else
 #if OMPT_DEBUG
   printf("ompt_start_tool() is called from the RTL\n");
 #endif
   return NULL;
+#endif
 }
 
 #elif OMPT_HAVE_PSAPI
 
 #include <psapi.h>
 #pragma comment(lib, "psapi.lib")
-#define ompt_tool ompt_tool_windows
+#define ompt_start_tool ompt_tool_windows
 
 // The number of loaded modules to start enumeration with EnumProcessModules()
 #define NUM_MODULES 128
 
-static ompt_initialize_t ompt_tool_windows() {
+static ompt_fns_t *ompt_tool_windows(unsigned int omp_version,
+                                     const char *runtime_version) {
   int i;
   DWORD needed, new_size;
   HMODULE *modules;
   HANDLE process = GetCurrentProcess();
   modules = (HMODULE *)malloc(NUM_MODULES * sizeof(HMODULE));
-  ompt_initialize_t (*ompt_tool_p)() = NULL;
+  ompt_start_tool_t ompt_tool_p = NULL;
 
 #if OMPT_DEBUG
-  printf("ompt_tool_windows(): looking for ompt_tool\n");
+  printf("ompt_tool_windows(): looking for ompt_start_tool\n");
 #endif
   if (!EnumProcessModules(process, modules, NUM_MODULES * sizeof(HMODULE),
                           &needed)) {
@@ -152,21 +173,22 @@ static ompt_initialize_t ompt_tool_windows() {
     }
   }
   for (i = 0; i < new_size; ++i) {
-    (FARPROC &)ompt_tool_p = GetProcAddress(modules[i], "ompt_tool");
+    (FARPROC &)ompt_tool_p = GetProcAddress(modules[i], "ompt_start_tool");
     if (ompt_tool_p) {
 #if OMPT_DEBUG
       TCHAR modName[MAX_PATH];
       if (GetModuleFileName(modules[i], modName, MAX_PATH))
-        printf("ompt_tool_windows(): ompt_tool found in module %s\n", modName);
+        printf("ompt_tool_windows(): ompt_start_tool found in module %s\n",
+               modName);
 #endif
       free(modules);
-      return ompt_tool_p();
+      return (*ompt_tool_p)(omp_version, runtime_version);
     }
 #if OMPT_DEBUG
     else {
       TCHAR modName[MAX_PATH];
       if (GetModuleFileName(modules[i], modName, MAX_PATH))
-        printf("ompt_tool_windows(): ompt_tool not found in module %s\n",
+        printf("ompt_tool_windows(): ompt_start_tool not found in module %s\n",
                modName);
     }
 #endif
@@ -181,16 +203,16 @@ static ompt_initialize_t ompt_tool_windows() {
 static ompt_fns_t *ompt_try_start_tool(unsigned int omp_version,
                                        const char *runtime_version) {
   ompt_fns_t *ret = NULL;
-#if KMP_OS_UNIX
-  ompt_fns_t *(*start_tool)(unsigned int, const char *) = NULL;
+  ompt_start_tool_t start_tool = NULL;
+#if KMP_OS_WINDOWS
+  // Cannot use colon to describe a list of absolute paths on Windows
+  const char *sep = ";";
+#else
+  const char *sep = ":";
+#endif
 
+  // Try in the current address space
   if ((ret = ompt_start_tool(omp_version, runtime_version)))
-    return ret;
-
-  // Try next visible symbol
-  start_tool = (ompt_fns_t * (*)(unsigned int, const char *))dlsym(
-      RTLD_NEXT, "ompt_start_tool");
-  if (start_tool && (ret = (*start_tool)(omp_version, runtime_version)))
     return ret;
 
   // Try tool-libraries-var ICV
@@ -198,24 +220,26 @@ static ompt_fns_t *ompt_try_start_tool(unsigned int omp_version,
   if (tool_libs) {
     const char *libs = __kmp_str_format("%s", tool_libs);
     char *buf;
-    char *fname = __kmp_str_token((char *)libs, ":", &buf);
+    char *fname = __kmp_str_token(CCAST(char *, libs), sep, &buf);
     while (fname) {
+#if KMP_OS_UNIX
       void *h = dlopen(fname, RTLD_LAZY);
       if (h) {
-        start_tool = (ompt_fns_t * (*)(unsigned int, const char *))dlsym(
-            h, "ompt_start_tool");
-        if (start_tool && (ret = (*start_tool)(omp_version, runtime_version))) {
-          __kmp_str_free(&libs);
-          return ret;
-        }
+        *(void **)(&start_tool) = dlsym(h, "ompt_start_tool");
+#elif KMP_OS_WINDOWS
+      HMODULE h = LoadLibrary(fname);
+      if (h) {
+        start_tool = (ompt_start_tool_t)GetProcAddress(h, "ompt_start_tool");
+#else
+#error Activation of OMPT is not supported on this platform.
+#endif
+        if (start_tool && (ret = (*start_tool)(omp_version, runtime_version)))
+          break;
       }
-      fname = __kmp_str_token(NULL, ":", &buf);
+      fname = __kmp_str_token(NULL, sep, &buf);
     }
     __kmp_str_free(&libs);
   }
-#elif KMP_OS_WINDOWS
-// TODO
-#endif
   return ret;
 }
 

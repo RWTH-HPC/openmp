@@ -521,15 +521,10 @@ static inline void __ompt_task_finish(kmp_task_t *task, kmp_taskdata_t *resumed_
 }
 #endif
 
-
-// __kmpc_omp_task_begin_if0: report that a given serialized task has started
-// execution
-//
-// loc_ref: source location information; points to beginning of task block.
-// gtid: global thread number.
-// task: task thunk for the started task.
-void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
-                               kmp_task_t *task) {
+#if OMPT_SUPPORT
+OMPT_NOINLINE
+static void __ompt_enabled_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
+    kmp_task_t *task, void *frame_address, void *return_address) {
   kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
   kmp_taskdata_t *current_task = __kmp_threads[gtid]->th.th_current_task;
 
@@ -550,25 +545,62 @@ void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
       1; // Execute this task immediately, not deferred.
 
   __kmp_task_start(gtid, task, current_task);
+
+  if (current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
+    current_task->ompt_task_info.frame.reenter_runtime_frame =
+        taskdata->ompt_task_info.frame.exit_runtime_frame = frame_address;
+  }
+  if (ompt_enabled.ompt_callback_task_create) {
+    ompt_task_info_t *parent_info = &(current_task->ompt_task_info);
+    ompt_data_t task_data = ompt_data_none;
+    ompt_callbacks.ompt_callback(ompt_callback_task_create)(
+        &(parent_info->task_data), &(parent_info->frame),
+        &(taskdata->ompt_task_info.task_data),
+        ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(taskdata), 0,
+        return_address);
+  }
+  __ompt_task_start(task, current_task, gtid);
+
+  KA_TRACE(10, ("__kmpc_omp_task_begin_if0(exit): T#%d loc=%p task=%p,\n", gtid,
+                loc_ref, taskdata));
+}
+#endif // OMPT_SUPPORT
+
+// __kmpc_omp_task_begin_if0: report that a given serialized task has started
+// execution
+//
+// loc_ref: source location information; points to beginning of task block.
+// gtid: global thread number.
+// task: task thunk for the started task.
+void __kmpc_omp_task_begin_if0(ident_t *loc_ref, kmp_int32 gtid,
+                               kmp_task_t *task) {
 #if OMPT_SUPPORT
-  if (__builtin_expect(ompt_enabled.enabled,0)){
-    if (current_task->ompt_task_info.frame.reenter_runtime_frame == NULL) {
-      current_task->ompt_task_info.frame.reenter_runtime_frame =
-          taskdata->ompt_task_info.frame.exit_runtime_frame =
-              OMPT_GET_FRAME_ADDRESS(1);
-    }
-    if (ompt_enabled.ompt_callback_task_create) {
-      ompt_task_info_t *parent_info = &(current_task->ompt_task_info);
-      ompt_data_t task_data = ompt_data_none;
-      ompt_callbacks.ompt_callback(ompt_callback_task_create)(
-          &(parent_info->task_data), &(parent_info->frame),
-          &(taskdata->ompt_task_info.task_data),
-          ompt_task_explicit | TASK_TYPE_DETAILS_FORMAT(taskdata), 0,
-          OMPT_GET_RETURN_ADDRESS(0));
-    }
-    __ompt_task_start(task, current_task, gtid);
+  if (UNLIKELY(ompt_enabled.enabled)) {
+    __ompt_enabled_task_begin_if0(loc_ref, gtid, task,
+      OMPT_GET_FRAME_ADDRESS(1), OMPT_GET_RETURN_ADDRESS(0));
+    return;
   }
 #endif
+  kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
+  kmp_taskdata_t *current_task = __kmp_threads[gtid]->th.th_current_task;
+
+  KA_TRACE(10, ("__kmpc_omp_task_begin_if0(enter): T#%d loc=%p task=%p "
+                "current_task=%p\n",
+                gtid, loc_ref, taskdata, current_task));
+
+  if (taskdata->td_flags.tiedness == TASK_UNTIED) {
+    // untied task needs to increment counter so that the task structure is not
+    // freed prematurely
+    kmp_int32 counter = 1 + KMP_TEST_THEN_INC32(&taskdata->td_untied_count);
+    KA_TRACE(20, ("__kmpc_omp_task_begin_if0: T#%d untied_count (%d) "
+                  "incremented for task %p\n",
+                  gtid, counter, taskdata));
+  }
+
+  taskdata->td_flags.task_serial =
+      1; // Execute this task immediately, not deferred.
+
+  __kmp_task_start(gtid, task, current_task);
 
   KA_TRACE(10, ("__kmpc_omp_task_begin_if0(exit): T#%d loc=%p task=%p,\n", gtid,
                 loc_ref, taskdata));
@@ -647,9 +679,8 @@ static void __kmp_free_task_and_ancestors(kmp_int32 gtid,
 #endif
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
 
-  kmp_int32 children = KMP_TEST_THEN_DEC32(CCAST(
-                           kmp_int32 *, &taskdata->td_allocated_child_tasks)) -
-                       1;
+  kmp_int32 children =
+      KMP_TEST_THEN_DEC32(&taskdata->td_allocated_child_tasks) - 1;
   KMP_DEBUG_ASSERT(children >= 0);
 
   // Now, go up the ancestor tree to see if any ancestors can now be freed.
@@ -671,9 +702,7 @@ static void __kmp_free_task_and_ancestors(kmp_int32 gtid,
       return;
 
     // Predecrement simulated by "- 1" calculation
-    children = KMP_TEST_THEN_DEC32(
-                   CCAST(kmp_int32 *, &taskdata->td_allocated_child_tasks)) -
-               1;
+    children = KMP_TEST_THEN_DEC32(&taskdata->td_allocated_child_tasks) - 1;
     KMP_DEBUG_ASSERT(children >= 0);
   }
 
@@ -744,8 +773,7 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   if (!(taskdata->td_flags.team_serial || taskdata->td_flags.tasking_ser)) {
     // Predecrement simulated by "- 1" calculation
     children =
-        KMP_TEST_THEN_DEC32(CCAST(
-            kmp_int32 *, &taskdata->td_parent->td_incomplete_child_tasks)) -
+        KMP_TEST_THEN_DEC32(&taskdata->td_parent->td_incomplete_child_tasks) -
         1;
     KMP_DEBUG_ASSERT(children >= 0);
 #if OMP_40_ENABLED
@@ -826,13 +854,10 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   return;
 }
 
-// __kmpc_omp_task_complete_if0: report that a task has completed execution
-//
-// loc_ref: source location information; points to end of task block.
-// gtid: global thread number.
-// task: task thunk for the completed task.
-void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
-                                  kmp_task_t *task) {
+#if OMPT_SUPPORT
+OMPT_NOINLINE
+static void __ompt_enabled_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
+                                             kmp_task_t *task) {
   KA_TRACE(10, ("__kmpc_omp_task_complete_if0(enter): T#%d loc=%p task=%p\n",
                 gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
 
@@ -842,14 +867,37 @@ void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
   KA_TRACE(10, ("__kmpc_omp_task_complete_if0(exit): T#%d loc=%p task=%p\n",
                 gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
 
+  __ompt_task_finish(task, NULL);
+  ompt_frame_t *ompt_frame;
+  __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
+  ompt_frame->reenter_runtime_frame = NULL;
+
+  return;
+}
+#endif
+
+// __kmpc_omp_task_complete_if0: report that a task has completed execution
+//
+// loc_ref: source location information; points to end of task block.
+// gtid: global thread number.
+// task: task thunk for the completed task.
+void __kmpc_omp_task_complete_if0(ident_t *loc_ref, kmp_int32 gtid,
+                                  kmp_task_t *task) {
 #if OMPT_SUPPORT
-  if (__builtin_expect(ompt_enabled.enabled,0)) {
-    __ompt_task_finish(task, NULL);
-    ompt_frame_t *ompt_frame;
-    __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
-    ompt_frame->reenter_runtime_frame = NULL;
+  if (UNLIKELY(ompt_enabled.enabled)) {
+    __ompt_enabled_task_complete_if0(loc_ref, gtid, task);
+    return;
   }
 #endif
+  KA_TRACE(10, ("__kmpc_omp_task_complete_if0(enter): T#%d loc=%p task=%p\n",
+                gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
+
+  // this routine will provide task to resume
+  __kmp_task_finish(gtid, task, NULL);
+
+  KA_TRACE(10, ("__kmpc_omp_task_complete_if0(exit): T#%d loc=%p task=%p\n",
+                gtid, loc_ref, KMP_TASK_TO_TASKDATA(task)));
+
   return;
 }
 
@@ -1161,8 +1209,7 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
   if (!(taskdata->td_flags.team_serial || taskdata->td_flags.tasking_ser))
 #endif
   {
-    KMP_TEST_THEN_INC32(
-        CCAST(kmp_int32 *, &parent_task->td_incomplete_child_tasks));
+    KMP_TEST_THEN_INC32(&parent_task->td_incomplete_child_tasks);
 #if OMP_40_ENABLED
     if (parent_task->td_taskgroup)
       KMP_TEST_THEN_INC32((kmp_int32 *)(&parent_task->td_taskgroup->count));
@@ -1170,8 +1217,7 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
     // Only need to keep track of allocated child tasks for explicit tasks since
     // implicit not deallocated
     if (taskdata->td_parent->td_flags.tasktype == TASK_EXPLICIT) {
-      KMP_TEST_THEN_INC32(
-          CCAST(kmp_int32 *, &taskdata->td_parent->td_allocated_child_tasks));
+      KMP_TEST_THEN_INC32(&taskdata->td_parent->td_allocated_child_tasks);
     }
   }
 
@@ -1544,9 +1590,10 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   return res;
 }
 
-// __kmpc_omp_taskwait: Wait until all tasks generated by the current task are
-// complete
-kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
+#if OMPT_SUPPORT
+OMPT_NOINLINE
+static kmp_int32 __ompt_enabled_taskwait(ident_t *loc_ref, kmp_int32 gtid,
+    void *frame_address, void *return_address) {
   kmp_taskdata_t *taskdata;
   kmp_info_t *thread;
   int thread_finished = FALSE;
@@ -1558,31 +1605,25 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     thread = __kmp_threads[gtid];
     taskdata = thread->th.th_current_task;
 
-#if OMPT_SUPPORT && OMPT_OPTIONAL
     ompt_data_t *my_task_data;
     ompt_data_t *my_parallel_data;
-    void *return_address;
 
-    if (__builtin_expect(ompt_enabled.enabled,0)) {
-      my_task_data = &(taskdata->ompt_task_info.task_data);
-      my_parallel_data = &(thread->th.th_team->t.ompt_team_info.parallel_data);
-      return_address = OMPT_GET_RETURN_ADDRESS(0);
+    my_task_data = &(taskdata->ompt_task_info.task_data);
+    my_parallel_data = &(thread->th.th_team->t.ompt_team_info.parallel_data);
 
-      taskdata->ompt_task_info.frame.reenter_runtime_frame =
-          OMPT_GET_FRAME_ADDRESS(1);
-      if (ompt_enabled.ompt_callback_sync_region) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
-            ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
-            my_task_data, return_address);
-      }
+    taskdata->ompt_task_info.frame.reenter_runtime_frame = frame_address;
 
-      if (ompt_enabled.ompt_callback_sync_region_wait) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
-            ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
-            my_task_data, return_address);
-      }
+    if (ompt_enabled.ompt_callback_sync_region) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+          ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
+          my_task_data, return_address);
     }
-#endif
+
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+          ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
+          my_task_data, return_address);
+    }
 
 // Debugger: The taskwait is active. Store location and thread encountered the
 // taskwait.
@@ -1625,21 +1666,90 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     // negated.
     taskdata->td_taskwait_thread = -taskdata->td_taskwait_thread;
 
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-    if (__builtin_expect(ompt_enabled.enabled,0)) {
-      if (ompt_enabled.ompt_callback_sync_region_wait) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
-            ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
-            my_task_data, return_address);
-      }
-      if (ompt_enabled.ompt_callback_sync_region) {
-        ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
-            ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
-            my_task_data, return_address);
-      }
-      taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
+    if (ompt_enabled.ompt_callback_sync_region_wait) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region_wait)(
+          ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
+          my_task_data, return_address);
     }
+    if (ompt_enabled.ompt_callback_sync_region) {
+      ompt_callbacks.ompt_callback(ompt_callback_sync_region)(
+          ompt_sync_region_taskwait, ompt_scope_end, my_parallel_data,
+          my_task_data, return_address);
+    }
+    taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
+
+    ANNOTATE_HAPPENS_AFTER(taskdata);
+  }
+
+  KA_TRACE(10, ("__kmpc_omp_taskwait(exit): T#%d task %p finished waiting, "
+                "returning TASK_CURRENT_NOT_QUEUED\n",
+                gtid, taskdata));
+
+  return TASK_CURRENT_NOT_QUEUED;
+}
+#endif // OMPT_SUPPORT && OMPT_OPTIONAL
+
+// __kmpc_omp_taskwait: Wait until all tasks generated by the current task are
+// complete
+kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  if (UNLIKELY(ompt_enabled.enabled)) {
+    return __ompt_enabled_taskwait(loc_ref, gtid,
+        OMPT_GET_FRAME_ADDRESS(1), OMPT_GET_RETURN_ADDRESS(0));
+  }
 #endif
+  kmp_taskdata_t *taskdata;
+  kmp_info_t *thread;
+  int thread_finished = FALSE;
+  KMP_SET_THREAD_STATE_BLOCK(TASKWAIT);
+
+  KA_TRACE(10, ("__kmpc_omp_taskwait(enter): T#%d loc=%p\n", gtid, loc_ref));
+
+  if (__kmp_tasking_mode != tskm_immediate_exec) {
+    thread = __kmp_threads[gtid];
+    taskdata = thread->th.th_current_task;
+
+// Debugger: The taskwait is active. Store location and thread encountered the
+// taskwait.
+#if USE_ITT_BUILD
+// Note: These values are used by ITT events as well.
+#endif /* USE_ITT_BUILD */
+    taskdata->td_taskwait_counter += 1;
+    taskdata->td_taskwait_ident = loc_ref;
+    taskdata->td_taskwait_thread = gtid + 1;
+
+#if USE_ITT_BUILD
+    void *itt_sync_obj = __kmp_itt_taskwait_object(gtid);
+    if (itt_sync_obj != NULL)
+      __kmp_itt_taskwait_starting(gtid, itt_sync_obj);
+#endif /* USE_ITT_BUILD */
+
+    bool must_wait =
+        !taskdata->td_flags.team_serial && !taskdata->td_flags.final;
+
+#if OMP_45_ENABLED
+    must_wait = must_wait || (thread->th.th_task_team != NULL &&
+                              thread->th.th_task_team->tt.tt_found_proxy_tasks);
+#endif
+    if (must_wait) {
+      kmp_flag_32 flag(
+          RCAST(volatile kmp_uint32 *, &taskdata->td_incomplete_child_tasks),
+          0U);
+      while (TCR_4(taskdata->td_incomplete_child_tasks) != 0) {
+        flag.execute_tasks(thread, gtid, FALSE,
+                           &thread_finished USE_ITT_BUILD_ARG(itt_sync_obj),
+                           __kmp_task_stealing_constraint);
+      }
+    }
+#if USE_ITT_BUILD
+    if (itt_sync_obj != NULL)
+      __kmp_itt_taskwait_finished(gtid, itt_sync_obj);
+#endif /* USE_ITT_BUILD */
+
+    // Debugger:  The taskwait is completed. Location remains, but thread is
+    // negated.
+    taskdata->td_taskwait_thread = -taskdata->td_taskwait_thread;
+
     ANNOTATE_HAPPENS_AFTER(taskdata);
   }
 
@@ -2227,7 +2337,7 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
     // master victim) might be prematurely released from the barrier!!!
     kmp_int32 count;
 
-    count = KMP_TEST_THEN_INC32(CCAST(kmp_int32 *, unfinished_threads));
+    count = KMP_TEST_THEN_INC32(unfinished_threads);
 
     KA_TRACE(
         20,
@@ -2439,7 +2549,7 @@ static inline int __kmp_execute_tasks_template(
       if (!*thread_finished) {
         kmp_int32 count;
 
-        count = KMP_TEST_THEN_DEC32(CCAST(kmp_int32 *, unfinished_threads)) - 1;
+        count = KMP_TEST_THEN_DEC32(unfinished_threads) - 1;
         KA_TRACE(20, ("__kmp_execute_tasks_template: T#%d dec "
                       "unfinished_threads to %d task_team=%p\n",
                       gtid, count, task_team));
@@ -2680,14 +2790,13 @@ static void __kmp_realloc_task_deque(kmp_info_t *thread,
 // Deallocates a task deque for a particular thread. Happens at library
 // deallocation so don't need to reset all thread data fields.
 static void __kmp_free_task_deque(kmp_thread_data_t *thread_data) {
-  __kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
-
   if (thread_data->td.td_deque != NULL) {
+    __kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
     TCW_4(thread_data->td.td_deque_ntasks, 0);
     __kmp_free(thread_data->td.td_deque);
     thread_data->td.td_deque = NULL;
+    __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
   }
-  __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
 
 #ifdef BUILD_TIED_TASK_STACK
   // GEH: Figure out what to do here for td_susp_tied_tasks
@@ -2749,7 +2858,7 @@ static int __kmp_realloc_task_threads_data(kmp_info_t *thread,
             nthreads * sizeof(kmp_thread_data_t));
         // copy old data to new data
         KMP_MEMCPY_S((void *)new_data, nthreads * sizeof(kmp_thread_data_t),
-                     (void *)old_data, maxthreads * sizeof(kmp_taskdata_t *));
+                     (void *)old_data, maxthreads * sizeof(kmp_thread_data_t));
 
 #ifdef BUILD_TIED_TASK_STACK
         // GEH: Figure out if this is the right thing to do
@@ -3134,7 +3243,7 @@ void __kmp_tasking_barrier(kmp_team_t *team, kmp_info_t *thread, int gtid) {
                                   &flag USE_ITT_BUILD_ARG(NULL), 0)) {
 #if USE_ITT_BUILD
     // TODO: What about itt_sync_obj??
-    KMP_FSYNC_SPIN_PREPARE(CCAST(void *, RCAST(volatile void *, spin)));
+    KMP_FSYNC_SPIN_PREPARE(CCAST(kmp_uint32 *, spin));
 #endif /* USE_ITT_BUILD */
 
     if (TCR_4(__kmp_global.g.g_done)) {
@@ -3145,7 +3254,7 @@ void __kmp_tasking_barrier(kmp_team_t *team, kmp_info_t *thread, int gtid) {
     KMP_YIELD(TRUE); // GH: We always yield here
   }
 #if USE_ITT_BUILD
-  KMP_FSYNC_SPIN_ACQUIRED(CCAST(void *, RCAST(volatile void *, spin)));
+  KMP_FSYNC_SPIN_ACQUIRED(CCAST(kmp_uint32 *, spin));
 #endif /* USE_ITT_BUILD */
 }
 
@@ -3269,9 +3378,7 @@ static void __kmp_second_top_half_finish_proxy(kmp_taskdata_t *taskdata) {
 
   // Predecrement simulated by "- 1" calculation
   children =
-      KMP_TEST_THEN_DEC32(
-          CCAST(kmp_int32 *, &taskdata->td_parent->td_incomplete_child_tasks)) -
-      1;
+      KMP_TEST_THEN_DEC32(&taskdata->td_parent->td_incomplete_child_tasks) - 1;
   KMP_DEBUG_ASSERT(children >= 0);
 
   // Remove the imaginary children
@@ -3415,6 +3522,7 @@ kmp_task_t *__kmp_task_dup_alloc(kmp_info_t *thread, kmp_task_t *task_src) {
                      0);
   }
   taskdata->td_alloc_thread = thread;
+  taskdata->td_parent = parent_task;
   taskdata->td_taskgroup =
       parent_task
           ->td_taskgroup; // task inherits the taskgroup from the parent task
@@ -3422,15 +3530,13 @@ kmp_task_t *__kmp_task_dup_alloc(kmp_info_t *thread, kmp_task_t *task_src) {
   // Only need to keep track of child task counts if team parallel and tasking
   // not serialized
   if (!(taskdata->td_flags.team_serial || taskdata->td_flags.tasking_ser)) {
-    KMP_TEST_THEN_INC32(
-        CCAST(kmp_int32 *, &parent_task->td_incomplete_child_tasks));
+    KMP_TEST_THEN_INC32(&parent_task->td_incomplete_child_tasks);
     if (parent_task->td_taskgroup)
       KMP_TEST_THEN_INC32(&parent_task->td_taskgroup->count);
     // Only need to keep track of allocated child tasks for explicit tasks since
     // implicit not deallocated
     if (taskdata->td_parent->td_flags.tasktype == TASK_EXPLICIT)
-      KMP_TEST_THEN_INC32(
-          CCAST(kmp_int32 *, &taskdata->td_parent->td_allocated_child_tasks));
+      KMP_TEST_THEN_INC32(&taskdata->td_parent->td_allocated_child_tasks);
   }
 
   KA_TRACE(20,
@@ -3442,32 +3548,37 @@ kmp_task_t *__kmp_task_dup_alloc(kmp_info_t *thread, kmp_task_t *task_src) {
   return task;
 }
 
-// Routine optionally generated by th ecompiler for setting the lastprivate flag
+// Routine optionally generated by the compiler for setting the lastprivate flag
 // and calling needed constructors for private/firstprivate objects
 // (used to form taskloop tasks from pattern task)
+// Parameters: dest task, src task, lastprivate flag.
 typedef void (*p_task_dup_t)(kmp_task_t *, kmp_task_t *, kmp_int32);
 
 // __kmp_taskloop_linear: Start tasks of the taskloop linearly
 //
 // loc       Source location information
 // gtid      Global thread ID
-// task      Task with whole loop iteration range
-// lb        Pointer to loop lower bound
-// ub        Pointer to loop upper bound
+// task      Pattern task, exposes the loop iteration range
+// lb        Pointer to loop lower bound in task structure
+// ub        Pointer to loop upper bound in task structure
 // st        Loop stride
-// sched     Schedule specified 0/1/2 for none/grainsize/num_tasks
-// grainsize Schedule value if specified
+// ub_glob   Global upper bound (used for lastprivate check)
+// num_tasks Number of tasks to execute
+// grainsize Number of loop iterations per task
+// extras    Number of chunks with grainsize+1 iterations
+// tc        Iterations count
 // task_dup  Tasks duplication routine
 void __kmp_taskloop_linear(ident_t *loc, int gtid, kmp_task_t *task,
                            kmp_uint64 *lb, kmp_uint64 *ub, kmp_int64 st,
-                           int sched, kmp_uint64 grainsize, void *task_dup) {
+                           kmp_uint64 ub_glob, kmp_uint64 num_tasks,
+                           kmp_uint64 grainsize, kmp_uint64 extras,
+                           kmp_uint64 tc, void *task_dup) {
   KMP_COUNT_BLOCK(OMP_TASKLOOP);
   KMP_TIME_PARTITIONED_BLOCK(OMP_taskloop_scheduling);
   p_task_dup_t ptask_dup = (p_task_dup_t)task_dup;
-  kmp_uint64 tc;
   kmp_uint64 lower = *lb; // compiler provides global bounds here
   kmp_uint64 upper = *ub;
-  kmp_uint64 i, num_tasks = 0, extras = 0;
+  kmp_uint64 i;
   kmp_info_t *thread = __kmp_threads[gtid];
   kmp_taskdata_t *current_task = thread->th.th_current_task;
   kmp_task_t *next_task;
@@ -3476,6 +3587,258 @@ void __kmp_taskloop_linear(ident_t *loc, int gtid, kmp_task_t *task,
       (char *)lb - (char *)task; // remember offset of lb in the task structure
   size_t upper_offset =
       (char *)ub - (char *)task; // remember offset of ub in the task structure
+
+  KMP_DEBUG_ASSERT(tc == num_tasks * grainsize + extras);
+  KMP_DEBUG_ASSERT(num_tasks > extras);
+  KMP_DEBUG_ASSERT(num_tasks > 0);
+  KA_TRACE(20, ("__kmp_taskloop_linear: T#%d: %lld tasks, grainsize %lld, "
+                "extras %lld, i=%lld,%lld(%d)%lld, dup %p\n",
+                gtid, num_tasks, grainsize, extras, lower, upper, ub_glob, st,
+                task_dup));
+
+  // Launch num_tasks tasks, assign grainsize iterations each task
+  for (i = 0; i < num_tasks; ++i) {
+    kmp_uint64 chunk_minus_1;
+    if (extras == 0) {
+      chunk_minus_1 = grainsize - 1;
+    } else {
+      chunk_minus_1 = grainsize;
+      --extras; // first extras iterations get bigger chunk (grainsize+1)
+    }
+    upper = lower + st * chunk_minus_1;
+    if (i == num_tasks - 1) {
+      // schedule the last task, set lastprivate flag if needed
+      if (st == 1) { // most common case
+        KMP_DEBUG_ASSERT(upper == *ub);
+        if (upper == ub_glob)
+          lastpriv = 1;
+      } else if (st > 0) { // positive loop stride
+        KMP_DEBUG_ASSERT((kmp_uint64)st > *ub - upper);
+        if ((kmp_uint64)st > ub_glob - upper)
+          lastpriv = 1;
+      } else { // negative loop stride
+        KMP_DEBUG_ASSERT(upper + st < *ub);
+        if (upper - ub_glob < (kmp_uint64)(-st))
+          lastpriv = 1;
+      }
+    }
+    next_task = __kmp_task_dup_alloc(thread, task); // allocate new task
+    // adjust task-specific bounds
+    *(kmp_uint64 *)((char *)next_task + lower_offset) = lower;
+    *(kmp_uint64 *)((char *)next_task + upper_offset) = upper;
+    if (ptask_dup != NULL) // set lastprivate flag, construct fistprivates, etc.
+      ptask_dup(next_task, task, lastpriv);
+    KA_TRACE(40, ("__kmp_taskloop_linear: T#%d; task %p: lower %lld, "
+                  "upper %lld (offsets %p %p)\n",
+                  gtid, next_task, lower, upper, lower_offset, upper_offset));
+    __kmp_omp_task(gtid, next_task, true); // schedule new task
+    lower = upper + st; // adjust lower bound for the next iteration
+  }
+  // free the pattern task and exit
+  __kmp_task_start(gtid, task, current_task); // make internal bookkeeping
+  // do not execute the pattern task, just do internal bookkeeping
+  __kmp_task_finish(gtid, task, current_task);
+}
+
+// Structure to keep taskloop parameters for auxiliary task
+// kept in the shareds of the task structure.
+typedef struct __taskloop_params {
+  kmp_task_t *task;
+  kmp_uint64 *lb;
+  kmp_uint64 *ub;
+  void *task_dup;
+  kmp_int64 st;
+  kmp_uint64 ub_glob;
+  kmp_uint64 num_tasks;
+  kmp_uint64 grainsize;
+  kmp_uint64 extras;
+  kmp_uint64 tc;
+  kmp_uint64 num_t_min;
+} __taskloop_params_t;
+
+void __kmp_taskloop_recur(ident_t *, int, kmp_task_t *, kmp_uint64 *,
+                          kmp_uint64 *, kmp_int64, kmp_uint64, kmp_uint64,
+                          kmp_uint64, kmp_uint64, kmp_uint64, kmp_uint64,
+                          void *);
+
+// Execute part of the the taskloop submitted as a task.
+int __kmp_taskloop_task(int gtid, void *ptask) {
+  __taskloop_params_t *p =
+      (__taskloop_params_t *)((kmp_task_t *)ptask)->shareds;
+  kmp_task_t *task = p->task;
+  kmp_uint64 *lb = p->lb;
+  kmp_uint64 *ub = p->ub;
+  void *task_dup = p->task_dup;
+  //  p_task_dup_t ptask_dup = (p_task_dup_t)task_dup;
+  kmp_int64 st = p->st;
+  kmp_uint64 ub_glob = p->ub_glob;
+  kmp_uint64 num_tasks = p->num_tasks;
+  kmp_uint64 grainsize = p->grainsize;
+  kmp_uint64 extras = p->extras;
+  kmp_uint64 tc = p->tc;
+  kmp_uint64 num_t_min = p->num_t_min;
+#if KMP_DEBUG
+  kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
+  KMP_DEBUG_ASSERT(task != NULL);
+  KA_TRACE(20, ("__kmp_taskloop_task: T#%d, task %p: %lld tasks, grainsize"
+                " %lld, extras %lld, i=%lld,%lld(%d), dup %p\n",
+                gtid, taskdata, num_tasks, grainsize, extras, *lb, *ub, st,
+                task_dup));
+#endif
+  KMP_DEBUG_ASSERT(num_tasks * 2 + 1 > num_t_min);
+  if (num_tasks > num_t_min)
+    __kmp_taskloop_recur(NULL, gtid, task, lb, ub, st, ub_glob, num_tasks,
+                         grainsize, extras, tc, num_t_min, task_dup);
+  else
+    __kmp_taskloop_linear(NULL, gtid, task, lb, ub, st, ub_glob, num_tasks,
+                          grainsize, extras, tc, task_dup);
+
+  KA_TRACE(40, ("__kmp_taskloop_task(exit): T#%d\n", gtid));
+  return 0;
+}
+
+// Schedule part of the the taskloop as a task,
+// execute the rest of the the taskloop.
+//
+// loc       Source location information
+// gtid      Global thread ID
+// task      Pattern task, exposes the loop iteration range
+// lb        Pointer to loop lower bound in task structure
+// ub        Pointer to loop upper bound in task structure
+// st        Loop stride
+// ub_glob   Global upper bound (used for lastprivate check)
+// num_tasks Number of tasks to execute
+// grainsize Number of loop iterations per task
+// extras    Number of chunks with grainsize+1 iterations
+// tc        Iterations count
+// num_t_min Threashold to launch tasks recursively
+// task_dup  Tasks duplication routine
+void __kmp_taskloop_recur(ident_t *loc, int gtid, kmp_task_t *task,
+                          kmp_uint64 *lb, kmp_uint64 *ub, kmp_int64 st,
+                          kmp_uint64 ub_glob, kmp_uint64 num_tasks,
+                          kmp_uint64 grainsize, kmp_uint64 extras,
+                          kmp_uint64 tc, kmp_uint64 num_t_min, void *task_dup) {
+#if KMP_DEBUG
+  kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
+  KMP_DEBUG_ASSERT(task != NULL);
+  KMP_DEBUG_ASSERT(num_tasks > num_t_min);
+  KA_TRACE(20, ("__kmp_taskloop_recur: T#%d, task %p: %lld tasks, grainsize"
+                " %lld, extras %lld, i=%lld,%lld(%d), dup %p\n",
+                gtid, taskdata, num_tasks, grainsize, extras, *lb, *ub, st,
+                task_dup));
+#endif
+  p_task_dup_t ptask_dup = (p_task_dup_t)task_dup;
+  kmp_uint64 lower = *lb;
+  kmp_uint64 upper = *ub;
+  kmp_info_t *thread = __kmp_threads[gtid];
+  //  kmp_taskdata_t *current_task = thread->th.th_current_task;
+  kmp_task_t *next_task;
+  kmp_int32 lastpriv = 0;
+  size_t lower_offset =
+      (char *)lb - (char *)task; // remember offset of lb in the task structure
+  size_t upper_offset =
+      (char *)ub - (char *)task; // remember offset of ub in the task structure
+
+  KMP_DEBUG_ASSERT(tc == num_tasks * grainsize + extras);
+  KMP_DEBUG_ASSERT(num_tasks > extras);
+  KMP_DEBUG_ASSERT(num_tasks > 0);
+
+  // split the loop in two halves
+  kmp_uint64 lb1, ub0, tc0, tc1, ext0, ext1;
+  kmp_uint64 gr_size0 = grainsize;
+  kmp_uint64 n_tsk0 = num_tasks >> 1; // num_tasks/2 to execute
+  kmp_uint64 n_tsk1 = num_tasks - n_tsk0; // to schedule as a task
+  if (n_tsk0 <= extras) {
+    gr_size0++; // integrate extras into grainsize
+    ext0 = 0; // no extra iters in 1st half
+    ext1 = extras - n_tsk0; // remaining extras
+    tc0 = gr_size0 * n_tsk0;
+    tc1 = tc - tc0;
+  } else { // n_tsk0 > extras
+    ext1 = 0; // no extra iters in 2nd half
+    ext0 = extras;
+    tc1 = grainsize * n_tsk1;
+    tc0 = tc - tc1;
+  }
+  ub0 = lower + st * (tc0 - 1);
+  lb1 = ub0 + st;
+
+  // create pattern task for 2nd half of the loop
+  next_task = __kmp_task_dup_alloc(thread, task); // duplicate the task
+  // adjust lower bound (upper bound is not changed) for the 2nd half
+  *(kmp_uint64 *)((char *)next_task + lower_offset) = lb1;
+  if (ptask_dup != NULL) // construct fistprivates, etc.
+    ptask_dup(next_task, task, 0);
+  *ub = ub0; // adjust upper bound for the 1st half
+
+  // create auxiliary task for 2nd half of the loop
+  kmp_task_t *new_task =
+      __kmpc_omp_task_alloc(loc, gtid, 1, 3 * sizeof(void *),
+                            sizeof(__taskloop_params_t), &__kmp_taskloop_task);
+  __taskloop_params_t *p = (__taskloop_params_t *)new_task->shareds;
+  p->task = next_task;
+  p->lb = (kmp_uint64 *)((char *)next_task + lower_offset);
+  p->ub = (kmp_uint64 *)((char *)next_task + upper_offset);
+  p->task_dup = task_dup;
+  p->st = st;
+  p->ub_glob = ub_glob;
+  p->num_tasks = n_tsk1;
+  p->grainsize = grainsize;
+  p->extras = ext1;
+  p->tc = tc1;
+  p->num_t_min = num_t_min;
+  __kmp_omp_task(gtid, new_task, true); // schedule new task
+
+  // execute the 1st half of current subrange
+  if (n_tsk0 > num_t_min)
+    __kmp_taskloop_recur(loc, gtid, task, lb, ub, st, ub_glob, n_tsk0, gr_size0,
+                         ext0, tc0, num_t_min, task_dup);
+  else
+    __kmp_taskloop_linear(loc, gtid, task, lb, ub, st, ub_glob, n_tsk0,
+                          gr_size0, ext0, tc0, task_dup);
+
+  KA_TRACE(40, ("__kmpc_taskloop_recur(exit): T#%d\n", gtid));
+}
+
+/*!
+@ingroup TASKING
+@param loc       Source location information
+@param gtid      Global thread ID
+@param task      Task structure
+@param if_val    Value of the if clause
+@param lb        Pointer to loop lower bound in task structure
+@param ub        Pointer to loop upper bound in task structure
+@param st        Loop stride
+@param nogroup   Flag, 1 if nogroup clause specified, 0 otherwise
+@param sched     Schedule specified 0/1/2 for none/grainsize/num_tasks
+@param grainsize Schedule value if specified
+@param task_dup  Tasks duplication routine
+
+Execute the taskloop construct.
+*/
+void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
+                     kmp_uint64 *lb, kmp_uint64 *ub, kmp_int64 st, int nogroup,
+                     int sched, kmp_uint64 grainsize, void *task_dup) {
+  kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
+  KMP_DEBUG_ASSERT(task != NULL);
+
+  KA_TRACE(20, ("__kmpc_taskloop: T#%d, task %p, lb %lld, ub %lld, st %lld, "
+                "grain %llu(%d), dup %p\n",
+                gtid, taskdata, *lb, *ub, st, grainsize, sched, task_dup));
+
+  if (nogroup == 0)
+    __kmpc_taskgroup(loc, gtid);
+
+  // =========================================================================
+  // calculate loop parameters
+  kmp_uint64 tc;
+  kmp_uint64 lower = *lb; // compiler provides global bounds here
+  kmp_uint64 upper = *ub;
+  kmp_uint64 ub_glob = upper; // global upper used to calc lastprivate flag
+  kmp_uint64 num_tasks = 0, extras = 0;
+  kmp_uint64 num_tasks_min = __kmp_taskloop_min_tasks;
+  kmp_info_t *thread = __kmp_threads[gtid];
+  kmp_taskdata_t *current_task = thread->th.th_current_task;
 
   // compute trip count
   if (st == 1) { // most common case
@@ -3493,6 +3856,10 @@ void __kmp_taskloop_linear(ident_t *loc, int gtid, kmp_task_t *task,
     __kmp_task_finish(gtid, task, current_task);
     return;
   }
+  if (num_tasks_min == 0)
+    // TODO: can we choose better default heuristic?
+    num_tasks_min =
+        KMP_MIN(thread->th.th_team_nproc * 10, INITIAL_TASK_DEQUE_SIZE);
 
   // compute num_tasks/grainsize based on the input provided
   switch (sched) {
@@ -3517,9 +3884,8 @@ void __kmp_taskloop_linear(ident_t *loc, int gtid, kmp_task_t *task,
       extras = 0;
     } else {
       num_tasks = tc / grainsize;
-      grainsize =
-          tc /
-          num_tasks; // adjust grainsize for balanced distribution of iterations
+      // adjust grainsize for balanced distribution of iterations
+      grainsize = tc / num_tasks;
       extras = tc % num_tasks;
     }
     break;
@@ -3529,95 +3895,36 @@ void __kmp_taskloop_linear(ident_t *loc, int gtid, kmp_task_t *task,
   KMP_DEBUG_ASSERT(tc == num_tasks * grainsize + extras);
   KMP_DEBUG_ASSERT(num_tasks > extras);
   KMP_DEBUG_ASSERT(num_tasks > 0);
-  KA_TRACE(20, ("__kmpc_taskloop: T#%d will launch: num_tasks %lld, grainsize "
-                "%lld, extras %lld\n",
-                gtid, num_tasks, grainsize, extras));
-
-  // Main loop, launch num_tasks tasks, assign grainsize iterations each task
-  for (i = 0; i < num_tasks; ++i) {
-    kmp_uint64 chunk_minus_1;
-    if (extras == 0) {
-      chunk_minus_1 = grainsize - 1;
-    } else {
-      chunk_minus_1 = grainsize;
-      --extras; // first extras iterations get bigger chunk (grainsize+1)
-    }
-    upper = lower + st * chunk_minus_1;
-    if (i == num_tasks - 1) {
-      // schedule the last task, set lastprivate flag
-      lastpriv = 1;
-#if KMP_DEBUG
-      if (st == 1)
-        KMP_DEBUG_ASSERT(upper == *ub);
-      else if (st > 0)
-        KMP_DEBUG_ASSERT(upper + st > *ub);
-      else
-        KMP_DEBUG_ASSERT(upper + st < *ub);
-#endif
-    }
-    next_task = __kmp_task_dup_alloc(thread, task); // allocate new task
-    *(kmp_uint64 *)((char *)next_task + lower_offset) =
-        lower; // adjust task-specific bounds
-    *(kmp_uint64 *)((char *)next_task + upper_offset) = upper;
-    if (ptask_dup != NULL)
-      ptask_dup(next_task, task,
-                lastpriv); // set lastprivate flag, construct fistprivates, etc.
-    KA_TRACE(20, ("__kmpc_taskloop: T#%d schedule task %p: lower %lld, upper "
-                  "%lld (offsets %p %p)\n",
-                  gtid, next_task, lower, upper, lower_offset, upper_offset));
-    __kmp_omp_task(gtid, next_task, true); // schedule new task
-    lower = upper + st; // adjust lower bound for the next iteration
-  }
-  // free the pattern task and exit
-  __kmp_task_start(gtid, task, current_task);
-  // do not execute the pattern task, just do bookkeeping
-  __kmp_task_finish(gtid, task, current_task);
-}
-
-/*!
-@ingroup TASKING
-@param loc       Source location information
-@param gtid      Global thread ID
-@param task      Task structure
-@param if_val    Value of the if clause
-@param lb        Pointer to loop lower bound
-@param ub        Pointer to loop upper bound
-@param st        Loop stride
-@param nogroup   Flag, 1 if nogroup clause specified, 0 otherwise
-@param sched     Schedule specified 0/1/2 for none/grainsize/num_tasks
-@param grainsize Schedule value if specified
-@param task_dup  Tasks duplication routine
-
-Execute the taskloop construct.
-*/
-void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
-                     kmp_uint64 *lb, kmp_uint64 *ub, kmp_int64 st, int nogroup,
-                     int sched, kmp_uint64 grainsize, void *task_dup) {
-  kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
-  KMP_DEBUG_ASSERT(task != NULL);
-
-  KA_TRACE(10, ("__kmpc_taskloop(enter): T#%d, pattern task %p, lb %lld ub "
-                "%lld st %lld, grain %llu(%d)\n",
-                gtid, taskdata, *lb, *ub, st, grainsize, sched));
+  // =========================================================================
 
   // check if clause value first
   if (if_val == 0) { // if(0) specified, mark task as serial
     taskdata->td_flags.task_serial = 1;
     taskdata->td_flags.tiedness = TASK_TIED; // AC: serial task cannot be untied
-  }
-  if (nogroup == 0) {
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
 #endif
-    __kmpc_taskgroup(loc, gtid);
-  }
-
-  if (1 /* AC: use some heuristic here to choose task scheduling method */) {
+    // always start serial tasks linearly
+    __kmp_taskloop_linear(loc, gtid, task, lb, ub, st, ub_glob, num_tasks,
+                          grainsize, extras, tc, task_dup);
+  } else if (num_tasks > num_tasks_min) {
+    KA_TRACE(20, ("__kmpc_taskloop: T#%d, go recursive: tc %llu, #tasks %llu"
+                  "(%lld), grain %llu, extras %llu\n",
+                  gtid, tc, num_tasks, num_tasks_min, grainsize, extras));
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
 #endif
-    __kmp_taskloop_linear(loc, gtid, task, lb, ub, st, sched, grainsize,
-                          task_dup);
+    __kmp_taskloop_recur(loc, gtid, task, lb, ub, st, ub_glob, num_tasks,
+                         grainsize, extras, tc, num_tasks_min, task_dup);
+  } else {
+    KA_TRACE(20, ("__kmpc_taskloop: T#%d, go linear: tc %llu, #tasks %llu"
+                  "(%lld), grain %llu, extras %llu\n",
+                  gtid, tc, num_tasks, num_tasks_min, grainsize, extras));
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+#endif
+    __kmp_taskloop_linear(loc, gtid, task, lb, ub, st, ub_glob, num_tasks,
+                          grainsize, extras, tc, task_dup);
   }
 
   if (nogroup == 0) {
@@ -3626,7 +3933,7 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
 #endif
     __kmpc_end_taskgroup(loc, gtid);
   }
-  KA_TRACE(10, ("__kmpc_taskloop(exit): T#%d\n", gtid));
+  KA_TRACE(20, ("__kmpc_taskloop(exit): T#%d\n", gtid));
 }
 
 #endif

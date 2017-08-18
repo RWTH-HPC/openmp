@@ -114,6 +114,14 @@ int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg);
 
 extern ompt_callbacks_active_t ompt_enabled;
 
+#if KMP_OS_WINDOWS
+#define UNLIKELY(x) (x)
+#define OMPT_NOINLINE __declspec(noinline)
+#else
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define OMPT_NOINLINE __attribute__((noinline))
+#endif
+
 #ifdef __cplusplus
 };
 #endif
