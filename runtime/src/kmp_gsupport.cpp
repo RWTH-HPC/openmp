@@ -468,7 +468,6 @@ void xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void) {
       // these don't see the implicit task on the stack
       OMPT_CUR_TASK_INFO(thr)->frame.exit_runtime_frame = NULL;
     }
-    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
 #endif
 
     __kmp_join_call(&loc, gtid
@@ -1132,6 +1131,11 @@ void xexpand(KMP_API_NAME_GOMP_PARALLEL)(void (*task)(void *), void *data,
   }
 #endif
   task(data);
+#if OMPT_SUPPORT
+  if (ompt_enabled.enabled) {
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
+  }
+#endif
   xexpand(KMP_API_NAME_GOMP_PARALLEL_END)();
 #if OMPT_SUPPORT
   if (ompt_enabled.enabled) {
