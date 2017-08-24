@@ -827,6 +827,7 @@ void __kmpc_ordered(ident_t *loc, kmp_int32 gtid) {
   ompt_wait_id_t lck;
   void* codeptr_ra;
   if (ompt_enabled.enabled) {
+    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
     team = __kmp_team_from_gtid(gtid);
     lck = (ompt_wait_id_t)&team->t.t_ordered.dt.t_value;
     /* OMPT state update */
@@ -893,6 +894,7 @@ void __kmpc_end_ordered(ident_t *loc, kmp_int32 gtid) {
     __kmp_parallel_dxo(&gtid, &cid, loc);
 
 #if OMPT_SUPPORT && OMPT_OPTIONAL
+  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
   if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
         ompt_mutex_ordered,
@@ -1163,6 +1165,7 @@ void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
   __kmp_itt_critical_acquiring(lck);
 #endif /* USE_ITT_BUILD */
 #if OMPT_SUPPORT && OMPT_OPTIONAL
+  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
   void* codeptr_ra = NULL;
   if (ompt_enabled.enabled) {
     ti = __kmp_threads[global_tid]->th.ompt_thread_info;
@@ -1172,7 +1175,7 @@ void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
     ti.state = omp_state_wait_critical;
 
     /* OMPT event callback */
-    codeptr_ra = OMPT_GET_RETURN_ADDRESS(0);
+    codeptr_ra = OMPT_LOAD_RETURN_ADDRESS(gtid);
     if (ompt_enabled.ompt_callback_mutex_acquire) {
       ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
           ompt_mutex_critical, omp_lock_hint_none, __ompt_get_mutex_impl_type(),
@@ -1540,6 +1543,7 @@ void __kmpc_end_critical(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   /* OMPT release event triggers after lock is released; place here to trigger
    * for all #if branches */
+  OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
   if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
         ompt_mutex_critical, (ompt_wait_id_t)crit, OMPT_LOAD_RETURN_ADDRESS(0));
