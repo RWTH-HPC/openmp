@@ -64,6 +64,7 @@ void xexpand(KMP_API_NAME_GOMP_CRITICAL_START)(void) {
   int gtid = __kmp_entry_gtid();
   MKLOC(loc, "GOMP_critical_start");
   KA_TRACE(20, ("GOMP_critical_start: T#%d\n", gtid));
+  OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
   __kmpc_critical(&loc, gtid, __kmp_unnamed_critical_addr);
 }
 
@@ -71,6 +72,7 @@ void xexpand(KMP_API_NAME_GOMP_CRITICAL_END)(void) {
   int gtid = __kmp_get_gtid();
   MKLOC(loc, "GOMP_critical_end");
   KA_TRACE(20, ("GOMP_critical_end: T#%d\n", gtid));
+  OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
   __kmpc_end_critical(&loc, gtid, __kmp_unnamed_critical_addr);
 }
 
@@ -237,6 +239,7 @@ void xexpand(KMP_API_NAME_GOMP_ORDERED_START)(void) {
   int gtid = __kmp_entry_gtid();
   MKLOC(loc, "GOMP_ordered_start");
   KA_TRACE(20, ("GOMP_ordered_start: T#%d\n", gtid));
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
   __kmpc_ordered(&loc, gtid);
 }
 
@@ -244,6 +247,7 @@ void xexpand(KMP_API_NAME_GOMP_ORDERED_END)(void) {
   int gtid = __kmp_get_gtid();
   MKLOC(loc, "GOMP_ordered_end");
   KA_TRACE(20, ("GOMP_ordered_start: T#%d\n", gtid));
+    OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);
   __kmpc_end_ordered(&loc, gtid);
 }
 

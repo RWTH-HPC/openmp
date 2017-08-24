@@ -825,6 +825,7 @@ void __kmpc_ordered(ident_t *loc, kmp_int32 gtid) {
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   kmp_team_t *team;
   ompt_wait_id_t lck;
+  void* codeptr_ra;
   if (ompt_enabled.enabled) {
     team = __kmp_team_from_gtid(gtid);
     lck = (ompt_wait_id_t)&team->t.t_ordered.dt.t_value;
@@ -833,10 +834,11 @@ void __kmpc_ordered(ident_t *loc, kmp_int32 gtid) {
     th->th.ompt_thread_info.state = omp_state_wait_ordered;
 
     /* OMPT event callback */
+    codeptr_ra = OMPT_LOAD_RETURN_ADDRESS(gtid);
     if (ompt_enabled.ompt_callback_mutex_acquire) {
       ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
           ompt_mutex_ordered, omp_lock_hint_none, ompt_mutex_impl_spin,
-          (ompt_wait_id_t)lck, OMPT_GET_RETURN_ADDRESS(0));
+          (ompt_wait_id_t)lck, codeptr_ra);
     }
   }
 #endif
@@ -855,7 +857,7 @@ void __kmpc_ordered(ident_t *loc, kmp_int32 gtid) {
     /* OMPT event callback */
     if (ompt_enabled.ompt_callback_mutex_acquired) {
       ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
-          ompt_mutex_ordered, (ompt_wait_id_t)lck, OMPT_GET_RETURN_ADDRESS(0));
+          ompt_mutex_ordered, (ompt_wait_id_t)lck, codeptr_ra);
     }
   }
 #endif
@@ -895,7 +897,7 @@ void __kmpc_end_ordered(ident_t *loc, kmp_int32 gtid) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
         ompt_mutex_ordered,
         (ompt_wait_id_t)&__kmp_team_from_gtid(gtid)->t.t_ordered.dt.t_value,
-        OMPT_GET_RETURN_ADDRESS(0));
+        OMPT_LOAD_RETURN_ADDRESS(gtid));
   }
 #endif
 }
@@ -1161,6 +1163,7 @@ void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
   __kmp_itt_critical_acquiring(lck);
 #endif /* USE_ITT_BUILD */
 #if OMPT_SUPPORT && OMPT_OPTIONAL
+  void* codeptr_ra = NULL;
   if (ompt_enabled.enabled) {
     ti = __kmp_threads[global_tid]->th.ompt_thread_info;
     /* OMPT state update */
@@ -1169,10 +1172,11 @@ void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
     ti.state = omp_state_wait_critical;
 
     /* OMPT event callback */
+    codeptr_ra = OMPT_GET_RETURN_ADDRESS(0);
     if (ompt_enabled.ompt_callback_mutex_acquire) {
       ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
           ompt_mutex_critical, omp_lock_hint_none, __ompt_get_mutex_impl_type(),
-          (ompt_wait_id_t)crit, OMPT_GET_RETURN_ADDRESS(0));
+          (ompt_wait_id_t)crit, codeptr_ra);
     }
   }
 #endif
@@ -1193,7 +1197,7 @@ void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
     if (ompt_enabled.ompt_callback_mutex_acquired) {
       ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
           ompt_mutex_critical, (ompt_wait_id_t)crit,
-          OMPT_GET_RETURN_ADDRESS(0));
+          codeptr_ra);
     }
   }
 #endif
@@ -1538,7 +1542,7 @@ void __kmpc_end_critical(ident_t *loc, kmp_int32 global_tid,
    * for all #if branches */
   if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
-        ompt_mutex_critical, (ompt_wait_id_t)crit, OMPT_GET_RETURN_ADDRESS(0));
+        ompt_mutex_critical, (ompt_wait_id_t)crit, OMPT_LOAD_RETURN_ADDRESS(0));
   }
 #endif
 
