@@ -214,8 +214,12 @@ __ompt_get_scheduling_taskinfo(int depth)
 //----------------------------------------------------------
 
 ompt_data_t *__ompt_get_thread_data_internal() {
-  kmp_info_t *thread = ompt_get_thread();
-  return &(thread->th.ompt_thread_info.thread_data);
+  if(__kmp_gtid >= 0)
+  {
+    kmp_info_t *thread = ompt_get_thread();
+    return &(thread->th.ompt_thread_info.thread_data);
+  }
+  return NULL;
 }
 
 //----------------------------------------------------------
