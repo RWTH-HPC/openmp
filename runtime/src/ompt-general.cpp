@@ -314,7 +314,7 @@ void ompt_post_init() {
   // Initialize the tool if so indicated.
   //--------------------------------------------------
   if (ompt_fns) {
-    ompt_fns->initialize(ompt_fn_lookup, ompt_fns);
+    ompt_enabled.enabled = !!ompt_fns->initialize(ompt_fn_lookup, ompt_fns);
 
     ompt_thread_t *root_thread = ompt_get_thread();
 
@@ -397,7 +397,6 @@ OMPT_API_ROUTINE int ompt_set_callback(ompt_callbacks_t which,
     if (ompt_event_implementation_status(event_name)) {                        \
       ompt_callbacks.ompt_callback(event_name) = (callback_type)callback;      \
       ompt_enabled.event_name = 1;                                             \
-      ompt_enabled.enabled = 1;                                                \
     }                                                                          \
     return ompt_event_implementation_status(event_name);
 
