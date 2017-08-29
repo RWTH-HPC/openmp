@@ -689,7 +689,7 @@ int ompt_initialize(
 
 void ompt_finalize(ompt_fns_t* fns)
 {
-  printf("%d: ompt_event_runtime_shutdown\n", omp_get_thread_num());
+  printf("0: ompt_event_runtime_shutdown\n");
 }
 
 ompt_fns_t* ompt_start_tool(
