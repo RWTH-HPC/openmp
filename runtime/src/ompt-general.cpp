@@ -673,7 +673,7 @@ OMPT_API_ROUTINE int ompt_get_target_info(
     ompt_id_t *target_id,
     ompt_id_t *host_op_id)
 {
-  return 0; //targets not supported
+  return 0; //thread is not in a target region
 }
 
 /*****************************************************************************
