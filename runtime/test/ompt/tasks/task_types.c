@@ -89,6 +89,7 @@ int main()
   // CHECK: {{^}}0: NULL_POINTER=[[NULL:.*$]]
   
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_task_create: parent_task_id=0, parent_task_frame.exit=[[NULL]], parent_task_frame.reenter=[[NULL]], new_task_id={{[0-9]+}}, codeptr_ra=[[NULL]], task_type=ompt_task_initial=1, has_dependences=no
+  // CHECK-NOT: 0: parallel_data initially not null
   // CHECK: {{^}}[[MASTER_ID]]: id=0 task_type=ompt_task_initial=1
   // CHECK: {{^}}[[MASTER_ID]]: id=1 task_type=ompt_task_implicit|ompt_task_undeferred=134217730
 

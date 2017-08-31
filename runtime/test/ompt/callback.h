@@ -564,6 +564,8 @@ on_ompt_callback_task_create(
   {
     ompt_data_t *parallel_data;
     ompt_get_parallel_info(0, &parallel_data, NULL);
+    if(parallel_data->ptr)
+      printf("%s\n", "0: parallel_data initially not null");
     parallel_data->value = ompt_get_unique_id();
   }
 
