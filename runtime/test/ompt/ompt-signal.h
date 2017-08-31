@@ -18,7 +18,8 @@ void ompt_wait(int *s, int v)
   int wait;
   do{
     usleep(10);
-    #pragma omp critical
-	  wait = (*s)+0;
+    wait = 0;
+    #pragma omp atomic
+	  wait += (*s);
   }while(wait<v);
 }
