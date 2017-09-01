@@ -636,10 +636,10 @@ OMPT_API_FUNCTION(void, ompt_finalize, (
     ompt_fns_t *fns
 ));
 
-typedef struct ompt_fns_t {
+struct ompt_fns_t {
     ompt_initialize_t initialize;
     ompt_finalize_t finalize;
-} ompt_fns_t;
+};
 
 /* initialization interface to be defined by tool */
 #ifdef _WIN32
@@ -716,8 +716,6 @@ OMPT_API_FUNCTION(uint64_t, ompt_get_unique_id, (void));
 };
 #endif
 
-#endif
-
 /****************************************************************************
  * TARGET
  ***************************************************************************/
@@ -727,3 +725,5 @@ OMPT_API_FUNCTION(uint64_t, ompt_get_unique_id, (void));
     ompt_id_t *target_id,
     ompt_id_t *host_op_id
 ));
+
+#endif /* __OMPT__ */
