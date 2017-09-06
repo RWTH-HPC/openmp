@@ -1325,7 +1325,7 @@ static void __kmp_invoke_task(kmp_int32 gtid, kmp_task_t *task,
     thread = __kmp_threads[gtid];
     oldInfo = thread->th.ompt_thread_info;
     thread->th.ompt_thread_info.wait_id = 0;
-    thread->th.ompt_thread_info.state = omp_state_work_parallel;
+    thread->th.ompt_thread_info.state = (thread->th.th_team_serialized)?omp_state_work_serial:omp_state_work_parallel;
     taskdata->ompt_task_info.frame.exit_runtime_frame =
         OMPT_GET_FRAME_ADDRESS(0);
   }
