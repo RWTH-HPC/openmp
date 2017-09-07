@@ -17,9 +17,9 @@ int main()
     print_current_address(0);
     #pragma omp for schedule(SCHEDULE) nowait
     for (i = 0; i < 4; i++) {
-      print_current_address(1);
+      print_fuzzy_address(2);
     }
-    print_current_address(2);
+    print_fuzzy_address(2);
   }
   print_current_address(3);
 
@@ -32,23 +32,27 @@ int main()
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
   // CHECK: {{^}}[[MASTER_ID:[0-9]+]]: ompt_event_parallel_begin: parent_task_id={{[0-9]+}}, parent_task_frame.exit=[[NULL]], parent_task_frame.reenter={{0x[0-f]+}}, parallel_id=[[PARALLEL_ID:[0-9]+]], requested_team_size=4, codeptr_ra=[[PARALLEL_RETURN_ADDRESS:0x[0-f]+]], invoker={{[0-9]+}}
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_loop_begin: parallel_id=[[PARALLEL_ID]], parent_task_id={{[0-9]+}}, codeptr_ra=0x{{[0-f]+}}
-  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[MASTER_ID]]: current_address=[[LOOP_END_RETURN_ADDRESS]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_loop_begin: parallel_id=[[PARALLEL_ID]], parent_task_id={{[0-9]+}}, codeptr_ra=[[LOOP_BEGIN_RETURN_ADDRESS:0x[0-f]+]]{{[0-f][0-f]}}
+  // CHECK-DAG: {{^}}[[MASTER_ID]]: fuzzy_address={{.*}}[[LOOP_BEGIN_RETURN_ADDRESS]]
+  // CHECK-DAG: {{^}}[[MASTER_ID]]: fuzzy_address={{.*}}[[LOOP_BEGIN_RETURN_ADDRESS]]
+  // CHECK-DAG: {{^}}[[MASTER_ID]]: fuzzy_address={{.*}}[[LOOP_BEGIN_RETURN_ADDRESS]]
+  // CHECK-DAG: {{^}}[[MASTER_ID]]: fuzzy_address={{.*}}[[LOOP_BEGIN_RETURN_ADDRESS]]
+  // CHECK: {{^}}[[MASTER_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]{{[0-f][0-f]}}
+  // CHECK: {{^}}[[MASTER_ID]]: fuzzy_address={{.*}}[[LOOP_END_RETURN_ADDRESS]]
   // CHECK: {{^}}[[MASTER_ID]]: ompt_event_parallel_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, invoker={{[0-9]+}}, codeptr_ra=[[PARALLEL_RETURN_ADDRESS]]
   // CHECK: {{^}}[[MASTER_ID]]: current_address=[[PARALLEL_RETURN_ADDRESS]]
 
   // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_loop_begin: parallel_id=[[PARALLEL_ID]], parent_task_id={{[0-9]+}}, codeptr_ra=0x{{[0-f]+}}
-  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[THREAD_ID]]: current_address=[[LOOP_END_RETURN_ADDRESS]]
+  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]{{[0-f][0-f]}}
+  // CHECK: {{^}}[[THREAD_ID]]: fuzzy_address={{.*}}[[LOOP_END_RETURN_ADDRESS]]
 
   // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_loop_begin: parallel_id=[[PARALLEL_ID]], parent_task_id={{[0-9]+}}, codeptr_ra=0x{{[0-f]+}}
-  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[THREAD_ID]]: current_address=[[LOOP_END_RETURN_ADDRESS]]
+  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]{{[0-f][0-f]}}
+  // CHECK: {{^}}[[THREAD_ID]]: fuzzy_address={{.*}}[[LOOP_END_RETURN_ADDRESS]]
 
   // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_loop_begin: parallel_id=[[PARALLEL_ID]], parent_task_id={{[0-9]+}}, codeptr_ra=0x{{[0-f]+}}
-  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]
-  // CHECK: {{^}}[[THREAD_ID]]: current_address=[[LOOP_END_RETURN_ADDRESS]]
+  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_loop_end: parallel_id=[[PARALLEL_ID]], task_id={{[0-9]+}}, codeptr_ra=[[LOOP_END_RETURN_ADDRESS:0x[0-f]+]]{{[0-f][0-f]}}
+  // CHECK: {{^}}[[THREAD_ID]]: fuzzy_address={{.*}}[[LOOP_END_RETURN_ADDRESS]]
 
   return 0;
 }
