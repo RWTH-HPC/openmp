@@ -217,6 +217,7 @@ ompt_data_t *__ompt_get_thread_data_internal() {
   if(__kmp_gtid >= 0)
   {
     kmp_info_t *thread = ompt_get_thread();
+    if(thread==NULL) return NULL;
     return &(thread->th.ompt_thread_info.thread_data);
   }
   return NULL;
@@ -381,6 +382,7 @@ int __ompt_get_task_info_internal(int ancestor_level, int *type,
         } else {
           // then go for implicit tasks
           taskdata = taskdata->td_parent;
+          if (team==NULL) return 0;
           team = team->t.t_parent;
           if (taskdata) {
             next_lwt = LWT_FROM_TEAM(taskdata->td_team);
