@@ -358,7 +358,9 @@ int __ompt_get_task_info_internal(int ancestor_level, int *type,
 
   if (thr) {
     kmp_taskdata_t *taskdata = thr->th.th_current_task;
+    if (taskdata==NULL) return 0;
     kmp_team *team = thr->th.th_team;
+    if (team==NULL) return 0;
     ompt_lw_taskteam_t *lwt = NULL,
                        *next_lwt = LWT_FROM_TEAM(taskdata->td_team);
 
