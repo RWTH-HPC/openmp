@@ -15,11 +15,10 @@ void ompt_signal(int* s)
 //inline 
 void ompt_wait(int *s, int v)
 {
-  int wait;
+  int wait=0;
   do{
     usleep(10);
-    wait = 0;
-    #pragma omp atomic
-	  wait += (*s);
+    #pragma omp atomic read
+	  wait = (*s);
   }while(wait<v);
 }
