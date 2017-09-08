@@ -69,8 +69,7 @@ typedef struct {
   ompt_data_t thread_data;
   ompt_data_t task_data; /* stored here from implicit barrier-begin until
                             implicit-task-end */
-  void *kmp_return_address; /* stored here on entry of runtime */
-  void *gomp_return_address; /* stored here on entry of runtime */
+  void *return_address; /* stored here on entry of runtime */
   omp_state_t state;
   ompt_wait_id_t wait_id;
   int ompt_task_yielded;

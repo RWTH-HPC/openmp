@@ -292,7 +292,7 @@ void __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...) {
             parent_team->t.t_implicit_task_taskdata[tid].ompt_task_info.frame);
       }
       ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-      OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+      OMPT_STORE_RETURN_ADDRESS(gtid);
     }
 #endif
 
@@ -376,7 +376,7 @@ void __kmpc_fork_teams(ident_t *loc, kmp_int32 argc, kmpc_micro microtask,
     parent_team->t.t_implicit_task_taskdata[tid]
         .ompt_task_info.frame.reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
   }
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
 
   // check if __kmpc_push_num_teams called, set default number of teams
@@ -435,7 +435,7 @@ void __kmpc_serialized_parallel(ident_t *loc, kmp_int32 global_tid) {
   // functions with kmp_fork_call since the tasks to be done are similar in
   // each case.
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+  OMPT_STORE_RETURN_ADDRESS(global_tid);
 #endif
   __kmp_serialized_parallel(loc, global_tid);
 }
@@ -691,7 +691,7 @@ void __kmpc_barrier(ident_t *loc, kmp_int32 global_tid) {
     __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
     if (ompt_frame->reenter_runtime_frame == NULL)
       ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    OMPT_STORE_RETURN_ADDRESS(global_tid);
   }
 #endif
   __kmp_threads[global_tid]->th.th_ident = loc;
@@ -827,7 +827,7 @@ void __kmpc_ordered(ident_t *loc, kmp_int32 gtid) {
   ompt_wait_id_t lck;
   void* codeptr_ra;
   if (ompt_enabled.enabled) {
-    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    OMPT_STORE_RETURN_ADDRESS(gtid);
     team = __kmp_team_from_gtid(gtid);
     lck = (ompt_wait_id_t)&team->t.t_ordered.dt.t_value;
     /* OMPT state update */
@@ -894,7 +894,7 @@ void __kmpc_end_ordered(ident_t *loc, kmp_int32 gtid) {
     __kmp_parallel_dxo(&gtid, &cid, loc);
 
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
   if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
         ompt_mutex_ordered,
@@ -1120,7 +1120,7 @@ void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
                      kmp_critical_name *crit) {
 #if KMP_USE_DYNAMIC_LOCK
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+  OMPT_STORE_RETURN_ADDRESS(global_tid);
 #endif // OMPT_SUPPORT
   __kmpc_critical_with_hint(loc, global_tid, crit, omp_lock_hint_none);
 #else
@@ -1165,7 +1165,7 @@ void __kmpc_critical(ident_t *loc, kmp_int32 global_tid,
   __kmp_itt_critical_acquiring(lck);
 #endif /* USE_ITT_BUILD */
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
   void* codeptr_ra = NULL;
   if (ompt_enabled.enabled) {
     ti = __kmp_threads[global_tid]->th.ompt_thread_info;
@@ -1543,7 +1543,7 @@ void __kmpc_end_critical(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   /* OMPT release event triggers after lock is released; place here to trigger
    * for all #if branches */
-  OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+  OMPT_STORE_RETURN_ADDRESS(global_tid);
   if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
         ompt_mutex_critical, (ompt_wait_id_t)crit, OMPT_LOAD_RETURN_ADDRESS(0));
@@ -1580,7 +1580,7 @@ kmp_int32 __kmpc_barrier_master(ident_t *loc, kmp_int32 global_tid) {
     __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
     if (ompt_frame->reenter_runtime_frame == NULL)
       ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    OMPT_STORE_RETURN_ADDRESS(global_tid);
   }
 #endif
 #if USE_ITT_NOTIFY
@@ -1642,7 +1642,7 @@ kmp_int32 __kmpc_barrier_master_nowait(ident_t *loc, kmp_int32 global_tid) {
     __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
     if (ompt_frame->reenter_runtime_frame == NULL)
       ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-    OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+    OMPT_STORE_RETURN_ADDRESS(global_tid);
   }
 #endif
 #if USE_ITT_NOTIFY
@@ -1979,7 +1979,7 @@ void __kmpc_copyprivate(ident_t *loc, kmp_int32 gtid, size_t cpy_size,
     __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
     if (ompt_frame->reenter_runtime_frame == NULL)
       ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    OMPT_STORE_RETURN_ADDRESS(gtid);
   }
 #endif
 /* This barrier is not a barrier region boundary */
@@ -1996,7 +1996,7 @@ void __kmpc_copyprivate(ident_t *loc, kmp_int32 gtid, size_t cpy_size,
 
 #if OMPT_SUPPORT
   if (ompt_enabled.enabled) {
-    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    OMPT_STORE_RETURN_ADDRESS(gtid);
   }
 #endif
 #if USE_ITT_NOTIFY
@@ -3318,7 +3318,7 @@ __kmpc_reduce_nowait(ident_t *loc, kmp_int32 global_tid, kmp_int32 num_vars,
       __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
       if (ompt_frame->reenter_runtime_frame == NULL)
         ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-      OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+      OMPT_STORE_RETURN_ADDRESS(global_tid);
     }
 #endif
 #if USE_ITT_NOTIFY
@@ -3494,7 +3494,7 @@ kmp_int32 __kmpc_reduce(ident_t *loc, kmp_int32 global_tid, kmp_int32 num_vars,
       __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
       if (ompt_frame->reenter_runtime_frame == NULL)
         ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-      OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+      OMPT_STORE_RETURN_ADDRESS(global_tid);
     }
 #endif
 #if USE_ITT_NOTIFY
@@ -3565,7 +3565,7 @@ void __kmpc_end_reduce(ident_t *loc, kmp_int32 global_tid,
       __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
       if (ompt_frame->reenter_runtime_frame == NULL)
         ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-      OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+      OMPT_STORE_RETURN_ADDRESS(global_tid);
     }
 #endif
 #if USE_ITT_NOTIFY
@@ -3589,7 +3589,7 @@ void __kmpc_end_reduce(ident_t *loc, kmp_int32 global_tid,
       __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
       if (ompt_frame->reenter_runtime_frame == NULL)
         ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-      OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+      OMPT_STORE_RETURN_ADDRESS(global_tid);
     }
 #endif
 #if USE_ITT_NOTIFY
@@ -3610,7 +3610,7 @@ void __kmpc_end_reduce(ident_t *loc, kmp_int32 global_tid,
       __ompt_get_task_info_internal(0, NULL, NULL, &ompt_frame, NULL, NULL);
       if (ompt_frame->reenter_runtime_frame == NULL)
         ompt_frame->reenter_runtime_frame = OMPT_GET_FRAME_ADDRESS(1);
-      OMPT_STORE_KMP_RETURN_ADDRESS(global_tid);
+      OMPT_STORE_RETURN_ADDRESS(global_tid);
     }
 #endif
 // TODO: implicit barrier: should be exposed
