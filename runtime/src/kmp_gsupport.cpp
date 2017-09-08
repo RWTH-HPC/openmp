@@ -517,6 +517,13 @@ void xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void) {
 // num and calculate the iteration space using the result.  It doesn't do this
 // with ordered static loop, so they can be checked.
 
+#if OMPT_SUPPORT
+#define IF_OMPT_SUPPORT(code) code
+#else
+#define IF_OMPT_SUPPORT(code)
+#endif
+
+
 #define LOOP_START(func, schedule)                                             \
   int func(long lb, long ub, long str, long chunk_sz, long *p_lb,              \
            long *p_ub) {                                                       \
@@ -529,9 +536,11 @@ void xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void) {
               gtid, lb, ub, str, chunk_sz));                                   \
                                                                                \
     if ((str > 0) ? (lb < ub) : (lb > ub)) {                                   \
+      IF_OMPT_SUPPORT(OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);)                   \
       KMP_DISPATCH_INIT(&loc, gtid, (schedule), lb,                            \
                         (str > 0) ? (ub - 1) : (ub + 1), str, chunk_sz,        \
                         (schedule) != kmp_sch_static);                         \
+      IF_OMPT_SUPPORT(OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);)                   \
       status = KMP_DISPATCH_NEXT(&loc, gtid, NULL, (kmp_int *)p_lb,            \
                                  (kmp_int *)p_ub, (kmp_int *)&stride);         \
       if (status) {                                                            \
@@ -560,8 +569,10 @@ void xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void) {
               gtid, lb, ub, str, chunk_sz));                                   \
                                                                                \
     if ((str > 0) ? (lb < ub) : (lb > ub)) {                                   \
+      IF_OMPT_SUPPORT(OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);)                   \
       KMP_DISPATCH_INIT(&loc, gtid, (schedule), lb,                            \
                         (str > 0) ? (ub - 1) : (ub + 1), str, chunk_sz, TRUE); \
+      IF_OMPT_SUPPORT(OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);)                   \
       status = KMP_DISPATCH_NEXT(&loc, gtid, NULL, (kmp_int *)p_lb,            \
                                  (kmp_int *)p_ub, (kmp_int *)&stride);         \
       if (status) {                                                            \
@@ -586,6 +597,7 @@ void xexpand(KMP_API_NAME_GOMP_PARALLEL_END)(void) {
     MKLOC(loc, #func);                                                         \
     KA_TRACE(20, (#func ": T#%d\n", gtid));                                    \
                                                                                \
+    IF_OMPT_SUPPORT(OMPT_STORE_GOMP_RETURN_ADDRESS(gtid);)                     \
     fini_code status = KMP_DISPATCH_NEXT(&loc, gtid, NULL, (kmp_int *)p_lb,    \
                                          (kmp_int *)p_ub, (kmp_int *)&stride); \
     if (status) {                                                              \
