@@ -202,6 +202,10 @@ Values for bit flags used in the ident_t to describe the fields.
 #define KMP_IDENT_BARRIER_IMPL_SINGLE 0x0140
 #define KMP_IDENT_BARRIER_IMPL_WORKSHARE 0x01C0
 
+#define KMP_IDENT_WORK_LOOP 0x200 // static loop
+#define KMP_IDENT_WORK_SECTIONS 0x400 //sections
+#define KMP_IDENT_WORK_DISTRIBUTE 0x800 //distribute
+
 /*!
  * The ident structure that describes a source location.
  */
@@ -3682,7 +3686,11 @@ KMP_EXPORT void __kmpc_taskloop(ident_t *loc, kmp_int32 gtid, kmp_task_t *task,
                                 kmp_int32 if_val, kmp_uint64 *lb,
                                 kmp_uint64 *ub, kmp_int64 st, kmp_int32 nogroup,
                                 kmp_int32 sched, kmp_uint64 grainsize,
-                                void *task_dup);
+                                void *task_dup
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                                 , void * codeptr
+#endif
+                                );
 #endif
 // TODO: change to OMP_50_ENABLED, need to change build tools for this to work
 #if OMP_45_ENABLED

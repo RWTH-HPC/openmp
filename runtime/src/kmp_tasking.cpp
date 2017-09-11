@@ -3818,13 +3818,29 @@ Execute the taskloop construct.
 */
 void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
                      kmp_uint64 *lb, kmp_uint64 *ub, kmp_int64 st, int nogroup,
-                     int sched, kmp_uint64 grainsize, void *task_dup) {
+                     int sched, kmp_uint64 grainsize, void *task_dup
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+                              , void * codeptr
+#endif
+                     ) {
   kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
   KMP_DEBUG_ASSERT(task != NULL);
 
   KA_TRACE(20, ("__kmpc_taskloop: T#%d, task %p, lb %lld, ub %lld, st %lld, "
                 "grain %llu(%d), dup %p\n",
                 gtid, taskdata, *lb, *ub, st, grainsize, sched, task_dup));
+
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
+  ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
+  if (ompt_enabled.ompt_callback_work) {
+    ompt_callbacks.ompt_callback(ompt_callback_work)(
+        ompt_work_taskloop, ompt_scope_begin, &(team_info->parallel_data),
+        &(task_info->task_data),
+        0, // TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18). ?? Should ve 'tc' value below?
+        OMPT_GET_RETURN_ADDRESS(0));
+  }
+#endif
 
   if (nogroup == 0)
     __kmpc_taskgroup(loc, gtid);
@@ -3933,6 +3949,15 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
 #endif
     __kmpc_end_taskgroup(loc, gtid);
   }
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  if (ompt_enabled.ompt_callback_work) {
+    ompt_callbacks.ompt_callback(ompt_callback_work)(
+        ompt_work_taskloop, ompt_scope_end, &(team_info->parallel_data),
+        &(task_info->task_data),
+        0, // TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18). ?? Should ve 'tc' value below?
+        OMPT_GET_RETURN_ADDRESS(0));
+  }
+#endif
   KA_TRACE(20, ("__kmpc_taskloop(exit): T#%d\n", gtid));
 }
 

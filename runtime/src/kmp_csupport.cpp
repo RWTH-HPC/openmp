@@ -502,7 +502,7 @@ void __kmpc_end_serialized_parallel(ident_t *loc, kmp_int32 global_tid) {
     if (ompt_enabled.ompt_callback_parallel_end) {
       ompt_callbacks.ompt_callback(ompt_callback_parallel_end)(
           &(serial_team->t.ompt_team_info.parallel_data), parent_task_data,
-          ompt_invoker_program, 
+          ompt_invoker_program,
           OMPT_LOAD_RETURN_ADDRESS(global_tid));
     }
     __ompt_lw_taskteam_unlink(this_thr);
@@ -1772,10 +1772,24 @@ void __kmpc_for_static_fini(ident_t *loc, kmp_int32 global_tid) {
 
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   if (ompt_enabled.ompt_callback_work) {
+    ompt_work_type_t ompt_work_type;
     ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
     ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
+    // Determine workshare type
+    if(loc != NULL) {
+      if((loc->flags & KMP_IDENT_WORK_LOOP) !=0) {
+          ompt_work_type = ompt_work_loop;
+      } else if((loc->flags & KMP_IDENT_WORK_SECTIONS)!=0) {
+          ompt_work_type = ompt_work_sections;
+      } else if((loc->flags & KMP_IDENT_WORK_DISTRIBUTE)!=0) {
+          ompt_work_type = ompt_work_distribute;
+      } else {
+          KMP_ASSERT2(0, "__kmpc_for_static_fini: can't determine workshare type");
+      }
+      KMP_DEBUG_ASSERT(ompt_work_type);
+    }
     ompt_callbacks.ompt_callback(ompt_callback_work)(
-        ompt_work_loop, ompt_scope_end, &(team_info->parallel_data),
+        ompt_work_type, ompt_scope_end, &(team_info->parallel_data),
         &(task_info->task_data), 0, OMPT_GET_RETURN_ADDRESS(0));
   }
 #endif
@@ -2193,7 +2207,7 @@ void __kmpc_init_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
   if (ompt_enabled.ompt_callback_lock_init) {
     ompt_callbacks.ompt_callback(ompt_callback_lock_init)(
         ompt_mutex_lock, omp_lock_hint_none, __ompt_get_mutex_impl_type(),
-        (ompt_wait_id_t)user_lock, 
+        (ompt_wait_id_t)user_lock,
         codeptr);
   }
 #endif
@@ -2265,7 +2279,7 @@ void __kmpc_init_nest_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
   if (ompt_enabled.ompt_callback_lock_init) {
     ompt_callbacks.ompt_callback(ompt_callback_lock_init)(
         ompt_mutex_nest_lock, omp_lock_hint_none, __ompt_get_mutex_impl_type(),
-        (ompt_wait_id_t)user_lock, 
+        (ompt_wait_id_t)user_lock,
         codeptr);
   }
 #endif
@@ -2302,7 +2316,7 @@ void __kmpc_destroy_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
       lck = (kmp_user_lock_p)user_lock;
     }
     ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)(
-        ompt_mutex_lock, (ompt_wait_id_t)user_lock, 
+        ompt_mutex_lock, (ompt_wait_id_t)user_lock,
         codeptr);
   }
 #endif
@@ -2327,7 +2341,7 @@ void __kmpc_destroy_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   if (ompt_enabled.ompt_callback_lock_destroy) {
     ompt_callbacks.ompt_callback(ompt_callback_lock_destroy)(
-        ompt_mutex_lock, (ompt_wait_id_t)user_lock, 
+        ompt_mutex_lock, (ompt_wait_id_t)user_lock,
         codeptr);
   }
 #endif
@@ -2465,7 +2479,7 @@ void __kmpc_set_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   if (ompt_enabled.ompt_callback_mutex_acquired) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_acquired)(
-        ompt_mutex_lock, (ompt_wait_id_t)user_lock, 
+        ompt_mutex_lock, (ompt_wait_id_t)user_lock,
         codeptr);
   }
 #endif
@@ -2495,7 +2509,7 @@ void __kmpc_set_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
   if (ompt_enabled.ompt_callback_mutex_acquire) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_acquire)(
         ompt_mutex_lock, omp_lock_hint_none, __ompt_get_mutex_impl_type(),
-        (ompt_wait_id_t)lck, 
+        (ompt_wait_id_t)lck,
         codeptr);
   }
 #endif
@@ -2651,7 +2665,7 @@ void __kmpc_unset_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
-        ompt_mutex_lock, (ompt_wait_id_t)user_lock, 
+        ompt_mutex_lock, (ompt_wait_id_t)user_lock,
         codeptr);
   }
 #endif
@@ -2677,7 +2691,7 @@ void __kmpc_unset_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled.ompt_callback_mutex_released) {
       ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
-          ompt_mutex_lock, (ompt_wait_id_t)lck, 
+          ompt_mutex_lock, (ompt_wait_id_t)lck,
           codeptr);
     }
 #endif
@@ -2706,7 +2720,7 @@ void __kmpc_unset_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   if (ompt_enabled.ompt_callback_mutex_released) {
     ompt_callbacks.ompt_callback(ompt_callback_mutex_released)(
-        ompt_mutex_lock, (ompt_wait_id_t)lck, 
+        ompt_mutex_lock, (ompt_wait_id_t)lck,
         codeptr);
   }
 #endif
