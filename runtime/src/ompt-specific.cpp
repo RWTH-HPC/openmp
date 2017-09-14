@@ -6,11 +6,6 @@
 #include "ompt-internal.h"
 #include "ompt-specific.h"
 
-#ifdef OMPT_USE_LIBUNWIND
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
-#endif
-
 #if KMP_OS_UNIX
 #include <dlfcn.h>
 #include <execinfo.h>
@@ -447,87 +442,3 @@ static uint64_t __ompt_get_unique_id_internal() {
   }
   return ++ID;
 }
-
-#if KMP_OS_UNIX
-void *__ompt_get_return_address_backtrace(int level) {
-
-  int real_level = level + 2;
-  void *array[real_level];
-  size_t size;
-
-  size = backtrace(array, real_level);
-  if (size == real_level)
-    return array[real_level - 1];
-  else
-    return NULL;
-}
-#endif
-
-#ifdef OMPT_USE_LIBUNWIND
-
-void *__ompt_get_return_address_internal(int level) {
-  // get info about runtime lib
-  Dl_info lib_info;
-  dladdr((void *)&__ompt_get_return_address_internal, &lib_info);
-
-  unw_cursor_t cursor;
-  unw_context_t uc;
-  unw_word_t ip;
-  Dl_info info;
-
-  // search for return address that does not point into the runtime lib
-  unw_getcontext(&uc);
-  unw_init_local(&cursor, &uc);
-  do {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    dladdr((void *)ip, &info);
-    if (info.dli_fbase != lib_info.dli_fbase)
-      return (void *)ip;
-  } while (unw_step(&cursor) > 0);
-
-  /*
-  printf("%p, %d\n", (void*)ip, dladdr((void*) ip, &info));
-  printf("%s, %s\n", info.dli_fname, __FILE__);
-  printf("%s\n", dlerror());
-  while (level > 0 && unw_step(&cursor) > 0)
-  {
-      level--;
-      unw_get_reg(&cursor, UNW_REG_IP, &ip);
-      printf("%p, %d\n", (void*)ip, dladdr((void*) ip, &info));
-      printf("%s, %s\n", info.dli_fname, __FILE__);
-      printf("%s\n", dlerror());
-  }
-  unw_get_reg(&cursor, UNW_REG_IP, &ip);
-
-  if(level == 0)
-    return (void*)ip;
-  else
-  */
-  return NULL;
-}
-
-void *__ompt_get_frame_address_internal(int level) {
-  level++;
-  unw_cursor_t cursor;
-  unw_context_t uc;
-  unw_word_t fp;
-
-  // printf("%p\n", (void*)cursor.opaque[0]);
-
-  unw_getcontext(&uc);
-  unw_init_local(&cursor, &uc);
-  // unw_get_reg(&cursor, UNW_REG_SP, &fp);
-  // printf("ompt %p\n", (void*)fp);
-  while (level > 0 && unw_step(&cursor) > 0) {
-    // unw_get_reg(&cursor, UNW_REG_SP, &fp);
-    // printf("ompt %p\n", (void*)fp);
-    level--;
-  }
-  unw_get_reg(&cursor, UNW_REG_SP, &fp);
-
-  if (level == 0)
-    return (void *)(fp);
-  else
-    return NULL;
-}
-#endif

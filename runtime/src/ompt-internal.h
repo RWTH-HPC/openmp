@@ -96,18 +96,8 @@ void ompt_pre_init(void);
 void ompt_post_init(void);
 void ompt_fini(void);
 
-#ifdef OMPT_USE_LIBUNWIND
-void *__ompt_get_return_address_internal(int level);
-#define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_internal(level)
-void *__ompt_get_frame_address_internal(int level);
-#define OMPT_GET_FRAME_ADDRESS(level) __ompt_get_frame_address_internal(level)
-#else
-void *__ompt_get_return_address_backtrace(int level);
 #define OMPT_GET_RETURN_ADDRESS(level) __builtin_return_address(level)
-//  #define OMPT_GET_RETURN_ADDRESS(level)
-//  __ompt_get_return_address_backtrace(level)
 #define OMPT_GET_FRAME_ADDRESS(level) __builtin_frame_address(level)
-#endif
 
 int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg);
 
