@@ -530,7 +530,7 @@ OMPT_API_ROUTINE int ompt_get_place_num(void) {
     return -1;
   gtid = __kmp_entry_gtid();
   thread = __kmp_thread_from_gtid(gtid);
-  if (thread->th.th_current_place < 0)
+  if(thread == NULL || thread->th.th_current_place < 0)
     return -1;
   return thread->th.th_current_place;
 #endif
@@ -548,6 +548,8 @@ OMPT_API_ROUTINE int ompt_get_partition_place_nums(int place_nums_size,
     return 0;
   gtid = __kmp_entry_gtid();
   thread = __kmp_thread_from_gtid(gtid);
+  if(thread==NULL)
+    return 0;
   first_place = thread->th.th_first_place;
   last_place = thread->th.th_last_place;
   if (first_place < 0 || last_place < 0)
