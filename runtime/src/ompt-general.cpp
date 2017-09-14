@@ -680,6 +680,11 @@ OMPT_API_ROUTINE int ompt_get_target_info(
   return 0; //thread is not in a target region
 }
 
+OMPT_API_ROUTINE int ompt_get_num_devices(void)
+{
+  return 1; //only one device (the current device) is available
+}
+
 /*****************************************************************************
  * API inquiry for tool
  ****************************************************************************/
