@@ -8,6 +8,9 @@
 int main()
 {
   int condition=0;
+  #pragma omp parallel num_threads(2)
+  {}
+
   print_frame(0);
   #pragma omp parallel num_threads(2)
   {
