@@ -97,7 +97,7 @@ do {\
 } while(0)
 
 #define print_current_address(id)\
-{}\
+{} /* Empty block between "#pragma omp ..." and __asm__ statement as a workaround for icc bug */ \
 __asm__("nop"); /* provide an instruction as jump target (compiler would insert an instruction if label is target of a jmp ) */ \
 ompt_label_##id:\
     printf("%" PRIu64 ": current_address=%p or %p\n", ompt_get_thread_data()->value, (char*)(&& ompt_label_##id)-1, (char*)(&& ompt_label_##id)-4) 
