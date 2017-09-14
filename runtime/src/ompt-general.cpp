@@ -647,10 +647,11 @@ OMPT_API_ROUTINE int ompt_get_ompt_version() { return OMPT_VERSION; }
  ---------------------------------------------------------------------------*/
 
 int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg) {
+
   if (ompt_enabled.enabled) {
     if (ompt_enabled.ompt_callback_control_tool) {
       return ompt_callbacks.ompt_callback(ompt_callback_control_tool)(
-          command, modifier, arg, OMPT_GET_RETURN_ADDRESS(0));
+          command, modifier, arg, OMPT_LOAD_RETURN_ADDRESS(__kmp_entry_gtid()));
     } else {
       return -1;
     }

@@ -23,6 +23,10 @@
 
 #include "kmp_i18n.h"
 
+#if OMPT_SUPPORT
+#include "ompt-specific.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -348,6 +352,7 @@ int FTN_STDCALL xexpand(FTN_CONTROL_TOOL)(uint64_t command, uint64_t modifier,
 #if defined(KMP_STUB) || !OMPT_SUPPORT
   return -2;
 #else
+  OMPT_STORE_RETURN_ADDRESS(__kmp_entry_gtid());
   if (!TCR_4(__kmp_init_middle)) {
     return -2;
   }
