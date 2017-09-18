@@ -903,7 +903,7 @@ void FTN_STDCALL FTN_INIT_LOCK_WITH_HINT(void **user_lock,
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_init_lock_with_hint(NULL, gtid, user_lock,
                              KMP_DEREF hint);
@@ -917,7 +917,7 @@ void FTN_STDCALL FTN_INIT_NEST_LOCK_WITH_HINT(void **user_lock,
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_init_nest_lock_with_hint(NULL, gtid, user_lock,
                                   KMP_DEREF hint);
@@ -932,7 +932,7 @@ void FTN_STDCALL xexpand(FTN_INIT_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_init_lock(NULL, gtid, user_lock);
 #endif
@@ -945,7 +945,7 @@ void FTN_STDCALL xexpand(FTN_INIT_NEST_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_init_nest_lock(NULL, gtid, user_lock);
 #endif
@@ -957,7 +957,7 @@ void FTN_STDCALL xexpand(FTN_DESTROY_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_destroy_lock(NULL, gtid, user_lock);
 #endif
@@ -969,7 +969,7 @@ void FTN_STDCALL xexpand(FTN_DESTROY_NEST_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_destroy_nest_lock(NULL, gtid, user_lock);
 #endif
@@ -987,7 +987,7 @@ void FTN_STDCALL xexpand(FTN_SET_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_set_lock(NULL, gtid, user_lock);
 #endif
@@ -1002,7 +1002,7 @@ void FTN_STDCALL xexpand(FTN_SET_NEST_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_set_nest_lock(NULL, gtid, user_lock);
 #endif
@@ -1020,7 +1020,7 @@ void FTN_STDCALL xexpand(FTN_UNSET_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_unset_lock(NULL, gtid, user_lock);
 #endif
@@ -1038,7 +1038,7 @@ void FTN_STDCALL xexpand(FTN_UNSET_NEST_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmpc_unset_nest_lock(NULL, gtid, user_lock);
 #endif
@@ -1057,7 +1057,7 @@ int FTN_STDCALL xexpand(FTN_TEST_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   return __kmpc_test_lock(NULL, gtid, user_lock
   );
@@ -1073,7 +1073,7 @@ int FTN_STDCALL xexpand(FTN_TEST_NEST_LOCK)(void **user_lock) {
 #else
   int gtid = __kmp_entry_gtid();
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   return __kmpc_test_nest_lock(NULL, gtid, user_lock);
 #endif
