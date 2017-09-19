@@ -1,5 +1,5 @@
 // RUN: %libomp-compile-and-run | %filecheck %s
-// RUN: %libomp-compile-and-run | %sort-threads | %filecheck --check-prefix=THREADS %s
+// RUN: %libomp-compile-and-run | %sort-threads | %filecheck-threads %s
 // REQUIRES: ompt
 #include "callback.h"
 #include <omp.h>

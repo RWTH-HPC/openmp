@@ -7,8 +7,9 @@ int main()
 {
   int y[] = {0,1,2,3};
 
+  int i;
   #pragma omp for simd
-  for (int i = 0; i < 4; i++)
+  for (i = 0; i < 4; i++)
   {
     y[i]++;
   }

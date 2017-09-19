@@ -10,8 +10,9 @@ int main()
   #pragma omp parallel num_threads(2)
   {
     //implicit barrier at end of for loop
+    int i;
     #pragma omp for
-    for (int i = 0; i < 4; i++)
+    for (i = 0; i < 4; i++)
     {
       y[i]++;
     }

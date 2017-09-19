@@ -69,8 +69,7 @@ typedef struct {
   ompt_data_t thread_data;
   ompt_data_t task_data; /* stored here from implicit barrier-begin until
                             implicit-task-end */
-  void *kmp_return_address; /* stored here on entry of runtime */
-  void *gomp_return_address; /* stored here on entry of runtime */
+  void *return_address; /* stored here on entry of runtime */
   omp_state_t state;
   ompt_wait_id_t wait_id;
   int ompt_task_yielded;
@@ -97,18 +96,8 @@ void ompt_pre_init(void);
 void ompt_post_init(void);
 void ompt_fini(void);
 
-#ifdef OMPT_USE_LIBUNWIND
-void *__ompt_get_return_address_internal(int level);
-#define OMPT_GET_RETURN_ADDRESS(level) __ompt_get_return_address_internal(level)
-void *__ompt_get_frame_address_internal(int level);
-#define OMPT_GET_FRAME_ADDRESS(level) __ompt_get_frame_address_internal(level)
-#else
-void *__ompt_get_return_address_backtrace(int level);
 #define OMPT_GET_RETURN_ADDRESS(level) __builtin_return_address(level)
-//  #define OMPT_GET_RETURN_ADDRESS(level)
-//  __ompt_get_return_address_backtrace(level)
 #define OMPT_GET_FRAME_ADDRESS(level) __builtin_frame_address(level)
-#endif
 
 int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg);
 

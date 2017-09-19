@@ -2544,7 +2544,7 @@ void __kmpc_dispatch_init_4(ident_t *loc, kmp_int32 gtid,
                             kmp_int32 ub, kmp_int32 st, kmp_int32 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dispatch_init<kmp_int32>(loc, gtid, schedule, lb, ub, st, chunk, true);
 }
@@ -2556,7 +2556,7 @@ void __kmpc_dispatch_init_4u(ident_t *loc, kmp_int32 gtid,
                              kmp_uint32 ub, kmp_int32 st, kmp_int32 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dispatch_init<kmp_uint32>(loc, gtid, schedule, lb, ub, st, chunk, true);
 }
@@ -2569,7 +2569,7 @@ void __kmpc_dispatch_init_8(ident_t *loc, kmp_int32 gtid,
                             kmp_int64 ub, kmp_int64 st, kmp_int64 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dispatch_init<kmp_int64>(loc, gtid, schedule, lb, ub, st, chunk, true);
 }
@@ -2582,7 +2582,7 @@ void __kmpc_dispatch_init_8u(ident_t *loc, kmp_int32 gtid,
                              kmp_uint64 ub, kmp_int64 st, kmp_int64 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dispatch_init<kmp_uint64>(loc, gtid, schedule, lb, ub, st, chunk, true);
 }
@@ -2602,7 +2602,7 @@ void __kmpc_dist_dispatch_init_4(ident_t *loc, kmp_int32 gtid,
                                  kmp_int32 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dist_get_bounds<kmp_int32>(loc, gtid, p_last, &lb, &ub, st);
   __kmp_dispatch_init<kmp_int32>(loc, gtid, schedule, lb, ub, st, chunk, true);
@@ -2614,7 +2614,7 @@ void __kmpc_dist_dispatch_init_4u(ident_t *loc, kmp_int32 gtid,
                                   kmp_int32 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dist_get_bounds<kmp_uint32>(loc, gtid, p_last, &lb, &ub, st);
   __kmp_dispatch_init<kmp_uint32>(loc, gtid, schedule, lb, ub, st, chunk, true);
@@ -2626,7 +2626,7 @@ void __kmpc_dist_dispatch_init_8(ident_t *loc, kmp_int32 gtid,
                                  kmp_int64 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dist_get_bounds<kmp_int64>(loc, gtid, p_last, &lb, &ub, st);
   __kmp_dispatch_init<kmp_int64>(loc, gtid, schedule, lb, ub, st, chunk, true);
@@ -2638,7 +2638,7 @@ void __kmpc_dist_dispatch_init_8u(ident_t *loc, kmp_int32 gtid,
                                   kmp_int64 chunk) {
   KMP_DEBUG_ASSERT(__kmp_init_serial);
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
   __kmp_dist_get_bounds<kmp_uint64>(loc, gtid, p_last, &lb, &ub, st);
   __kmp_dispatch_init<kmp_uint64>(loc, gtid, schedule, lb, ub, st, chunk, true);
@@ -2659,9 +2659,12 @@ If there is no more work, then the lb,ub and stride need not be modified.
 */
 int __kmpc_dispatch_next_4(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                            kmp_int32 *p_lb, kmp_int32 *p_ub, kmp_int32 *p_st) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  OMPT_STORE_RETURN_ADDRESS(gtid);
+#endif
   return __kmp_dispatch_next<kmp_int32>(loc, gtid, p_last, p_lb, p_ub, p_st
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-                                       , OMPT_GET_RETURN_ADDRESS(0)
+                                       , OMPT_LOAD_RETURN_ADDRESS(gtid)
 #endif
                                        );
 }
@@ -2672,9 +2675,12 @@ See @ref __kmpc_dispatch_next_4
 int __kmpc_dispatch_next_4u(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                             kmp_uint32 *p_lb, kmp_uint32 *p_ub,
                             kmp_int32 *p_st) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  OMPT_STORE_RETURN_ADDRESS(gtid);
+#endif
   return __kmp_dispatch_next<kmp_uint32>(loc, gtid, p_last, p_lb, p_ub, p_st
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-                                        , OMPT_GET_RETURN_ADDRESS(0)
+                                        , OMPT_LOAD_RETURN_ADDRESS(gtid)
 #endif
                                         );
 }
@@ -2684,9 +2690,12 @@ See @ref __kmpc_dispatch_next_4
 */
 int __kmpc_dispatch_next_8(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                            kmp_int64 *p_lb, kmp_int64 *p_ub, kmp_int64 *p_st) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  OMPT_STORE_RETURN_ADDRESS(gtid);
+#endif
   return __kmp_dispatch_next<kmp_int64>(loc, gtid, p_last, p_lb, p_ub, p_st
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-                                       , OMPT_GET_RETURN_ADDRESS(0)
+                                       , OMPT_LOAD_RETURN_ADDRESS(gtid)
 #endif
                                        );
 }
@@ -2697,9 +2706,12 @@ See @ref __kmpc_dispatch_next_4
 int __kmpc_dispatch_next_8u(ident_t *loc, kmp_int32 gtid, kmp_int32 *p_last,
                             kmp_uint64 *p_lb, kmp_uint64 *p_ub,
                             kmp_int64 *p_st) {
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  OMPT_STORE_RETURN_ADDRESS(gtid);
+#endif
   return __kmp_dispatch_next<kmp_uint64>(loc, gtid, p_last, p_lb, p_ub, p_st
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-                                        , OMPT_GET_RETURN_ADDRESS(0)
+                                        , OMPT_LOAD_RETURN_ADDRESS(gtid)
 #endif
                                         );
 }

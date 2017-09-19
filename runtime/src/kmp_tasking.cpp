@@ -3918,7 +3918,7 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
     taskdata->td_flags.task_serial = 1;
     taskdata->td_flags.tiedness = TASK_TIED; // AC: serial task cannot be untied
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
     // always start serial tasks linearly
     __kmp_taskloop_linear(loc, gtid, task, lb, ub, st, ub_glob, num_tasks,
@@ -3928,7 +3928,7 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
                   "(%lld), grain %llu, extras %llu\n",
                   gtid, tc, num_tasks, num_tasks_min, grainsize, extras));
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
     __kmp_taskloop_recur(loc, gtid, task, lb, ub, st, ub_glob, num_tasks,
                          grainsize, extras, tc, num_tasks_min, task_dup);
@@ -3937,7 +3937,7 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
                   "(%lld), grain %llu, extras %llu\n",
                   gtid, tc, num_tasks, num_tasks_min, grainsize, extras));
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
     __kmp_taskloop_linear(loc, gtid, task, lb, ub, st, ub_glob, num_tasks,
                           grainsize, extras, tc, task_dup);
@@ -3945,7 +3945,7 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
 
   if (nogroup == 0) {
 #if OMPT_SUPPORT && OMPT_OPTIONAL
-    OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+    OMPT_STORE_RETURN_ADDRESS(gtid);
 #endif
     __kmpc_end_taskgroup(loc, gtid);
   }

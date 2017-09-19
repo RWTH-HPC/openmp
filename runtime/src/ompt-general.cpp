@@ -499,6 +499,7 @@ OMPT_API_ROUTINE int ompt_get_place_proc_ids(int place_num, int ids_size,
     return 0;
   if (place_num < 0 || place_num >= (int)__kmp_affinity_num_masks)
     return 0;
+  /* TODO: Is this safe for asynchronous call from signal handler during runtime shutdown? */
   kmp_affin_mask_t *mask = KMP_CPU_INDEX(__kmp_affinity_masks, place_num);
   count = 0;
   KMP_CPU_SET_ITERATE(i, mask) {
@@ -530,7 +531,7 @@ OMPT_API_ROUTINE int ompt_get_place_num(void) {
     return -1;
   gtid = __kmp_entry_gtid();
   thread = __kmp_thread_from_gtid(gtid);
-  if (thread->th.th_current_place < 0)
+  if(thread == NULL || thread->th.th_current_place < 0)
     return -1;
   return thread->th.th_current_place;
 #endif
@@ -548,6 +549,8 @@ OMPT_API_ROUTINE int ompt_get_partition_place_nums(int place_nums_size,
     return 0;
   gtid = __kmp_entry_gtid();
   thread = __kmp_thread_from_gtid(gtid);
+  if(thread==NULL)
+    return 0;
   first_place = thread->th.th_first_place;
   last_place = thread->th.th_last_place;
   if (first_place < 0 || last_place < 0)
@@ -644,10 +647,11 @@ OMPT_API_ROUTINE int ompt_get_ompt_version() { return OMPT_VERSION; }
  ---------------------------------------------------------------------------*/
 
 int __kmp_control_tool(uint64_t command, uint64_t modifier, void *arg) {
+
   if (ompt_enabled.enabled) {
     if (ompt_enabled.ompt_callback_control_tool) {
       return ompt_callbacks.ompt_callback(ompt_callback_control_tool)(
-          command, modifier, arg, OMPT_GET_RETURN_ADDRESS(0));
+          command, modifier, arg, OMPT_LOAD_RETURN_ADDRESS(__kmp_entry_gtid()));
     } else {
       return -1;
     }
@@ -674,6 +678,11 @@ OMPT_API_ROUTINE int ompt_get_target_info(
     ompt_id_t *host_op_id)
 {
   return 0; //thread is not in a target region
+}
+
+OMPT_API_ROUTINE int ompt_get_num_devices(void)
+{
+  return 1; //only one device (the current device) is available
 }
 
 /*****************************************************************************

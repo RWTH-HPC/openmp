@@ -3702,78 +3702,30 @@ KMP_EXPORT void *__kmpc_task_reduction_get_th_data(int gtid, void *tg, void *d);
 
 /* Lock interface routines (fast versions with gtid passed in) */
 KMP_EXPORT void __kmpc_init_lock(ident_t *loc, kmp_int32 gtid,
-                                 void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                 , void * codeptr
-#endif
-                                   );
+                                 void **user_lock);
 KMP_EXPORT void __kmpc_init_nest_lock(ident_t *loc, kmp_int32 gtid,
-                                      void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                      , void * codeptr
-#endif
-                                      );
+                                      void **user_lock);
 KMP_EXPORT void __kmpc_destroy_lock(ident_t *loc, kmp_int32 gtid,
-                                    void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                    , void * codeptr
-#endif
-                                    );
+                                    void **user_lock);
 KMP_EXPORT void __kmpc_destroy_nest_lock(ident_t *loc, kmp_int32 gtid,
-                                         void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                         , void * codeptr
-#endif
-                                         );
-KMP_EXPORT void __kmpc_set_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                , void * codeptr
-#endif
-);
+                                         void **user_lock);
+KMP_EXPORT void __kmpc_set_lock(ident_t *loc, kmp_int32 gtid, void **user_lock);
 KMP_EXPORT void __kmpc_set_nest_lock(ident_t *loc, kmp_int32 gtid,
-                                     void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                     , void * codeptr
-#endif
-                                     );
+                                     void **user_lock);
 KMP_EXPORT void __kmpc_unset_lock(ident_t *loc, kmp_int32 gtid,
-                                  void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                  , void * codeptr
-#endif
-                                  );
+                                  void **user_lock);
 KMP_EXPORT void __kmpc_unset_nest_lock(ident_t *loc, kmp_int32 gtid,
-                                       void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                       , void * codeptr
-#endif
-                                       );
-KMP_EXPORT int __kmpc_test_lock(ident_t *loc, kmp_int32 gtid, void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                , void * codeptr
-#endif
-);
+                                       void **user_lock);
+KMP_EXPORT int __kmpc_test_lock(ident_t *loc, kmp_int32 gtid, void **user_lock);
 KMP_EXPORT int __kmpc_test_nest_lock(ident_t *loc, kmp_int32 gtid,
-                                     void **user_lock
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                     , void * codeptr
-#endif
-                                     );
+                                     void **user_lock);
 
 #if OMP_45_ENABLED
 KMP_EXPORT void __kmpc_init_lock_with_hint(ident_t *loc, kmp_int32 gtid,
-                                           void **user_lock, uintptr_t hint
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                           , void * codeptr
-#endif
-                                           );
+                                           void **user_lock, uintptr_t hint);
 KMP_EXPORT void __kmpc_init_nest_lock_with_hint(ident_t *loc, kmp_int32 gtid,
                                                 void **user_lock,
-                                                uintptr_t hint
-#if OMPT_SUPPORT && OMPT_OPTIONAL
-                                                , void * codeptr
-#endif
-                                                );
+                                                uintptr_t hint);
 #endif
 
 /* Interface to fast scalable reduce methods routines */

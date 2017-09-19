@@ -38,7 +38,8 @@
     macro(ompt_get_partition_place_nums)    \
     macro(ompt_get_proc_id)                 \
                                             \
-    macro(ompt_get_target_info)
+    macro(ompt_get_target_info)             \
+    macro(ompt_get_num_devices)
 
 #define FOREACH_OMPT_PLACEHOLDER_FN(macro)  \
     macro (ompt_idle)                       \
@@ -725,5 +726,7 @@ OMPT_API_FUNCTION(uint64_t, ompt_get_unique_id, (void));
     ompt_id_t *target_id,
     ompt_id_t *host_op_id
 ));
+
+ OMPT_API_FUNCTION(int, ompt_get_num_devices, (void));
 
 #endif /* __OMPT__ */

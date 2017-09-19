@@ -477,7 +477,7 @@ kmp_int32 __kmpc_omp_task_with_deps(ident_t *loc_ref, kmp_int32 gtid,
   kmp_taskdata_t *current_task = thread->th.th_current_task;
 
 #if OMPT_SUPPORT
-  OMPT_STORE_KMP_RETURN_ADDRESS(gtid);
+  OMPT_STORE_RETURN_ADDRESS(gtid);
 
   if (ompt_enabled.enabled) {
     if (ompt_enabled.ompt_callback_task_create) {
