@@ -309,8 +309,8 @@ void __kmp_check_stack_overlap(kmp_info_t *th) {
                 (size_t)TCR_PTR(f_th->th.th_info.ds.ds_stacksize),
                 "th_%d stack (overlapped)", __kmp_gtid_from_thread(f_th));
 
-          __kmp_msg(kmp_ms_fatal, KMP_MSG(StackOverlap),
-                    KMP_HNT(ChangeStackLimit), __kmp_msg_null);
+          __kmp_fatal(KMP_MSG(StackOverlap), KMP_HNT(ChangeStackLimit),
+                      __kmp_msg_null);
         }
       }
     }
@@ -3703,12 +3703,12 @@ int __kmp_register_root(int initial_thread) {
   /* see if there are too many threads */
   if (__kmp_all_nth >= capacity && !__kmp_expand_threads(1, 1)) {
     if (__kmp_tp_cached) {
-      __kmp_msg(kmp_ms_fatal, KMP_MSG(CantRegisterNewThread),
-                KMP_HNT(Set_ALL_THREADPRIVATE, __kmp_tp_capacity),
-                KMP_HNT(PossibleSystemLimitOnThreads), __kmp_msg_null);
+      __kmp_fatal(KMP_MSG(CantRegisterNewThread),
+                  KMP_HNT(Set_ALL_THREADPRIVATE, __kmp_tp_capacity),
+                  KMP_HNT(PossibleSystemLimitOnThreads), __kmp_msg_null);
     } else {
-      __kmp_msg(kmp_ms_fatal, KMP_MSG(CantRegisterNewThread),
-                KMP_HNT(SystemLimitOnThreads), __kmp_msg_null);
+      __kmp_fatal(KMP_MSG(CantRegisterNewThread), KMP_HNT(SystemLimitOnThreads),
+                  __kmp_msg_null);
     }
   }; // if
 
@@ -4146,10 +4146,6 @@ static void __kmp_initialize_info(kmp_info_t *this_thr, kmp_team_t *team,
 
   this_thr->th.th_local.this_construct = 0;
 
-#ifdef BUILD_TV
-  this_thr->th.th_local.tv_data = 0;
-#endif
-
   if (!this_thr->th.th_pri_common) {
     this_thr->th.th_pri_common =
         (struct common_table *)__kmp_allocate(sizeof(struct common_table));
@@ -4542,8 +4538,8 @@ __kmp_set_thread_affinity_mask_full_tmp(kmp_affin_mask_t *old_mask) {
       status = __kmp_get_system_affinity(old_mask, TRUE);
       int error = errno;
       if (status != 0) {
-        __kmp_msg(kmp_ms_fatal, KMP_MSG(ChangeThreadAffMaskError),
-                  KMP_ERR(error), __kmp_msg_null);
+        __kmp_fatal(KMP_MSG(ChangeThreadAffMaskError), KMP_ERR(error),
+                    __kmp_msg_null);
       }
     }
     __kmp_set_system_affinity(__kmp_affin_fullMask, TRUE);
@@ -4693,23 +4689,50 @@ static void __kmp_partition_places(kmp_team_t *team, int update_master_only) {
       n_places = __kmp_affinity_num_masks - first_place + last_place + 1;
     }
     if (n_th <= n_places) {
-      int place = masters_place;
-      int S = n_places / n_th;
-      int s_count, rem, gap, gap_ct;
-      rem = n_places - n_th * S;
-      gap = rem ? n_th / rem : 1;
-      gap_ct = gap;
-      thidx = n_th;
-      if (update_master_only == 1)
-        thidx = 1;
-      for (f = 0; f < thidx; f++) {
-        kmp_info_t *th = team->t.t_threads[f];
-        KMP_DEBUG_ASSERT(th != NULL);
+      int place = -1;
 
-        th->th.th_first_place = place;
-        th->th.th_new_place = place;
-        s_count = 1;
-        while (s_count < S) {
+      if (n_places != static_cast<int>(__kmp_affinity_num_masks)) {
+        int S = n_places / n_th;
+        int s_count, rem, gap, gap_ct;
+
+        place = masters_place;
+        rem = n_places - n_th * S;
+        gap = rem ? n_th / rem : 1;
+        gap_ct = gap;
+        thidx = n_th;
+        if (update_master_only == 1)
+          thidx = 1;
+        for (f = 0; f < thidx; f++) {
+          kmp_info_t *th = team->t.t_threads[f];
+          KMP_DEBUG_ASSERT(th != NULL);
+
+          th->th.th_first_place = place;
+          th->th.th_new_place = place;
+          s_count = 1;
+          while (s_count < S) {
+            if (place == last_place) {
+              place = first_place;
+            } else if (place == (int)(__kmp_affinity_num_masks - 1)) {
+              place = 0;
+            } else {
+              place++;
+            }
+            s_count++;
+          }
+          if (rem && (gap_ct == gap)) {
+            if (place == last_place) {
+              place = first_place;
+            } else if (place == (int)(__kmp_affinity_num_masks - 1)) {
+              place = 0;
+            } else {
+              place++;
+            }
+            rem--;
+            gap_ct = 0;
+          }
+          th->th.th_last_place = place;
+          gap_ct++;
+
           if (place == last_place) {
             place = first_place;
           } else if (place == (int)(__kmp_affinity_num_masks - 1)) {
@@ -4717,35 +4740,74 @@ static void __kmp_partition_places(kmp_team_t *team, int update_master_only) {
           } else {
             place++;
           }
-          s_count++;
+
+          KA_TRACE(100, ("__kmp_partition_places: spread: T#%d(%d:%d) place %d "
+                         "partition = [%d,%d], __kmp_affinity_num_masks: %u\n",
+                         __kmp_gtid_from_thread(team->t.t_threads[f]),
+                         team->t.t_id, f, th->th.th_new_place,
+                         th->th.th_first_place, th->th.th_last_place,
+                         __kmp_affinity_num_masks));
         }
-        if (rem && (gap_ct == gap)) {
-          if (place == last_place) {
-            place = first_place;
-          } else if (place == (int)(__kmp_affinity_num_masks - 1)) {
-            place = 0;
-          } else {
-            place++;
+      } else {
+        /* Having uniform space of available computation places I can create
+           T partitions of round(P/T) size and put threads into the first
+           place of each partition. */
+        double current = static_cast<double>(masters_place);
+        double spacing =
+                (static_cast<double>(n_places + 1) / static_cast<double>(n_th));
+        int first, last;
+        kmp_info_t *th;
+
+        thidx = n_th + 1;
+        if (update_master_only == 1)
+          thidx = 1;
+        for (f = 0; f < thidx; f++) {
+          first = static_cast<int>(current);
+          last = static_cast<int>(current + spacing) - 1;
+          KMP_DEBUG_ASSERT(last >= first);
+          if (first >= n_places) {
+            if (masters_place) {
+              first -= n_places;
+              last -= n_places;
+              if (first == (masters_place + 1)) {
+                KMP_DEBUG_ASSERT(f == n_th);
+                first--;
+              }
+              if (last == masters_place) {
+                KMP_DEBUG_ASSERT(f == (n_th - 1));
+                last--;
+              }
+            } else {
+              KMP_DEBUG_ASSERT(f == n_th);
+              first = 0;
+              last = 0;
+            }
           }
-          rem--;
-          gap_ct = 0;
-        }
-        th->th.th_last_place = place;
-        gap_ct++;
+          if (last >= n_places) {
+            last = (n_places - 1);
+          }
+          place = first;
+          current += spacing;
+          if (f < n_th) {
+            KMP_DEBUG_ASSERT(0 <= first);
+            KMP_DEBUG_ASSERT(n_places > first);
+            KMP_DEBUG_ASSERT(0 <= last);
+            KMP_DEBUG_ASSERT(n_places > last);
+            KMP_DEBUG_ASSERT(last_place >= first_place);
+            th = team->t.t_threads[f];
+            KMP_DEBUG_ASSERT(th);
+            th->th.th_first_place = first;
+            th->th.th_new_place = place;
+            th->th.th_last_place = last;
 
-        if (place == last_place) {
-          place = first_place;
-        } else if (place == (int)(__kmp_affinity_num_masks - 1)) {
-          place = 0;
-        } else {
-          place++;
+            KA_TRACE(100, ("__kmp_partition_places: spread: T#%d(%d:%d) place %d "
+                           "partition = [%d,%d], spacing = %.4f\n",
+                           __kmp_gtid_from_thread(team->t.t_threads[f]),
+                           team->t.t_id, f, th->th.th_new_place,
+                           th->th.th_first_place, th->th.th_last_place,
+                           spacing));
+          }
         }
-
-        KA_TRACE(100, ("__kmp_partition_places: spread: T#%d(%d:%d) place %d "
-                       "partition = [%d,%d]\n",
-                       __kmp_gtid_from_thread(team->t.t_threads[f]),
-                       team->t.t_id, f, th->th.th_new_place,
-                       th->th.th_first_place, th->th.th_last_place));
       }
       KMP_DEBUG_ASSERT(update_master_only || place == masters_place);
     } else {
@@ -6303,9 +6365,8 @@ void __kmp_register_library_startup(void) {
         char *duplicate_ok = __kmp_env_get("KMP_DUPLICATE_LIB_OK");
         if (!__kmp_str_match_true(duplicate_ok)) {
           // That's not allowed. Issue fatal error.
-          __kmp_msg(kmp_ms_fatal,
-                    KMP_MSG(DuplicateLibrary, KMP_LIBRARY_FILE, file_name),
-                    KMP_HNT(DuplicateLibrary), __kmp_msg_null);
+          __kmp_fatal(KMP_MSG(DuplicateLibrary, KMP_LIBRARY_FILE, file_name),
+                      KMP_HNT(DuplicateLibrary), __kmp_msg_null);
         }; // if
         KMP_INTERNAL_FREE(duplicate_ok);
         __kmp_duplicate_library_ok = 1;
@@ -6610,8 +6671,8 @@ static void __kmp_do_serial_initialize(void) {
        library. For dynamic library, we already have _fini and DllMain. */
     int rc = atexit(__kmp_internal_end_atexit);
     if (rc != 0) {
-      __kmp_msg(kmp_ms_fatal, KMP_MSG(FunctionError, "atexit()"), KMP_ERR(rc),
-                __kmp_msg_null);
+      __kmp_fatal(KMP_MSG(FunctionError, "atexit()"), KMP_ERR(rc),
+                  __kmp_msg_null);
     }; // if
   }
 #endif
