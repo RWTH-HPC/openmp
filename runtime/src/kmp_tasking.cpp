@@ -3826,8 +3826,24 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
                 "grain %llu(%d), dup %p\n",
                 gtid, taskdata, *lb, *ub, st, grainsize, sched, task_dup));
 
-  if (nogroup == 0)
-    __kmpc_taskgroup(loc, gtid);
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  ompt_team_info_t *team_info = __ompt_get_teaminfo(0, NULL);
+  ompt_task_info_t *task_info = __ompt_get_task_info_object(0);
+  if (ompt_enabled.ompt_callback_work) {
+    ompt_callbacks.ompt_callback(ompt_callback_work)(
+        ompt_work_taskloop, ompt_scope_begin, &(team_info->parallel_data),
+        &(task_info->task_data),
+        0, // TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18). ?? Should ve 'tc' value below?
+        OMPT_GET_RETURN_ADDRESS(0));
+  }
+#endif
+
+  if (nogroup == 0){
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+    OMPT_STORE_RETURN_ADDRESS(gtid);
+#endif
+     __kmpc_taskgroup(loc, gtid);
+  }
 
   // =========================================================================
   // calculate loop parameters
@@ -3933,6 +3949,15 @@ void __kmpc_taskloop(ident_t *loc, int gtid, kmp_task_t *task, int if_val,
 #endif
     __kmpc_end_taskgroup(loc, gtid);
   }
+#if OMPT_SUPPORT && OMPT_OPTIONAL
+  if (ompt_enabled.ompt_callback_work) {
+    ompt_callbacks.ompt_callback(ompt_callback_work)(
+        ompt_work_taskloop, ompt_scope_end, &(team_info->parallel_data),
+        &(task_info->task_data),
+        0, // TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18). ?? Should ve 'tc' value below?
+        OMPT_GET_RETURN_ADDRESS(0));
+  }
+#endif
   KA_TRACE(20, ("__kmpc_taskloop(exit): T#%d\n", gtid));
 }
 

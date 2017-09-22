@@ -202,6 +202,10 @@ Values for bit flags used in the ident_t to describe the fields.
 #define KMP_IDENT_BARRIER_IMPL_SINGLE 0x0140
 #define KMP_IDENT_BARRIER_IMPL_WORKSHARE 0x01C0
 
+#define KMP_IDENT_WORK_LOOP 0x200 // static loop
+#define KMP_IDENT_WORK_SECTIONS 0x400 //sections
+#define KMP_IDENT_WORK_DISTRIBUTE 0x800 //distribute
+
 /*!
  * The ident structure that describes a source location.
  */

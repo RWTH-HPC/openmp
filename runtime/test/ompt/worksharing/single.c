@@ -21,11 +21,11 @@ int main()
 
   // CHECK: 0: NULL_POINTER=[[NULL:.*$]]
 
-  // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_single_in_block_begin: parallel_id=[[PARALLEL_ID:[0-9]+]], parent_task_id=[[TASK_ID:[0-9]+]], codeptr_ra={{0x[0-f]+}}, count=1
-  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_single_in_block_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], codeptr_ra={{0x[0-f]+}}, count=1
+  // CHECK: {{^}}[[THREAD_ID_1:[0-9]+]]: ompt_event_single_in_block_begin: parallel_id=[[PARALLEL_ID:[0-9]+]], parent_task_id=[[TASK_ID:[0-9]+]], codeptr_ra={{0x[0-f]+}}, count=1
+  // CHECK: {{^}}[[THREAD_ID_1]]: ompt_event_single_in_block_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], codeptr_ra={{0x[0-f]+}}, count=1
 
-  // CHECK: {{^}}[[THREAD_ID:[0-9]+]]: ompt_event_single_others_begin: parallel_id=[[PARALLEL_ID:[0-9]+]], task_id=[[TASK_ID:[0-9]+]], codeptr_ra={{0x[0-f]+}}, count=1
-  // CHECK: {{^}}[[THREAD_ID]]: ompt_event_single_others_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], codeptr_ra={{0x[0-f]+}}, count=1
+  // CHECK: {{^}}[[THREAD_ID_2:[0-9]+]]: ompt_event_single_others_begin: parallel_id=[[PARALLEL_ID:[0-9]+]], task_id=[[TASK_ID:[0-9]+]], codeptr_ra={{0x[0-f]+}}, count=1
+  // CHECK: {{^}}[[THREAD_ID_2]]: ompt_event_single_others_end: parallel_id=[[PARALLEL_ID]], task_id=[[TASK_ID]], codeptr_ra={{0x[0-f]+}}, count=1
 
 
 

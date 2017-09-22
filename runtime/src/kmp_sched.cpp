@@ -67,11 +67,25 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   ompt_team_info_t *team_info = NULL;
   ompt_task_info_t *task_info = NULL;
+  ompt_work_type_t ompt_work_type;
 
   if (ompt_enabled.enabled) {
     // Only fully initialize variables needed by OMPT if OMPT is enabled.
     team_info = __ompt_get_teaminfo(0, NULL);
     task_info = __ompt_get_task_info_object(0);
+    // Determine workshare type
+    if(loc != NULL) {
+      if((loc->flags & KMP_IDENT_WORK_LOOP) !=0) {
+          ompt_work_type = ompt_work_loop;
+      } else if((loc->flags & KMP_IDENT_WORK_SECTIONS)!=0) {
+          ompt_work_type = ompt_work_sections;
+      } else if((loc->flags & KMP_IDENT_WORK_DISTRIBUTE)!=0) {
+          ompt_work_type = ompt_work_distribute;
+      } else {
+          KMP_ASSERT2(0, "__kmpc_for_static_init: can't determine workshare type");
+      }
+      KMP_DEBUG_ASSERT(ompt_work_type);
+    }
   }
 #endif
 
@@ -130,7 +144,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled.ompt_callback_work) {
       ompt_callbacks.ompt_callback(ompt_callback_work)(
-          ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
+          ompt_work_type, ompt_scope_begin, &(team_info->parallel_data),
           &(task_info->task_data),
           0, // TODO: OMPT: verify loop count value (OpenMP-spec 4.6.2.18)
           codeptr);
@@ -185,10 +199,10 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled.ompt_callback_work) {
       ompt_callbacks.ompt_callback(ompt_callback_work)(
-          ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
+          ompt_work_type, ompt_scope_begin, &(team_info->parallel_data),
           &(task_info->task_data),
           *pstride, // TODO: OMPT: verify loop count value (OpenMP-spec
-                    // 4.6.2.18)
+                    // 4.6.2.18) ??? Should be trip_count value below?
           codeptr);
     }
 #endif
@@ -218,10 +232,10 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
     if (ompt_enabled.ompt_callback_work) {
       ompt_callbacks.ompt_callback(ompt_callback_work)(
-          ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
+          ompt_work_type, ompt_scope_begin, &(team_info->parallel_data),
           &(task_info->task_data),
           *pstride, // TODO: OMPT: verify loop count value (OpenMP-spec
-                    // 4.6.2.18)
+                    // 4.6.2.18) ??? Should be trip_count value below?
           codeptr);
     }
 #endif
@@ -379,7 +393,7 @@ static void __kmp_for_static_init(ident_t *loc, kmp_int32 global_tid,
 #if OMPT_SUPPORT && OMPT_OPTIONAL
   if (ompt_enabled.ompt_callback_work) {
     ompt_callbacks.ompt_callback(ompt_callback_work)(
-        ompt_work_loop, ompt_scope_begin, &(team_info->parallel_data),
+        ompt_work_type, ompt_scope_begin, &(team_info->parallel_data),
         &(task_info->task_data),
         trip_count, // TODO: OMPT: verify loop count value (OpenMP-spec
                     // 4.6.2.18; email discussion on count value semantics)
