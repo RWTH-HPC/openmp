@@ -1577,6 +1577,31 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   }
 #endif
 
+#if KMP_USE_TASK_AFFINITY
+  // check whether pointer is set or not
+  kmp_info_t *thread;
+  thread = __kmp_threads[gtid];
+  if(thread->th.data_aff == NULL)
+  {
+    KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d data_aff is NULL.\n", gtid));
+  }
+  else
+  {
+    KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d data_aff address is %p.\n", gtid, thread->th.data_aff));
+    new_task->task_affinity_data = thread->th.data_aff;
+    new_task->use_task_affinity = true;
+
+    // TODO: check address for numa domain
+
+    // TODO: get threads for numa domain
+
+    // TODO: determine gtid where task should be scheduled
+
+
+    thread->th.data_aff = NULL;
+  }
+#endif
+
   res = __kmp_omp_task(gtid, new_task, true);
 
   KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning "
@@ -1589,6 +1614,15 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #endif
   return res;
 }
+
+#if KMP_USE_TASK_AFFINITY
+void __kmp_set_task_affinity( void * data )
+{
+    int gtid = __kmp_entry_gtid();
+    kmp_info_t      * thread = __kmp_threads[ gtid ];
+    thread->th.data_aff = data;
+}
+#endif
 
 #if OMPT_SUPPORT
 OMPT_NOINLINE

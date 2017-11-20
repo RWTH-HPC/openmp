@@ -63,6 +63,10 @@
     extern int    __KAI_KMPC_CONVENTION  omp_get_max_active_levels   (void);
     extern void   __KAI_KMPC_CONVENTION  omp_get_schedule            (omp_sched_t *, int *);
     extern int    __KAI_KMPC_CONVENTION  omp_get_max_task_priority   (void);
+	
+	# if KMP_USE_TASK_AFFINITY
+	extern void   __KAI_KMPC_CONVENTION  kmp_set_task_affinity(void *);
+	# endif
 
     /* lock API functions */
     typedef struct omp_lock_t {

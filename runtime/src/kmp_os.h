@@ -75,6 +75,13 @@
 #define KMP_GROUP_AFFINITY 0
 #endif
 
+#ifndef KMP_USE_TASK_AFFINITY
+# define KMP_USE_TASK_AFFINITY 0
+#elif !KMP_AFFINITY_SUPPORTED
+# undef KMP_USE_TASK_AFFINITY
+# define KMP_USE_TASK_AFFINITY 0
+#endif
+
 /* Check for quad-precision extension. */
 #define KMP_HAVE_QUAD 0
 #if KMP_ARCH_X86 || KMP_ARCH_X86_64

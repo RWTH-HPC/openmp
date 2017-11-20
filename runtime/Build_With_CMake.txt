@@ -126,6 +126,9 @@ Intel(R) MIC Architecture, can be knf or knc.
 -DLIBOMP_FORTRAN_MODULES=off|on
 Should the Fortran modules be created (requires Fortran compiler)
 
+-DLIBOMP_USE_TASK_AFFINITY=off|on
+Specify whether or not to compile with task affinity features
+
 -DLIBOMP_USE_ADAPTIVE_LOCKS=on|off
 Should adaptive (Intel(R) Transactional Synchronization Extensions
 (Intel(R) TSX) based) locks be included?  These are x86 specific.

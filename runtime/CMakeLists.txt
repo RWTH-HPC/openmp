@@ -318,6 +318,12 @@ if(LIBOMP_USE_VERSION_SYMBOLS AND (NOT LIBOMP_ENABLE_SHARED) )
   set (LIBOMP_USE_VERSION_SYMBOLS FALSE)
 endif()
 
+set(LIBOMP_USE_TASK_AFFINITY FALSE CACHE BOOL
+  "Should experimental task affinity support be included?")
+if(LIBOMP_USE_TASK_AFFINITY AND (${LIBOMP_OMP_VERSION} LESS 45))
+  libomp_error_say("Task affinity only available in OpenMP 4.5 or higher")
+endif()
+
 # OMPT-support
 set(LIBOMP_OMPT_DEBUG FALSE CACHE BOOL
   "Trace OMPT initialization?")
@@ -395,6 +401,7 @@ if(${LIBOMP_STANDALONE_BUILD})
   libomp_say("Use Stats-gathering  -- ${LIBOMP_STATS}")
   libomp_say("Use Debugger-support -- ${LIBOMP_USE_DEBUGGER}")
   libomp_say("Use ITT notify       -- ${LIBOMP_USE_ITT_NOTIFY}")
+  libomp_say("Use task affinity    -- ${LIBOMP_USE_TASK_AFFINITY}")
   libomp_say("Use OMPT-support     -- ${LIBOMP_OMPT_SUPPORT}")
   if(${LIBOMP_OMPT_SUPPORT})
     libomp_say("Use OMPT-optional  -- ${LIBOMP_OMPT_OPTIONAL}")

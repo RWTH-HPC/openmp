@@ -748,6 +748,11 @@ extern void __kmp_affinity_bind_thread(int which);
 extern kmp_affin_mask_t *__kmp_affin_fullMask;
 extern char const *__kmp_cpuinfo_file;
 
+#if KMP_USE_TASK_AFFINITY
+// experimental task affinity
+extern void __kmp_set_task_affinity(void * data);
+#endif
+
 #endif /* KMP_AFFINITY_SUPPORTED */
 
 #if OMP_40_ENABLED
@@ -2090,6 +2095,11 @@ typedef struct kmp_task { /* GEH: Shouldn't this be aligned somehow? */
   kmp_cmplrdata_t
       data1; /* Two known optional additions: destructors and priority */
   kmp_cmplrdata_t data2; /* Process destructors first, priority second */
+  
+#if KMP_USE_TASK_AFFINITY
+  bool use_task_affinity = false;
+  void * task_affinity_data = NULL;
+#endif
 /* future data */
 #endif
   /*  private vars  */
@@ -2261,6 +2271,10 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 #if OMP_45_ENABLED
   kmp_task_team_t *td_task_team;
   kmp_int32 td_size_alloc; // The size of task structure, including shareds etc.
+#endif
+#if KMP_USE_TASK_AFFINITY
+  void * affinity_data = NULL;
+  bool use_task_affinity = false;
 #endif
 }; // struct kmp_taskdata
 
@@ -2493,6 +2507,9 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 #if KMP_STATS_ENABLED
   kmp_stats_list *th_stats;
 #endif
+#if KMP_USE_TASK_AFFINITY
+  void * data_aff;
+#endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
 typedef union KMP_ALIGN_CACHE kmp_info {

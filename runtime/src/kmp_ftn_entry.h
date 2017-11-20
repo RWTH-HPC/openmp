@@ -308,6 +308,17 @@ int FTN_STDCALL FTN_GET_AFFINITY_MASK_PROC(int KMP_DEREF proc, void **mask) {
 #endif
 }
 
+#if KMP_USE_TASK_AFFINITY
+void FTN_STDCALL FTN_SET_TASK_AFFINITY( void * data )
+{
+    #ifdef KMP_STUB
+        // Nothing.
+    #else
+        __kmp_set_task_affinity( data );
+    #endif
+}
+#endif
+
 /* ------------------------------------------------------------------------ */
 
 /* sets the requested number of threads for the next parallel region */
