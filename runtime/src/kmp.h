@@ -18,6 +18,9 @@
 #define KMP_H
 
 #include "kmp_config.h"
+#include <unistd.h>
+# include <sys/time.h>
+# include <time.h>
 
 /* #define BUILD_PARALLEL_ORDERED 1 */
 
@@ -3822,6 +3825,8 @@ KMP_EXPORT void KMPC_CONVENTION kmpc_set_stacksize_s(size_t);
 KMP_EXPORT void KMPC_CONVENTION kmpc_set_library(int);
 KMP_EXPORT void KMPC_CONVENTION kmpc_set_defaults(char const *);
 KMP_EXPORT void KMPC_CONVENTION kmpc_set_disp_num_buffers(int);
+
+extern double get_wall_time2(void);
 
 #if KMP_USE_TASK_AFFINITY
 extern bool numa_map_set;

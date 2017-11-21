@@ -28,6 +28,7 @@
 #if KMP_USE_TASK_AFFINITY
 #include <numa.h>
 #include <numaif.h>
+#include <unistd.h>
 #endif
 
 /* forward declaration */
@@ -300,7 +301,9 @@ static kmp_int32 __kmp_push_task(kmp_int32 gtid, kmp_task_t *task) {
 
   // No lock needed since only owner can allocate
   if (thread_data->td.td_deque == NULL) {
+    __kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
     __kmp_alloc_task_deque(thread, thread_data);
+    __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
   }
 
   // Check if deque is full
@@ -1523,6 +1526,12 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
 
 /* Should we execute the new task or queue it? For now, let's just always try to
    queue it.  If the queue fills up, then we'll execute it.  */
+
+   kmp_int32 owner_id = __kmp_entry_gtid();
+   if(owner_id != gtid){
+    KA_TRACE(10, ("__kmp_omp_task: T#%d pushing task to thread %d\n", owner_id, gtid));
+   }
+
 #if OMP_45_ENABLED
   if (new_taskdata->td_flags.proxy == TASK_PROXY ||
       __kmp_push_task(gtid, new_task) == TASK_NOT_PUSHED) // if cannot defer
@@ -1530,6 +1539,7 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
   if (__kmp_push_task(gtid, new_task) == TASK_NOT_PUSHED) // if cannot defer
 #endif
   { // Execute this task immediately
+    KA_TRACE(10, ("__kmp_omp_task: T#%d immediatly executing task for thread %d\n", owner_id, gtid));
     kmp_taskdata_t *current_task = __kmp_threads[gtid]->th.th_current_task;
     if (serialize_immediate)
       new_taskdata->td_flags.task_serial = 1;
@@ -1586,9 +1596,11 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   // check whether pointer is set or not
   kmp_info_t *thread;
   thread = __kmp_threads[gtid];
+  double time1, time2;
 
   if(gtid == 0)
   {
+    time1 = get_wall_time2();
     for (int tmp = 0; tmp < 24; tmp++)
     { 
       int cur_size = numa_domain_size[tmp];
@@ -1604,11 +1616,13 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           pos_inner += sprintf(&string_per_map[pos_inner], "%d ", map_threads_in_numa_domain[tmp][j]);
           tmp_nr_threads++;
         }
-        KA_TRACE(10, ("NUMA DOMAIN %d has %d threads: %s\n", tmp, tmp_nr_threads, string_per_map));
+        KA_TRACE(10, ("TASK AFFINITY: NUMA DOMAIN %d has %d threads: %s\n", tmp, tmp_nr_threads, string_per_map));
       }
     }
+    time2 = get_wall_time2()-time1;
+    KA_TRACE(10, ("TASK AFFINITY: T#%d printing numa info took %f ms \n", gtid, time2));
   }
-
+  
   if(thread->th.task_affinity_data == NULL)
   {
     KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
@@ -1616,6 +1630,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   }
   else
   {
+    time1 = get_wall_time2();
     KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.task_affinity_data));
     new_task->task_affinity_data = thread->th.task_affinity_data;
     new_task->use_task_affinity = true;
@@ -1639,6 +1654,9 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       if(n_thread_domain > 0)
         target_id = map_threads_in_numa_domain[current_data_domain][0];
 
+      time2 = get_wall_time2()-time1;
+      KA_TRACE(10, ("TASK AFFINITY: T#%d looking up numa info for pointer %f ms \n", gtid, time2));
+
       if(target_id == -1)
       {
         // fall back mode if not possible to find any matching thread
@@ -1646,9 +1664,12 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         res = __kmp_omp_task(gtid, new_task, true);    
       } else {
         KB_TRACE(5, ("TASK AFFINITY: T#%d task=%p has been scheduled on thread %d\n", gtid, new_taskdata, target_id));
-        res = __kmp_omp_task(target_id, new_task, true);
+        res = __kmp_omp_task(target_id, new_task, false);
+        //res = __kmp_omp_task(gtid, new_task, true);
       }
     } else {
+      time2 = get_wall_time2()-time1;
+      KA_TRACE(10, ("TASK AFFINITY: T#%d looking up numa info for pointer %f ms \n", gtid, time2));
       // fall back mode if not possible to find any matching thread
       KB_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
       res = __kmp_omp_task(gtid, new_task, true);
