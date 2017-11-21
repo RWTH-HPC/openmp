@@ -25,6 +25,11 @@
 
 #include "tsan_annotations.h"
 
+#if KMP_USE_TASK_AFFINITY
+#include <numa.h>
+#include <numaif.h>
+#endif
+
 /* forward declaration */
 static void __kmp_enable_tasking(kmp_task_team_t *task_team,
                                  kmp_info_t *this_thr);
@@ -1581,28 +1586,81 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   // check whether pointer is set or not
   kmp_info_t *thread;
   thread = __kmp_threads[gtid];
-  if(thread->th.data_aff == NULL)
+
+  if(gtid == 0)
   {
-    KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d data_aff is NULL.\n", gtid));
+    for (int tmp = 0; tmp < 24; tmp++)
+    { 
+      int cur_size = numa_domain_size[tmp];
+  
+      if( cur_size > 0 )
+      {
+        int pos_inner = 0;
+        int tmp_nr_threads = 0;
+        char string_per_map[256];
+
+        for (int j = 0; j < cur_size; j++)
+        {
+          pos_inner += sprintf(&string_per_map[pos_inner], "%d ", map_threads_in_numa_domain[tmp][j]);
+          tmp_nr_threads++;
+        }
+        KA_TRACE(10, ("NUMA DOMAIN %d has %d threads: %s\n", tmp, tmp_nr_threads, string_per_map));
+      }
+    }
+  }
+
+  if(thread->th.task_affinity_data == NULL)
+  {
+    KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
+    res = __kmp_omp_task(gtid, new_task, true);
   }
   else
   {
-    KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d data_aff address is %p.\n", gtid, thread->th.data_aff));
-    new_task->task_affinity_data = thread->th.data_aff;
+    KB_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.task_affinity_data));
+    new_task->task_affinity_data = thread->th.task_affinity_data;
     new_task->use_task_affinity = true;
 
-    // TODO: check address for numa domain
+    // check address for numa domain
+    int current_data_domain = -1;
+    int ret_code;
+    ret_code = move_pages(0 /*self memory */, 1, &thread->th.task_affinity_data, NULL, &current_data_domain, 0);
+    KB_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.task_affinity_data, current_data_domain, ret_code));
 
-    // TODO: get threads for numa domain
+    // TODO: get page for pointer
+    // reset pointer
+    thread->th.task_affinity_data = NULL;
 
-    // TODO: determine gtid where task should be scheduled
+    int target_id = -1;
 
+    if(ret_code == 0) {
+      // get threads for numa domain & determine gtid where task should be scheduled
+      int n_thread_domain = numa_domain_size[current_data_domain];
+      // schedule on first
+      if(n_thread_domain > 0)
+        target_id = map_threads_in_numa_domain[current_data_domain][0];
 
-    thread->th.data_aff = NULL;
+      if(target_id == -1)
+      {
+        // fall back mode if not possible to find any matching thread
+        KB_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
+        res = __kmp_omp_task(gtid, new_task, true);    
+      } else {
+        KB_TRACE(5, ("TASK AFFINITY: T#%d task=%p has been scheduled on thread %d\n", gtid, new_taskdata, target_id));
+        res = __kmp_omp_task(target_id, new_task, true);
+      }
+    } else {
+      // fall back mode if not possible to find any matching thread
+      KB_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+      res = __kmp_omp_task(gtid, new_task, true);
+    } // if
   }
+#else
+  res = __kmp_omp_task(gtid, new_task, true);
 #endif
 
-  res = __kmp_omp_task(gtid, new_task, true);
+// #ifndef KMP_USE_TASK_AFFINITY
+//   res = __kmp_omp_task(gtid, new_task, true);
+// #endif
 
   KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning "
                 "TASK_CURRENT_NOT_QUEUED: loc=%p task=%p\n",
@@ -1620,7 +1678,7 @@ void __kmp_set_task_affinity( void * data )
 {
     int gtid = __kmp_entry_gtid();
     kmp_info_t      * thread = __kmp_threads[ gtid ];
-    thread->th.data_aff = data;
+    thread->th.task_affinity_data = data;
 }
 #endif
 

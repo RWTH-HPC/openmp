@@ -2272,10 +2272,6 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
   kmp_task_team_t *td_task_team;
   kmp_int32 td_size_alloc; // The size of task structure, including shareds etc.
 #endif
-#if KMP_USE_TASK_AFFINITY
-  void * affinity_data = NULL;
-  bool use_task_affinity = false;
-#endif
 }; // struct kmp_taskdata
 
 // Make sure padding above worked
@@ -2508,7 +2504,7 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   kmp_stats_list *th_stats;
 #endif
 #if KMP_USE_TASK_AFFINITY
-  void * data_aff;
+  void * task_affinity_data;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
@@ -3826,6 +3822,18 @@ KMP_EXPORT void KMPC_CONVENTION kmpc_set_stacksize_s(size_t);
 KMP_EXPORT void KMPC_CONVENTION kmpc_set_library(int);
 KMP_EXPORT void KMPC_CONVENTION kmpc_set_defaults(char const *);
 KMP_EXPORT void KMPC_CONVENTION kmpc_set_disp_num_buffers(int);
+
+#if KMP_USE_TASK_AFFINITY
+extern bool numa_map_set;
+extern int * map_threads_in_numa_domain[];
+extern int numa_domain_size[24];
+extern int map_thread_to_numa_domain[];
+extern kmp_bootstrap_lock_t lock_numa_domain[];
+extern kmp_bootstrap_lock_t lock_numa_map_set;
+
+extern int __kmp_task_affinity_get_node_for_address(void * data);
+extern void __kmp_build_numa_map(int gtid);
+#endif // KMP_USE_TASK_AFFINITY
 
 #ifdef __cplusplus
 }

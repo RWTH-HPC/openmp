@@ -67,6 +67,19 @@ unsigned int __kmp_init_wait =
 unsigned int __kmp_next_wait =
     KMP_DEFAULT_NEXT_WAIT; /* susequent number of spin-tests */
 
+#if KMP_USE_TASK_AFFINITY
+#define NUMA_DOMAIN_MAX_NR 24
+#define MAX_THREADS_OVERALL 4096
+#define MAX_THREADS_PER_DOMAIN 128
+
+bool numa_map_set = false;
+int * map_threads_in_numa_domain[NUMA_DOMAIN_MAX_NR];
+int numa_domain_size[NUMA_DOMAIN_MAX_NR];
+int map_thread_to_numa_domain[MAX_THREADS_OVERALL];
+kmp_bootstrap_lock_t lock_numa_domain[NUMA_DOMAIN_MAX_NR];
+kmp_bootstrap_lock_t lock_numa_map_set;
+#endif // KMP_USE_TASK_AFFINITY
+
 size_t __kmp_stksize = KMP_DEFAULT_STKSIZE;
 #if KMP_USE_MONITOR
 size_t __kmp_monitor_stksize = 0; // auto adjust
