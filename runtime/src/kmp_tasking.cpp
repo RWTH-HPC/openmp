@@ -1571,8 +1571,9 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #if KMP_DEBUG || OMPT_SUPPORT
   kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
 #endif
-  KA_TRACE(10, ("TASK AFFINITY: __kmpc_omp_task(enter): T#%d loc=%p task=%p\n", gtid, loc_ref,
-                new_taskdata));
+    kmp_info_t * tmpthread = __kmp_threads[gtid];
+  KA_TRACE(10, ("__kmpc_omp_task(enter): T#%d loc=%p task=%p current_task:%p parent_of_current:%p\n", gtid, loc_ref,
+                new_taskdata, tmpthread->th.th_current_task, tmpthread->th.th_current_task->td_parent));
 
 #if OMPT_SUPPORT
   kmp_taskdata_t *parent = NULL;
@@ -1594,10 +1595,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #endif
 
 #if KMP_USE_TASK_AFFINITY
-  // check whether pointer is set or not
-  kmp_info_t *thread = __kmp_threads[gtid];
-  double time1, time2;
-
   // if(gtid == 0)
   // {
   //   time1 = get_wall_time2();
@@ -1623,113 +1620,131 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   //   KA_TRACE(10, ("TASK AFFINITY: T#%d printing numa info took %f ms \n", gtid, time2));
   // }
 
-  kmp_task_team_t *task_team = thread->th.th_task_team;
-  kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
-  kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
-
-  if(thread->th.task_affinity_data == NULL || task_team == NULL || nthreads_in_team <= 1 || threads_data == NULL) //  
+  if(__kmp_tasking_mode == tskm_immediate_exec)
   {
-    KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
+    // do not use task queue but execute immediately
     res = __kmp_omp_task(gtid, new_task, true);
-  }
-  else
-  {
-    time1 = get_wall_time2();
+  } else {
 
-    kmp_int32 tid = thread->th.th_info.ds.ds_tid;
-    kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
-    
-    // No lock needed since only owner can allocate
-    if (cur_thread_data->td.td_deque == NULL) {
-      __kmp_alloc_task_deque(thread, cur_thread_data);
+    double time1, time2;
+    kmp_info_t *thread = __kmp_threads[gtid];
+    kmp_task_team_t *task_team = thread->th.th_task_team;
+    kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
+
+    KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
+    if (!KMP_TASKING_ENABLED(task_team)) {
+      __kmp_enable_tasking(task_team, thread);
     }
+    
+    kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
+    KMP_DEBUG_ASSERT(__kmp_tasking_mode != NULL);
 
-    KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.task_affinity_data));
-
-    // check address for numa domain
-    int current_data_domain = -1;
-    int ret_code = move_pages(0 /*self memory */, 1, &thread->th.task_affinity_data, NULL, &current_data_domain, 0);
-    KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.task_affinity_data, current_data_domain, ret_code));
-
-    // TODO: get page for pointer
-    // reset pointer
-    thread->th.task_affinity_data = NULL;
-
-    int target_id = -1;
-    kmp_info_t * target_thread = NULL;
-    kmp_thread_data_t *target_thread_data = NULL;
-
-    if(ret_code == 0) {
-      // get threads for numa domain & determine gtid where task should be scheduled
-      int n_thread_domain = numa_domain_size[current_data_domain];
-      int tmp_id;
-      int tmp_id2;
-      
-      if(n_thread_domain > 0){
-        KA_TRACE(5, ("TASK AFFINITY: T#%d Now looking for other threads...\n", gtid));
-        for( int i = 0; i < n_thread_domain; i++){
-            tmp_id = map_threads_in_numa_domain[current_data_domain][i];
-
-            // check whether this is valid and in current task team
-            for( int j = 0; j < nthreads_in_team; j++)
-            {
-              //target_thread = task_team->tt.tt_threads[j];
-              target_thread_data = &(threads_data[j]);
-              target_thread = target_thread_data->td.td_thr;
-              tmp_id2 = __kmp_gtid_from_thread(target_thread);
-              if(tmp_id2 == tmp_id){
-                // match: this thread is in task team
-                target_id = j;
-                break;
-              }
-            }
-
-            if(target_id != -1)
-              break;
-        }
-      }
-      time2 = get_wall_time2()-time1;
-      KA_TRACE(10, ("TASK AFFINITY: T#%d looking up numa info for pointer %f ms \n", gtid, time2));
-
-      if(target_id == -1)
-      {
-        // fall back mode if not possible to find any matching thread
-        KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
-        res = __kmp_omp_task(gtid, new_task, true);    
-      } else {
-        KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_id));
-        // set correct team
-        kmp_int32 pass = 1;
-        do {
-            pass = pass << 1;
-        } while (!__kmp_give_task(target_thread, target_id, new_task, pass));
-
-        //res = __kmp_omp_task(gtid, new_task, true);
-        //res = __kmp_omp_task(target_id, new_task, false);
-
-        // // This should be similar to start_k = __kmp_get_random( thread ) % nthreads
-        // // but we cannot use __kmp_get_random here
-        // kmp_int32 start_k = 0;
-        // kmp_int32 pass = 1;
-        // kmp_int32 k = start_k;
-        // 
-        // do {
-        //   // For now we're just linearly trying to find a thread
-        //   thread = team->t.t_threads[k];
-        //   k = (k + 1) % nthreads;
-
-        //   // we did a full pass through all the threads
-        //   if (k == start_k)
-        //     pass = pass << 1;
-
-        // } while (!__kmp_give_task(thread, k, ptask, pass));
-      }
-    } else {
-      time2 = get_wall_time2()-time1;
-      // fall back mode if not possible to find any matching thread
-      KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+    if(thread->th.task_affinity_data == NULL || nthreads_in_team <= 1)
+    {
+      KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
       res = __kmp_omp_task(gtid, new_task, true);
-    } // if
+    }
+    else
+    {
+      time1 = get_wall_time2();
+
+      // Allocate deque if necessary
+      kmp_int32 tid = thread->th.th_info.ds.ds_tid;
+      kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
+      // No lock needed since only owner can allocate
+      if (cur_thread_data->td.td_deque == NULL) {
+        __kmp_alloc_task_deque(thread, cur_thread_data);
+      }
+
+      KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.task_affinity_data));
+
+      // check address for numa domain
+      int current_data_domain = -1;
+      int ret_code = move_pages(0 /*self memory */, 1, &thread->th.task_affinity_data, NULL, &current_data_domain, 0);
+      KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.task_affinity_data, current_data_domain, ret_code));
+
+      // TODO: get page for pointer
+      // reset pointer
+      thread->th.task_affinity_data = NULL;
+
+      int target_id = -1;
+      kmp_info_t * target_thread = NULL;
+      kmp_thread_data_t *target_thread_data = NULL;
+
+      if(ret_code == 0) {
+        // get threads for numa domain & determine gtid where task should be scheduled
+        int n_thread_domain = numa_domain_size[current_data_domain];
+        int tmp_id;
+        int tmp_id2;
+        
+        if(n_thread_domain > 0){
+          KA_TRACE(5, ("TASK AFFINITY: T#%d Now looking for other threads...\n", gtid));
+          for( int i = 0; i < n_thread_domain; i++){
+              tmp_id = map_threads_in_numa_domain[current_data_domain][i];
+
+              // check whether this is valid and in current task team
+              for( int j = 0; j < nthreads_in_team; j++)
+              {
+                //target_thread = task_team->tt.tt_threads[j];
+                target_thread_data = &(threads_data[j]);
+                target_thread = target_thread_data->td.td_thr;
+                tmp_id2 = __kmp_gtid_from_thread(target_thread);
+                if(tmp_id2 == tmp_id){
+                  // match: this thread is in task team
+                  target_id = j;
+                  break;
+                }
+              }
+
+              if(target_id != -1)
+                break;
+          }
+        }
+        time2 = get_wall_time2()-time1;
+        KA_TRACE(10, ("TASK AFFINITY: T#%d looking up numa info for pointer %f ms \n", gtid, time2));
+
+        if(target_id == -1)
+        {
+          // fall back mode if not possible to find any matching thread
+          KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
+          res = __kmp_omp_task(gtid, new_task, true);    
+        } else {
+          KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_id));
+          // set correct team
+          kmp_int32 pass = 1;
+          do {
+              pass = pass << 1;
+          } while (!__kmp_give_task(target_thread, target_id, new_task, pass));
+
+          res = TASK_CURRENT_NOT_QUEUED;
+          KA_TRACE(5, ("TASK AFFINITY: T#%d successfully scheduled task=%p on thread %d\n", gtid, new_taskdata, target_id));
+          //res = __kmp_omp_task(gtid, new_task, true);
+          //res = __kmp_omp_task(target_id, new_task, false);
+
+          // // This should be similar to start_k = __kmp_get_random( thread ) % nthreads
+          // // but we cannot use __kmp_get_random here
+          // kmp_int32 start_k = 0;
+          // kmp_int32 pass = 1;
+          // kmp_int32 k = start_k;
+          // 
+          // do {
+          //   // For now we're just linearly trying to find a thread
+          //   thread = team->t.t_threads[k];
+          //   k = (k + 1) % nthreads;
+
+          //   // we did a full pass through all the threads
+          //   if (k == start_k)
+          //     pass = pass << 1;
+
+          // } while (!__kmp_give_task(thread, k, ptask, pass));
+        }
+      } else {
+        time2 = get_wall_time2()-time1;
+        // fall back mode if not possible to find any matching thread
+        KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+        res = __kmp_omp_task(gtid, new_task, true);
+      } // if
+    }
   }
 #else
   res = __kmp_omp_task(gtid, new_task, true);
@@ -2432,6 +2447,17 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
   victim_tid = victim->th.th_info.ds.ds_tid;
   victim_td = &threads_data[victim_tid];
 
+#if KMP_USE_TASK_AFFINITY
+  // Allocate deque if necessary
+  kmp_info_t *thread = __kmp_threads[gtid];
+  kmp_int32 tid = __kmp_tid_from_gtid(gtid);
+  kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
+  // No lock needed since only owner can allocate
+  if (cur_thread_data->td.td_deque == NULL) {
+    __kmp_alloc_task_deque(thread, cur_thread_data);
+  }
+#endif
+
   KA_TRACE(10, ("__kmp_steal_task(enter): T#%d try to steal from T#%d: "
                 "task_team=%p ntasks=%d "
                 "head=%u tail=%u\n",
@@ -2565,8 +2591,8 @@ static inline int __kmp_execute_tasks_template(
     return FALSE;
 
   KA_TRACE(15, ("__kmp_execute_tasks_template(enter): T#%d final_spin=%d "
-                "*thread_finished=%d\n",
-                gtid, final_spin, *thread_finished));
+                "*thread_finished=%d current_task=%p\n",
+                gtid, final_spin, *thread_finished, thread->th.th_current_task));
 
   thread->th.th_reap_state = KMP_NOT_SAFE_TO_REAP;
   threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
@@ -2916,7 +2942,7 @@ static void __kmp_alloc_task_deque(kmp_info_t *thread,
   KMP_DEBUG_ASSERT(thread_data->td.td_deque_head == 0);
   KMP_DEBUG_ASSERT(thread_data->td.td_deque_tail == 0);
 
-  KE_TRACE(
+  KA_TRACE(
       10,
       ("__kmp_alloc_task_deque: T#%d allocating deque[%d] for thread_data %p\n",
        __kmp_gtid_from_thread(thread), INITIAL_TASK_DEQUE_SIZE, thread_data));
@@ -2937,7 +2963,7 @@ static void __kmp_realloc_task_deque(kmp_info_t *thread,
   kmp_int32 size = TASK_DEQUE_SIZE(thread_data->td);
   kmp_int32 new_size = 2 * size;
 
-  KE_TRACE(10, ("__kmp_realloc_task_deque: T#%d reallocating deque[from %d to "
+  KA_TRACE(10, ("__kmp_realloc_task_deque: T#%d reallocating deque[from %d to "
                 "%d] for thread_data %p\n",
                 __kmp_gtid_from_thread(thread), size, new_size, thread_data));
 
@@ -3016,7 +3042,7 @@ static int __kmp_realloc_task_threads_data(kmp_info_t *thread,
         kmp_thread_data_t *old_data = *threads_data_p;
         kmp_thread_data_t *new_data = NULL;
 
-        KE_TRACE(
+        KA_TRACE(
             10,
             ("__kmp_realloc_task_threads_data: T#%d reallocating "
              "threads data for task_team %p, new_size = %d, old_size = %d\n",
@@ -3042,7 +3068,7 @@ static int __kmp_realloc_task_threads_data(kmp_info_t *thread,
         (*threads_data_p) = new_data;
         __kmp_free(old_data);
       } else {
-        KE_TRACE(10, ("__kmp_realloc_task_threads_data: T#%d allocating "
+        KA_TRACE(10, ("__kmp_realloc_task_threads_data: T#%d allocating "
                       "threads data for task_team %p, size = %d\n",
                       __kmp_gtid_from_thread(thread), task_team, nthreads));
         // Make the initial allocate for threads_data array, and zero entries
@@ -3127,7 +3153,7 @@ static kmp_task_team_t *__kmp_allocate_task_team(kmp_info_t *thread,
   }
 
   if (task_team == NULL) {
-    KE_TRACE(10, ("__kmp_allocate_task_team: T#%d allocating "
+    KA_TRACE(10, ("__kmp_allocate_task_team: T#%d allocating "
                   "task team for team %p\n",
                   __kmp_gtid_from_thread(thread), team));
     // Allocate a new task team if one is not available.
@@ -3441,7 +3467,7 @@ static bool __kmp_give_task(kmp_info_t *thread, kmp_int32 tid, kmp_task_t *task,
   kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
   kmp_task_team_t *task_team = taskdata->td_task_team;
 
-  KA_TRACE(20, ("__kmp_give_task: trying to give task %p to thread %d.\n",
+  KA_TRACE(20, ("__kmp_give_task: T#%d trying to give task %p to thread %d.\n", __kmp_entry_gtid(),
                 taskdata, tid));
 
   // If task_team is NULL something went really bad...
