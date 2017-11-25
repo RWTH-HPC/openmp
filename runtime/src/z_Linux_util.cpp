@@ -774,6 +774,17 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 
   th->th.th_info.ds.ds_gtid = gtid;
 
+#if KMP_USE_TASK_AFFINITY
+  // init counters and time variable  
+  th->th.th_task_affinity_data = NULL;
+  th->th.th_task_aff_sum_time_find_numa = 0.0;
+  th->th.th_task_aff_sum_time_steal_search = 0.0;
+  th->th.th_task_aff_sum_time_remove_my_task = 0.0;
+  th->th.th_task_aff_num_find_numa = 0;
+  th->th.th_task_aff_num_steal_search = 0;
+  th->th.th_task_aff_num_remove_my_task = 0;
+#endif
+
 #if KMP_STATS_ENABLED
   // sets up worker thread stats
   __kmp_acquire_tas_lock(&__kmp_stats_lock, gtid);

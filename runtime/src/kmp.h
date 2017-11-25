@@ -2507,7 +2507,13 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   kmp_stats_list *th_stats;
 #endif
 #if KMP_USE_TASK_AFFINITY
-  void * task_affinity_data;
+  void * th_task_affinity_data;
+  double th_task_aff_sum_time_find_numa;
+  double th_task_aff_sum_time_steal_search;
+  double th_task_aff_sum_time_remove_my_task;
+  int th_task_aff_num_find_numa;
+  int th_task_aff_num_steal_search;
+  int th_task_aff_num_remove_my_task;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
