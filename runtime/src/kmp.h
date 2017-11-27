@@ -2515,6 +2515,19 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double th_task_aff_sum_time_find_numa;
   double th_task_aff_sum_time_steal_search;
   double th_task_aff_sum_time_remove_my_task;
+
+  double th_task_aff_sum_time_map_find;
+  int th_task_aff_sum_time_map_find_num;
+
+  double th_task_aff_sum_time_map_add;
+  int th_task_aff_sum_time_map_add_num;
+
+  double th_task_aff_sum_time_numa_find;
+  int th_task_aff_sum_time_numa_find_num;
+
+  double th_task_aff_sum_time_numa_get_thread;
+  int th_task_aff_sum_time_numa_get_thread_num;
+
   int th_task_aff_num_find_numa;
   int th_task_aff_num_steal_search;
   int th_task_aff_num_remove_my_task;

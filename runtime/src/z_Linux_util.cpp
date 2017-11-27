@@ -784,6 +784,18 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
   th->th.th_task_aff_num_steal_search = 0;
   th->th.th_task_aff_num_remove_my_task = 0;
 
+  th->th.th_task_aff_sum_time_map_find = 0.0;
+  th->th.th_task_aff_sum_time_map_find_num = 0;
+
+  th->th.th_task_aff_sum_time_map_add = 0.0;
+  th->th.th_task_aff_sum_time_map_add_num = 0;
+
+  th->th.th_task_aff_sum_time_numa_find = 0.0;
+  th->th.th_task_aff_sum_time_numa_find_num = 0;
+
+  th->th.th_task_aff_sum_time_numa_get_thread = 0.0;
+  th->th.th_task_aff_sum_time_numa_get_thread_num = 0;
+
   th->th.th_num_aff_search_steal = 0;
   th->th.th_num_aff_search_remove = 0;
   th->th.th_num_task_aff_search_parent_thread_pointer = 0;
