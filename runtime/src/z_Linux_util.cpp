@@ -786,6 +786,9 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 
   th->th.th_num_aff_search_steal = 0;
   th->th.th_num_aff_search_remove = 0;
+  th->th.th_num_task_aff_search_parent_thread_pointer = 0;
+  th->th.th_num_task_aff_search_no_parent_thread_pointer = 0;
+  th->th.th_num_task_aff_search_nr_in_while = 0;
 #endif
 
 #if KMP_STATS_ENABLED

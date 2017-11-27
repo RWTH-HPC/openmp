@@ -5924,6 +5924,10 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
 
   fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_aff_search_steal\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_aff_search_steal);
   fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_aff_search_remove\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_aff_search_remove);
+
+  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_task_aff_search_parent_thread_pointer\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_task_aff_search_parent_thread_pointer);
+  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_task_aff_search_no_parent_thread_pointer\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_task_aff_search_no_parent_thread_pointer);
+  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_task_aff_search_nr_in_while\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_task_aff_search_nr_in_while);
 #endif
   __kmp_free(thread);
 

@@ -21,6 +21,7 @@
 #include <unistd.h>
 # include <sys/time.h>
 # include <time.h>
+//#include <unordered_map>
 
 /* #define BUILD_PARALLEL_ORDERED 1 */
 
@@ -2273,6 +2274,7 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 #if KMP_USE_TASK_AFFINITY
   bool td_use_task_affinity_search = false;
   void * td_task_affinity_data_pointer = NULL;
+  int td_parent_thread_team_id = -1;
 #endif
 }; // struct kmp_taskdata
 
@@ -2515,6 +2517,10 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   int th_task_aff_num_remove_my_task;
   int th_num_aff_search_steal;
   int th_num_aff_search_remove;
+
+  int th_num_task_aff_search_parent_thread_pointer;
+  int th_num_task_aff_search_no_parent_thread_pointer;
+  int th_num_task_aff_search_nr_in_while;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
