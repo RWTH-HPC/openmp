@@ -43,6 +43,14 @@ static int __kmp_realloc_task_threads_data(kmp_info_t *thread,
 static bool __kmp_give_task(kmp_info_t *thread, kmp_int32 tid, kmp_task_t *task,
                             kmp_int32 pass);
 
+#if KMP_USE_TASK_AFFINITY
+inline bool __kmp_task_aff_is_correct_task(
+  kmp_info_t * thread, 
+  kmp_taskdata_t *taskdata, 
+  kmp_thread_data_t *victim_td,
+  kmp_task_team_t * task_team);
+#endif
+
 #ifdef OMP_45_ENABLED
 static void __kmp_bottom_half_finish_proxy(kmp_int32 gtid, kmp_task_t *ptask);
 #endif
@@ -1662,10 +1670,12 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.th_task_affinity_data, current_data_domain, ret_code));
 
       // TODO: get page for pointer
-      // reset pointer
+      // reset pointer & save temporary
+      new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
       thread->th.th_task_affinity_data = NULL;
 
       int target_id = -1;
+      int target_gtid = -1;
       kmp_info_t * target_thread = NULL;
       kmp_thread_data_t *target_thread_data = NULL;
 
@@ -1690,6 +1700,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
                 if(tmp_id2 == tmp_id){
                   // match: this thread is in task team
                   target_id = j;
+                  target_gtid = tmp_id2;
                   break;
                 }
               }
@@ -1707,6 +1718,8 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
           res = __kmp_omp_task(gtid, new_task, true);    
         } else {
+          if(gtid != target_gtid)
+            new_taskdata->td_use_task_affinity_search = true;
           KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_id));
           // set correct team
           kmp_int32 pass = 1;
@@ -1716,25 +1729,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
           res = TASK_CURRENT_NOT_QUEUED;
           KA_TRACE(5, ("TASK AFFINITY: T#%d successfully scheduled task=%p on thread %d\n", gtid, new_taskdata, target_id));
-          //res = __kmp_omp_task(gtid, new_task, true);
-          //res = __kmp_omp_task(target_id, new_task, false);
-
-          // // This should be similar to start_k = __kmp_get_random( thread ) % nthreads
-          // // but we cannot use __kmp_get_random here
-          // kmp_int32 start_k = 0;
-          // kmp_int32 pass = 1;
-          // kmp_int32 k = start_k;
-          // 
-          // do {
-          //   // For now we're just linearly trying to find a thread
-          //   thread = team->t.t_threads[k];
-          //   k = (k + 1) % nthreads;
-
-          //   // we did a full pass through all the threads
-          //   if (k == start_k)
-          //     pass = pass << 1;
-
-          // } while (!__kmp_give_task(thread, k, ptask, pass));
         }
       } else {
         time2 = get_wall_time2()-time1;
@@ -1767,8 +1761,42 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 void __kmp_set_task_affinity( void * data )
 {
     int gtid = __kmp_entry_gtid();
-    kmp_info_t      * thread = __kmp_threads[ gtid ];
+    kmp_info_t *thread = __kmp_threads[gtid];
     thread->th.th_task_affinity_data = data;
+}
+
+inline bool __kmp_task_aff_is_correct_task(
+  kmp_info_t * thread, 
+  kmp_taskdata_t *taskdata, 
+  kmp_thread_data_t *victim_td,
+  kmp_task_team_t * task_team) {
+  
+  // check against all current tasks of threads in team due to adding task to queues of different threads
+  bool found_match = false;
+  kmp_taskdata_t *parent = NULL;
+  int gtid = __kmp_entry_gtid();
+
+  for(int i = 0; i < task_team->tt.tt_nproc; i++) {
+    kmp_taskdata_t *current_task = __kmp_threads[__kmp_gtid_from_tid(i, thread->th.th_team)]->th.th_current_task;
+    kmp_int32 cur_lvl = current_task->td_level;
+
+    // reset pointer
+    parent = taskdata->td_parent;
+
+    while (parent != current_task && parent->td_level > cur_lvl) {
+      parent = parent->td_parent; // check generation up to the level of the
+      KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
+                    gtid, i, victim_td->td.td_deque_ntasks,
+                    victim_td->td.td_deque_head, victim_td->td.td_deque_tail, current_task, cur_lvl, parent, parent->td_level));
+      // current task
+      KMP_DEBUG_ASSERT(parent != NULL);
+    }
+    if(current_task == parent){
+      found_match = true;
+      break;
+    }
+  }
+  return found_match;
 }
 #endif
 
@@ -2393,41 +2421,77 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
     // KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
     //             gtid, thread_data->td.td_deque_ntasks,
     //             thread_data->td.td_deque_head, thread_data->td.td_deque_tail, current, level, parent, parent->td_level));
-
+    
 #if KMP_USE_TASK_AFFINITY
-    // check against all current tasks of threads in team due to adding task to queues of different threads
-    bool found_match = false;
-    for(int i = 0; i < task_team->tt.tt_nproc; i++) {
-      kmp_taskdata_t *current_task = __kmp_threads[__kmp_gtid_from_tid(i, thread->th.th_team)]->th.th_current_task;
-      kmp_int32 cur_lvl = current_task->td_level;
+    double time1, time2;
+    time1 = get_wall_time2();
+    if(taskdata->td_use_task_affinity_search) {
+    //if(true) {
+      bool found_match = __kmp_task_aff_is_correct_task(thread, taskdata, thread_data, task_team);
+      
+      // // check against all current tasks of threads in team due to adding task to queues of different threads
+      // bool found_match = false;
+      // for(int i = 0; i < task_team->tt.tt_nproc; i++) {
+      //   kmp_taskdata_t *current_task = __kmp_threads[__kmp_gtid_from_tid(i, thread->th.th_team)]->th.th_current_task;
+      //   kmp_int32 cur_lvl = current_task->td_level;
 
-      // reset pointer
-      parent = taskdata->td_parent;
+      //   // reset pointer
+      //   parent = taskdata->td_parent;
 
-      while (parent != current_task && parent->td_level > cur_lvl) {
+      //   while (parent != current_task && parent->td_level > cur_lvl) {
+      //     parent = parent->td_parent; // check generation up to the level of the
+      //     KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
+      //               gtid, i, thread_data->td.td_deque_ntasks,
+      //               thread_data->td.td_deque_head, thread_data->td.td_deque_tail, current, level, parent, parent->td_level));
+      //     // current task
+      //     KMP_DEBUG_ASSERT(parent != NULL);
+      //   }
+      //   if(current_task == parent){
+      //       found_match = true;
+      //       break;
+      //   }
+      // }
+
+      time2 = get_wall_time2() - time1;
+      thread->th.th_task_aff_sum_time_remove_my_task += time2;
+      thread->th.th_task_aff_num_remove_my_task++;
+      thread->th.th_num_aff_search_remove++;
+
+      if(!found_match){
+        // If the head task is not a descendant of the current task then do not
+        // steal it. No other task in victim's deque can be a descendant of the
+        // current task.
+        __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+        KA_TRACE(10,
+                ("__kmp_remove_my_task(exit #1.9): T#%d No tasks to remove: "
+                  "ntasks=%d head=%u tail=%u\n",
+                  gtid, thread_data->td.td_deque_ntasks,
+                  thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
+        return NULL;
+      }
+    }else {
+      while (parent != current && parent->td_level > level) {
         parent = parent->td_parent; // check generation up to the level of the
-        KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
-                  gtid, i, thread_data->td.td_deque_ntasks,
+        KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
+                  gtid, thread_data->td.td_deque_ntasks,
                   thread_data->td.td_deque_head, thread_data->td.td_deque_tail, current, level, parent, parent->td_level));
         // current task
         KMP_DEBUG_ASSERT(parent != NULL);
       }
-      if(current_task == parent){
-          found_match = true;
-          break;
+      time2 = get_wall_time2() - time1;
+      thread->th.th_task_aff_sum_time_remove_my_task += time2;
+      thread->th.th_task_aff_num_remove_my_task++;
+      if (parent != current) {
+        // If the tail task is not a child, then no other child can appear in the
+        // deque.
+        __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+        KA_TRACE(10,
+                ("__kmp_remove_my_task(exit #2): T#%d No tasks to remove: "
+                  "ntasks=%d head=%u tail=%u\n",
+                  gtid, thread_data->td.td_deque_ntasks,
+                  thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
+        return NULL;
       }
-    }
-    if(!found_match){
-      // If the head task is not a descendant of the current task then do not
-      // steal it. No other task in victim's deque can be a descendant of the
-      // current task.
-      __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
-      KA_TRACE(10,
-               ("__kmp_remove_my_task(exit #1.9): T#%d No tasks to remove: "
-                "ntasks=%d head=%u tail=%u\n",
-                gtid, thread_data->td.td_deque_ntasks,
-                thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
-      return NULL;
     }
 #else
     while (parent != current && parent->td_level > level) {
@@ -2545,42 +2609,79 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
     kmp_taskdata_t *current = __kmp_threads[gtid]->th.th_current_task;
     kmp_int32 level = current->td_level;
     kmp_taskdata_t *parent = taskdata->td_parent;
+
 #if KMP_USE_TASK_AFFINITY
-    // check against all current tasks of threads in team due to adding task to queues of different threads
-    bool found_match = false;
-    for(int i = 0; i < task_team->tt.tt_nproc; i++) {
-      kmp_taskdata_t *current_task = __kmp_threads[__kmp_gtid_from_tid(i, thread->th.th_team)]->th.th_current_task;
-      kmp_int32 cur_lvl = current_task->td_level;
+    double time1, time2;
+    time1 = get_wall_time2();
+    if(taskdata->td_use_task_affinity_search) {
+    //if(true) {
+      bool found_match = __kmp_task_aff_is_correct_task(thread, taskdata, victim_td, task_team);
 
-      // reset pointer
-      parent = taskdata->td_parent;
+      // // check against all current tasks of threads in team due to adding task to queues of different threads
+      // bool found_match = false;
+      // for(int i = 0; i < task_team->tt.tt_nproc; i++) {
+      //   kmp_taskdata_t *current_task = __kmp_threads[__kmp_gtid_from_tid(i, thread->th.th_team)]->th.th_current_task;
+      //   kmp_int32 cur_lvl = current_task->td_level;
 
-      while (parent != current_task && parent->td_level > cur_lvl) {
+      //   // reset pointer
+      //   parent = taskdata->td_parent;
+
+      //   while (parent != current_task && parent->td_level > cur_lvl) {
+      //     parent = parent->td_parent; // check generation up to the level of the
+      //     KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
+      //               gtid, i, victim_td->td.td_deque_ntasks,
+      //               victim_td->td.td_deque_head, victim_td->td.td_deque_tail, current, level, parent, parent->td_level));
+      //     // current task
+      //     KMP_DEBUG_ASSERT(parent != NULL);
+      //   }
+      //   if(current_task == parent){
+      //       found_match = true;
+      //       break;
+      //   }
+      // }
+
+      time2 = get_wall_time2() - time1;
+      thread->th.th_task_aff_sum_time_steal_search += time2;
+      thread->th.th_task_aff_num_steal_search++;
+      thread->th.th_num_aff_search_steal++;
+
+      if(!found_match) {
+        // If the head task is not a descendant of the current task then do not
+        // steal it. No other task in victim's deque can be a descendant of the
+        // current task.
+        __kmp_release_bootstrap_lock(&victim_td->td.td_deque_lock);
+        KA_TRACE(10, ("__kmp_steal_task(exit #1.9): T#%d could not steal from "
+                      "T#%d: task_team=%p "
+                      "ntasks=%d head=%u tail=%u\n",
+                      gtid,
+                      __kmp_gtid_from_thread(threads_data[victim_tid].td.td_thr),
+                      task_team, victim_td->td.td_deque_ntasks,
+                      victim_td->td.td_deque_head, victim_td->td.td_deque_tail));
+        return NULL;
+      }
+    } else {
+      while (parent != current && parent->td_level > level) {
         parent = parent->td_parent; // check generation up to the level of the
-        KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
-                  gtid, i, victim_td->td.td_deque_ntasks,
-                  victim_td->td.td_deque_head, victim_td->td.td_deque_tail, current, level, parent, parent->td_level));
         // current task
         KMP_DEBUG_ASSERT(parent != NULL);
       }
-      if(current_task == parent){
-          found_match = true;
-          break;
+      time2 = get_wall_time2() - time1;
+      thread->th.th_task_aff_sum_time_steal_search += time2;
+      thread->th.th_task_aff_num_steal_search++;
+      if (parent != current) {
+        // If the head task is not a descendant of the current task then do not
+        // steal it. No other task in victim's deque can be a descendant of the
+        // current task.
+        __kmp_release_bootstrap_lock(&victim_td->td.td_deque_lock);
+        KA_TRACE(10, ("__kmp_steal_task(exit #2): T#%d could not steal from "
+                      "T#%d: task_team=%p "
+                      "ntasks=%d head=%u tail=%u\n",
+                      gtid,
+                      __kmp_gtid_from_thread(threads_data[victim_tid].td.td_thr),
+                      task_team, victim_td->td.td_deque_ntasks,
+                      victim_td->td.td_deque_head, victim_td->td.td_deque_tail));
+        return NULL;
       }
-    }
-    if(!found_match){
-      // If the head task is not a descendant of the current task then do not
-      // steal it. No other task in victim's deque can be a descendant of the
-      // current task.
-      __kmp_release_bootstrap_lock(&victim_td->td.td_deque_lock);
-      KA_TRACE(10, ("__kmp_steal_task(exit #1.9): T#%d could not steal from "
-                    "T#%d: task_team=%p "
-                    "ntasks=%d head=%u tail=%u\n",
-                    gtid,
-                    __kmp_gtid_from_thread(threads_data[victim_tid].td.td_thr),
-                    task_team, victim_td->td.td_deque_ntasks,
-                    victim_td->td.td_deque_head, victim_td->td.td_deque_tail));
-      return NULL;
     }
 #else
     while (parent != current && parent->td_level > level) {

@@ -2098,11 +2098,6 @@ typedef struct kmp_task { /* GEH: Shouldn't this be aligned somehow? */
   kmp_cmplrdata_t
       data1; /* Two known optional additions: destructors and priority */
   kmp_cmplrdata_t data2; /* Process destructors first, priority second */
-  
-#if KMP_USE_TASK_AFFINITY
-  bool use_task_affinity = false;
-  void * task_affinity_data = NULL;
-#endif
 /* future data */
 #endif
   /*  private vars  */
@@ -2274,6 +2269,10 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 #if OMP_45_ENABLED
   kmp_task_team_t *td_task_team;
   kmp_int32 td_size_alloc; // The size of task structure, including shareds etc.
+#endif
+#if KMP_USE_TASK_AFFINITY
+  bool td_use_task_affinity_search = false;
+  void * td_task_affinity_data_pointer = NULL;
 #endif
 }; // struct kmp_taskdata
 
@@ -2514,6 +2513,8 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   int th_task_aff_num_find_numa;
   int th_task_aff_num_steal_search;
   int th_task_aff_num_remove_my_task;
+  int th_num_aff_search_steal;
+  int th_num_aff_search_remove;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
