@@ -1646,6 +1646,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
     kmp_task_team_t *task_team = thread->th.th_task_team;
     kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
 
+    // need to enable tasking and allocate and assign proper data structures once
     KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
     if (!KMP_TASKING_ENABLED(task_team)) {
       __kmp_enable_tasking(task_team, thread);
@@ -1664,7 +1665,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       time1 = get_wall_time2();
 
       // Allocate deque if necessary
-      kmp_int32 tid = thread->th.th_info.ds.ds_tid;
+      kmp_int32 tid = __kmp_tid_from_gtid(gtid); // thread->th.th_info.ds.ds_tid;
       kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
       // No lock needed since only owner can allocate
       if (cur_thread_data->td.td_deque == NULL) {
@@ -1675,10 +1676,35 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
       // check address for numa domain
       int current_data_domain = -1;
-      int ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-      KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.th_task_affinity_data, current_data_domain, ret_code));
+      int ret_code = -1;
+      size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
+      
+      // page_start_address = tmp_address;
+      const int page_size = KMP_GET_PAGE_SIZE();
+      size_t page_start_address = tmp_address & ~(page_size-1);
+      KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
 
-      // TODO: get page for pointer
+      // TODO: check map
+      auto search = task_aff_addr_map.find(page_start_address);
+      if(search != task_aff_addr_map.end()) {
+        KA_TRACE(5, ("TASK AFFINITY: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
+        ret_code = 0;
+        current_data_domain = search->second;
+      }
+      else {
+        KA_TRACE(5, ("TASK AFFINITY: T#%d Not Found %lx\n", gtid, page_start_address));
+      }
+
+      if(ret_code != 0){
+        // run move pages
+        ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+        KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.th_task_affinity_data, current_data_domain, ret_code));
+
+        if(ret_code == 0){
+          task_aff_addr_map[page_start_address] = current_data_domain;
+        }
+      }
+      
       // reset pointer & save temporary
       new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
       thread->th.th_task_affinity_data = NULL;
@@ -1695,7 +1721,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         int tmp_id2;
         
         if(n_thread_domain > 0){
-          KA_TRACE(5, ("TASK AFFINITY: T#%d Now looking for other threads...\n", gtid));
           for( int i = 0; i < n_thread_domain; i++){
               tmp_id = map_threads_in_numa_domain[current_data_domain][i];
 
