@@ -1718,7 +1718,9 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
           if(ret_code == 0){
             // ttime1 = get_wall_time2();
+            __kmp_acquire_bootstrap_lock(&lock_addr_map);
             task_aff_addr_map[page_start_address] = current_data_domain;
+            __kmp_release_bootstrap_lock(&lock_addr_map);
             // ttime1 = get_wall_time2() - ttime1;
             // thread->th.th_task_aff_sum_time_map_add += ttime1;
             // thread->th.th_task_aff_sum_time_map_add_num++;
@@ -2574,8 +2576,8 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
     time1 = get_wall_time2();
     if(taskdata->td_use_task_affinity_search) {
     //if(true) {
-      //bool found_match = __kmp_task_aff_is_correct_task(thread, taskdata, thread_data, task_team);
-      bool found_match = true;
+      bool found_match = __kmp_task_aff_is_correct_task(thread, taskdata, thread_data, task_team);
+      //bool found_match = true;
       
       time2 = get_wall_time2() - time1;
       thread->th.th_task_aff_sum_time_remove_my_task += time2;
@@ -2728,6 +2730,11 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
   KMP_DEBUG_ASSERT(victim_td->td.td_deque != NULL);
 
   taskdata = victim_td->td.td_deque[victim_td->td.td_deque_head];
+  // if(taskdata == NULL)
+  // {
+  //     return NULL;
+  // }
+
   if (is_constrained) {
     // we need to check if the candidate obeys task scheduling constraint:
     // only descendant of current task can be scheduled
@@ -2740,8 +2747,8 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
     time1 = get_wall_time2();
     if(taskdata->td_use_task_affinity_search) {
     //if(true) {
-      //bool found_match = __kmp_task_aff_is_correct_task(thread, taskdata, victim_td, task_team);
-      bool found_match = true;
+      bool found_match = __kmp_task_aff_is_correct_task(thread, taskdata, victim_td, task_team);
+      //bool found_match = true;
 
       time2 = get_wall_time2() - time1;
       thread->th.th_task_aff_sum_time_steal_search += time2;

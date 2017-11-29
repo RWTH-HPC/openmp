@@ -3867,6 +3867,7 @@ extern kmp_bootstrap_lock_t lock_numa_map_set;
 
 extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
+extern kmp_bootstrap_lock_t lock_addr_map;
 extern std::map<size_t, int> task_aff_addr_map;
 #endif // KMP_USE_TASK_AFFINITY
 

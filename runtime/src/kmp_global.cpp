@@ -78,6 +78,7 @@ int numa_domain_size[NUMA_DOMAIN_MAX_NR];
 int map_thread_to_numa_domain[MAX_THREADS_OVERALL];
 kmp_bootstrap_lock_t lock_numa_domain[NUMA_DOMAIN_MAX_NR];
 kmp_bootstrap_lock_t lock_numa_map_set;
+kmp_bootstrap_lock_t lock_addr_map;
 std::map<size_t ,int> task_aff_addr_map;
 #endif // KMP_USE_TASK_AFFINITY
 
