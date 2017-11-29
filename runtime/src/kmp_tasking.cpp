@@ -1645,152 +1645,159 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
     double ttime1;
     kmp_info_t *thread = __kmp_threads[gtid];
     kmp_task_team_t *task_team = thread->th.th_task_team;
-    kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
-
-    // need to enable tasking and allocate and assign proper data structures once
-    KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
-    if (!KMP_TASKING_ENABLED(task_team)) {
-      __kmp_enable_tasking(task_team, thread);
-    }
     
-    kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
-    KMP_DEBUG_ASSERT(__kmp_tasking_mode != NULL);
-
-    if(thread->th.th_task_affinity_data == NULL || nthreads_in_team <= 1)
+    // if single threaded
+    if(task_team == NULL)
     {
-      // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
       res = __kmp_omp_task(gtid, new_task, true);
-    }
-    else
-    {
-      time1 = get_wall_time2();
-      // ttime1 = get_wall_time2();
+    } else {
+      kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
 
-      // Allocate deque if necessary
-      kmp_int32 tid = __kmp_tid_from_gtid(gtid); // thread->th.th_info.ds.ds_tid;
-      kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
-      // No lock needed since only owner can allocate
-      if (cur_thread_data->td.td_deque == NULL) {
-        __kmp_alloc_task_deque(thread, cur_thread_data);
+      // need to enable tasking and allocate and assign proper data structures once
+      KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
+      if (!KMP_TASKING_ENABLED(task_team)) {
+        __kmp_enable_tasking(task_team, thread);
       }
       
-      // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
-      // check address for numa domain
-      int current_data_domain = -1;
-      int ret_code = -1;
-      size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
-      
-      // page_start_address = tmp_address;
-      const int page_size = KMP_GET_PAGE_SIZE();
-      size_t page_start_address = tmp_address & ~(page_size-1);
-      // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
-      
-      // check map      
-      auto search = task_aff_addr_map.find(page_start_address);
-      bool found = search != task_aff_addr_map.end();
-      // ttime1 = get_wall_time2() - ttime1;
-      // thread->th.th_task_aff_sum_time_map_find += ttime1;
-      // thread->th.th_task_aff_sum_time_map_find_num++;
-      
-      if(found) {
-        // KA_TRACE(5, ("TASK AFFINITY: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
-        ret_code = 0;
-        current_data_domain = search->second;
-      }
-      else {
-        // KA_TRACE(5, ("TASK AFFINITY: T#%d Not Found %lx\n", gtid, page_start_address));
-      }
-      
-      if(ret_code != 0){
-        // ttime1 = get_wall_time2();
-        // run move pages
-        ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-        // KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.th_task_affinity_data, current_data_domain, ret_code));
-        // ttime1 = get_wall_time2() - ttime1;
-        // thread->th.th_task_aff_sum_time_numa_find += ttime1;
-        // thread->th.th_task_aff_sum_time_numa_find_num++;
+      kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
+      KMP_DEBUG_ASSERT(__kmp_tasking_mode != NULL);
 
-        if(ret_code == 0){
-          // ttime1 = get_wall_time2();
-          task_aff_addr_map[page_start_address] = current_data_domain;
-          // ttime1 = get_wall_time2() - ttime1;
-          // thread->th.th_task_aff_sum_time_map_add += ttime1;
-          // thread->th.th_task_aff_sum_time_map_add_num++;
-        }
-      }
-      
-      // reset pointer & save temporary
-      new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
-      thread->th.th_task_affinity_data = NULL;
-
-      int target_id = -1;
-      int target_gtid = -1;
-      kmp_info_t * target_thread = NULL;
-      kmp_thread_data_t *target_thread_data = NULL;
-
-      if(ret_code == 0) {
-        // get threads for numa domain & determine gtid where task should be scheduled
-        int n_thread_domain = numa_domain_size[current_data_domain];
-        int tmp_id;
-        int tmp_id2;
-        
-        if(n_thread_domain > 0){
-          // ttime1 = get_wall_time2();
-          for( int i = 0; i < n_thread_domain; i++){
-              tmp_id = map_threads_in_numa_domain[current_data_domain][i];
-
-              // check whether this is valid and in current task team
-              for( int j = 0; j < nthreads_in_team; j++)
-              {
-                //target_thread = task_team->tt.tt_threads[j];
-                target_thread_data = &(threads_data[j]);
-                target_thread = target_thread_data->td.td_thr;
-                tmp_id2 = __kmp_gtid_from_thread(target_thread);
-                if(tmp_id2 == tmp_id){
-                  // match: this thread is in task team
-                  target_id = j;
-                  target_gtid = tmp_id2;
-                  break;
-                }
-              }
-
-              if(target_id != -1)
-                break;
-          }
-          // ttime1 = get_wall_time2() - ttime1;
-          // thread->th.th_task_aff_sum_time_numa_get_thread += ttime1;
-          // thread->th.th_task_aff_sum_time_numa_get_thread_num++;
-        }
-        time2 = get_wall_time2()-time1;
-        thread->th.th_task_aff_sum_time_find_numa += time2;
-        thread->th.th_task_aff_num_find_numa++;
-
-        if(target_id == -1)
-        {
-          // fall back mode if not possible to find any matching thread
-          // KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
-          res = __kmp_omp_task(gtid, new_task, true);    
-        } else {
-          if(gtid != target_gtid)
-            new_taskdata->td_use_task_affinity_search = true;
-          // KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_id));
-          // set correct team
-          kmp_int32 pass = 1;
-          do {
-              pass = pass << 1;
-          } while (!__kmp_give_task(target_thread, target_id, new_task, pass));
-
-          res = TASK_CURRENT_NOT_QUEUED;
-          // KA_TRACE(5, ("TASK AFFINITY: T#%d successfully scheduled task=%p on thread %d\n", gtid, new_taskdata, target_id));
-        }
-      } else {
-        time2 = get_wall_time2()-time1;
-        thread->th.th_task_aff_sum_time_find_numa += time2;
-        thread->th.th_task_aff_num_find_numa++;
-        // fall back mode if not possible to find any matching thread
-        // KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+      if(thread->th.th_task_affinity_data == NULL || nthreads_in_team <= 1)
+      {
+        // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
         res = __kmp_omp_task(gtid, new_task, true);
-      } // if
+      }
+      else
+      {
+        time1 = get_wall_time2();
+        // ttime1 = get_wall_time2();
+
+        // Allocate deque if necessary
+        kmp_int32 tid = __kmp_tid_from_gtid(gtid); // thread->th.th_info.ds.ds_tid;
+        kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
+        // No lock needed since only owner can allocate
+        if (cur_thread_data->td.td_deque == NULL) {
+          __kmp_alloc_task_deque(thread, cur_thread_data);
+        }
+        
+        // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
+        // check address for numa domain
+        int current_data_domain = -1;
+        int ret_code = -1;
+        size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
+        
+        // page_start_address = tmp_address;
+        const int page_size = KMP_GET_PAGE_SIZE();
+        size_t page_start_address = tmp_address & ~(page_size-1);
+        // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
+        
+        // check map      
+        auto search = task_aff_addr_map.find(page_start_address);
+        bool found = search != task_aff_addr_map.end();
+        // ttime1 = get_wall_time2() - ttime1;
+        // thread->th.th_task_aff_sum_time_map_find += ttime1;
+        // thread->th.th_task_aff_sum_time_map_find_num++;
+        
+        if(found) {
+          // KA_TRACE(5, ("TASK AFFINITY: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
+          ret_code = 0;
+          current_data_domain = search->second;
+        }
+        else {
+          // KA_TRACE(5, ("TASK AFFINITY: T#%d Not Found %lx\n", gtid, page_start_address));
+        }
+        
+        if(ret_code != 0){
+          // ttime1 = get_wall_time2();
+          // run move pages
+          ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+          // KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.th_task_affinity_data, current_data_domain, ret_code));
+          // ttime1 = get_wall_time2() - ttime1;
+          // thread->th.th_task_aff_sum_time_numa_find += ttime1;
+          // thread->th.th_task_aff_sum_time_numa_find_num++;
+
+          if(ret_code == 0){
+            // ttime1 = get_wall_time2();
+            task_aff_addr_map[page_start_address] = current_data_domain;
+            // ttime1 = get_wall_time2() - ttime1;
+            // thread->th.th_task_aff_sum_time_map_add += ttime1;
+            // thread->th.th_task_aff_sum_time_map_add_num++;
+          }
+        }
+        
+        // reset pointer & save temporary
+        new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
+        thread->th.th_task_affinity_data = NULL;
+
+        int target_id = -1;
+        int target_gtid = -1;
+        kmp_info_t * target_thread = NULL;
+        kmp_thread_data_t *target_thread_data = NULL;
+
+        if(ret_code == 0) {
+          // get threads for numa domain & determine gtid where task should be scheduled
+          int n_thread_domain = numa_domain_size[current_data_domain];
+          int tmp_id;
+          int tmp_id2;
+          
+          if(n_thread_domain > 0){
+            // ttime1 = get_wall_time2();
+            for( int i = 0; i < n_thread_domain; i++){
+                tmp_id = map_threads_in_numa_domain[current_data_domain][i];
+
+                // check whether this is valid and in current task team
+                for( int j = 0; j < nthreads_in_team; j++)
+                {
+                  //target_thread = task_team->tt.tt_threads[j];
+                  target_thread_data = &(threads_data[j]);
+                  target_thread = target_thread_data->td.td_thr;
+                  tmp_id2 = __kmp_gtid_from_thread(target_thread);
+                  if(tmp_id2 == tmp_id){
+                    // match: this thread is in task team
+                    target_id = j;
+                    target_gtid = tmp_id2;
+                    break;
+                  }
+                }
+
+                if(target_id != -1)
+                  break;
+            }
+            // ttime1 = get_wall_time2() - ttime1;
+            // thread->th.th_task_aff_sum_time_numa_get_thread += ttime1;
+            // thread->th.th_task_aff_sum_time_numa_get_thread_num++;
+          }
+          time2 = get_wall_time2()-time1;
+          thread->th.th_task_aff_sum_time_find_numa += time2;
+          thread->th.th_task_aff_num_find_numa++;
+
+          if(target_id == -1)
+          {
+            // fall back mode if not possible to find any matching thread
+            // KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
+            res = __kmp_omp_task(gtid, new_task, true);    
+          } else {
+            if(gtid != target_gtid)
+              new_taskdata->td_use_task_affinity_search = true;
+            // KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_id));
+            // set correct team
+            kmp_int32 pass = 1;
+            do {
+                pass = pass << 1;
+            } while (!__kmp_give_task(target_thread, target_id, new_task, pass));
+
+            res = TASK_CURRENT_NOT_QUEUED;
+            // KA_TRACE(5, ("TASK AFFINITY: T#%d successfully scheduled task=%p on thread %d\n", gtid, new_taskdata, target_id));
+          }
+        } else {
+          time2 = get_wall_time2()-time1;
+          thread->th.th_task_aff_sum_time_find_numa += time2;
+          thread->th.th_task_aff_num_find_numa++;
+          // fall back mode if not possible to find any matching thread
+          // KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+          res = __kmp_omp_task(gtid, new_task, true);
+        } // if
+      }
     }
   }
 #else

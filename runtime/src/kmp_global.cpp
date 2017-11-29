@@ -537,9 +537,9 @@ int _You_must_link_with_Microsoft_OpenMP_library = 1;
 #endif
 
 double get_wall_time2(void) {
-  struct timeval tv;
-  gettimeofday (&tv, NULL);
-  return tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0;
+  struct timespec tv;
+  clock_gettime (CLOCK_MONOTONIC, &tv);
+  return tv.tv_sec * 1000.0 + tv.tv_nsec / 1000000.0;
 }
 
 // end of file //
