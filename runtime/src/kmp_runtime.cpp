@@ -5922,6 +5922,8 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   /*if(thread->th.th_task_aff_num_steal_search > 0) {*/  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d steal_search\t%d\t%f\tmean:\t%f\tms\n", thread->th.th_info.ds.ds_gtid, thread->th.th_task_aff_num_steal_search, thread->th.th_task_aff_sum_time_steal_search, thread->th.th_task_aff_sum_time_steal_search / thread->th.th_task_aff_num_steal_search); //}
   /*if(thread->th.th_task_aff_num_remove_my_task > 0) {*/  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d remove_my_task\t%d\t%f\tmean:\t%f\tms\n", thread->th.th_info.ds.ds_gtid, thread->th.th_task_aff_num_remove_my_task, thread->th.th_task_aff_sum_time_remove_my_task, thread->th.th_task_aff_sum_time_remove_my_task / thread->th.th_task_aff_num_remove_my_task); //} 
 
+  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_task_aff_num_steal_search_aborted\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_task_aff_num_steal_search_aborted);
+  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_task_aff_num_remove_my_task_aborted\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_task_aff_num_remove_my_task_aborted);
 
   fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_task_aff_sum_time_map_find\t%d\t%f\tmean:\t%f\tms\n", 
     thread->th.th_info.ds.ds_gtid, 

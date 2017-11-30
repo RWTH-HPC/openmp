@@ -2531,6 +2531,10 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   int th_task_aff_num_find_numa;
   int th_task_aff_num_steal_search;
   int th_task_aff_num_remove_my_task;
+
+  int th_task_aff_num_steal_search_aborted;
+  int th_task_aff_num_remove_my_task_aborted;
+  
   int th_num_aff_search_steal;
   int th_num_aff_search_remove;
 
