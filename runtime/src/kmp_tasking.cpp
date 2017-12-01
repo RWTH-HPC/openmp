@@ -392,7 +392,7 @@ void __kmp_push_current_task_to_thread(kmp_info_t *this_thr, kmp_team_t *team,
                                        int tid) {
   // current task of the thread is a parent of the new just created implicit
   // tasks of new team
-  KA_TRACE(10, ("__kmp_push_current_task_to_thread(enter): T#%d this_thread=%p "
+  KF_TRACE(10, ("__kmp_push_current_task_to_thread(enter): T#%d this_thread=%p "
                 "curtask=%p "
                 "parent_task=%p\n",
                 tid, this_thr, this_thr->th.th_current_task,
@@ -412,7 +412,7 @@ void __kmp_push_current_task_to_thread(kmp_info_t *this_thr, kmp_team_t *team,
     this_thr->th.th_current_task = &team->t.t_implicit_task_taskdata[tid];
   }
 
-  KA_TRACE(10, ("__kmp_push_current_task_to_thread(exit): T#%d this_thread=%p "
+  KF_TRACE(10, ("__kmp_push_current_task_to_thread(exit): T#%d this_thread=%p "
                 "curtask=%p "
                 "parent_task=%p\n",
                 tid, this_thr, this_thr->th.th_current_task,
@@ -430,8 +430,8 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
   kmp_info_t *thread = __kmp_threads[gtid];
 
   KA_TRACE(10,
-           ("__kmp_task_start(enter): T#%d starting task %p with lvl:%d -- current_task=%p with lvl:%d\n",
-            gtid, taskdata, taskdata->td_level, current_task, current_task == NULL ? 0 : current_task->td_level));
+           ("__kmp_task_start(enter): T#%d starting task %p: current_task=%p\n",
+            gtid, taskdata, current_task));
 
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
 
@@ -1664,7 +1664,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
       if(thread->th.th_task_affinity_data == NULL || nthreads_in_team <= 1)
       {
-        KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
+        // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
         res = __kmp_omp_task(gtid, new_task, true);
       }
       else
@@ -1680,7 +1680,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           __kmp_alloc_task_deque(thread, cur_thread_data);
         }
         
-        KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
+        // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
         // check address for numa domain
         int current_data_domain = -1;
         int ret_code = -1;
@@ -1699,37 +1699,36 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         // // thread->th.th_task_aff_sum_time_map_find_num++;
         
         // if(found) {
-        //   KA_TRACE(5, ("TASK AFFINITY: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
+        //   // KA_TRACE(5, ("TASK AFFINITY: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
         //   ret_code = 0;
         //   current_data_domain = search->second;
         // }
         // else {
-        //   KA_TRACE(5, ("TASK AFFINITY: T#%d Not Found %lx\n", gtid, page_start_address));
+        //   // KA_TRACE(5, ("TASK AFFINITY: T#%d Not Found %lx\n", gtid, page_start_address));
+        // }
+        
+        // if(ret_code != 0){
+        //   // ttime1 = get_wall_time2();
+        //   // run move pages
+        //   ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+        //   // KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.th_task_affinity_data, current_data_domain, ret_code));
+        //   // ttime1 = get_wall_time2() - ttime1;
+        //   // thread->th.th_task_aff_sum_time_numa_find += ttime1;
+        //   // thread->th.th_task_aff_sum_time_numa_find_num++;
+
+        //   if(ret_code == 0){
+        //     // ttime1 = get_wall_time2();
+        //     __kmp_acquire_bootstrap_lock(&lock_addr_map);
+        //     task_aff_addr_map[page_start_address] = current_data_domain;
+        //     __kmp_release_bootstrap_lock(&lock_addr_map);
+        //     // ttime1 = get_wall_time2() - ttime1;
+        //     // thread->th.th_task_aff_sum_time_map_add += ttime1;
+        //     // thread->th.th_task_aff_sum_time_map_add_num++;
+        //   }
         // }
 
-        // simply fix it
         ret_code = 0;
         current_data_domain = rand() & 1;
-        
-        if(ret_code != 0) {
-          // ttime1 = get_wall_time2();
-          // run move pages
-          ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-          // KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, thread->th.th_task_affinity_data, current_data_domain, ret_code));
-          // ttime1 = get_wall_time2() - ttime1;
-          // thread->th.th_task_aff_sum_time_numa_find += ttime1;
-          // thread->th.th_task_aff_sum_time_numa_find_num++;
-
-          if(ret_code == 0){
-            // ttime1 = get_wall_time2();
-            __kmp_acquire_bootstrap_lock(&lock_addr_map);
-            task_aff_addr_map[page_start_address] = current_data_domain;
-            __kmp_release_bootstrap_lock(&lock_addr_map);
-            // ttime1 = get_wall_time2() - ttime1;
-            // thread->th.th_task_aff_sum_time_map_add += ttime1;
-            // thread->th.th_task_aff_sum_time_map_add_num++;
-          }
-        }
         
         // reset pointer & save temporary
         new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
@@ -1780,29 +1779,32 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           if(target_id == -1)
           {
             // fall back mode if not possible to find any matching thread
-            KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
-            res = __kmp_omp_task(gtid, new_task, true);    
+            // KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, n_thread_domain: %d, target_id: %d\n", gtid, n_thread_domain, target_id));
+            res = __kmp_omp_task(gtid, new_task, true);
           } else {
-            if(gtid != target_gtid)
+            if(gtid == target_gtid) {
+              res = __kmp_omp_task(gtid, new_task, true);
+            }else {
               new_taskdata->td_use_task_affinity_search = true;
-            KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_id));
-            // set correct team
-            kmp_int32 pass = 1;
-            int tmp_count = 0;
-            do {
-                tmp_count++;
-                pass = pass << 1;
-            } while (!__kmp_give_task(target_thread, target_id, new_task, pass));
+              // KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_id));
+              // set correct team
+              kmp_int32 pass = 1;
+              int count = 0;
+              do {
+                  count++;
+                  pass = pass << 1;
+              } while (!__kmp_give_task(target_thread, target_id, new_task, pass));
 
-            res = TASK_CURRENT_NOT_QUEUED;
-            KA_TRACE(5, ("TASK AFFINITY: T#%d successfully scheduled task=%p on thread %d after %d iterations\n", gtid, new_taskdata, target_id, tmp_count));
+              res = TASK_CURRENT_NOT_QUEUED;
+              KA_TRACE(5, ("TASK AFFINITY: T#%d successfully scheduled task=%p on thread:%d gtid:%d after %d iterations.\n", gtid, new_taskdata, target_id, target_gtid, count));
+            }
           }
         } else {
           time2 = get_wall_time2()-time1;
           thread->th.th_task_aff_sum_time_find_numa += time2;
           thread->th.th_task_aff_num_find_numa++;
           // fall back mode if not possible to find any matching thread
-          KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+          // KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
           res = __kmp_omp_task(gtid, new_task, true);
         } // if
       }
@@ -1830,6 +1832,40 @@ void __kmp_set_task_affinity( void * data )
     kmp_info_t *thread = __kmp_threads[gtid];
     thread->th.th_task_affinity_data = data;
 }
+
+// inline bool __kmp_task_aff_is_correct_task(
+//   kmp_info_t * thread, 
+//   kmp_taskdata_t *taskdata, 
+//   kmp_thread_data_t *victim_td,
+//   kmp_task_team_t * task_team) {
+  
+//   // check against all current tasks of threads in team due to adding task to queues of different threads
+//   bool found_match = false;
+//   kmp_taskdata_t *parent = NULL;
+//   int gtid = __kmp_entry_gtid();
+
+//   for(int i = 0; i < task_team->tt.tt_nproc; i++) {
+    // kmp_taskdata_t *current_task = __kmp_threads[__kmp_gtid_from_tid(i, thread->th.th_team)]->th.th_current_task;
+    // kmp_int32 cur_lvl = current_task->td_level;
+
+    // // reset pointer
+    // parent = taskdata->td_parent;
+
+    // while (parent != current_task && parent->td_level > cur_lvl) {
+    //   parent = parent->td_parent; // check generation up to the level of the
+    //   KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
+    //                 gtid, i, victim_td->td.td_deque_ntasks,
+    //                 victim_td->td.td_deque_head, victim_td->td.td_deque_tail, current_task, cur_lvl, parent, parent->td_level));
+    //   // current task
+    //   KMP_DEBUG_ASSERT(parent != NULL);
+    // }
+    // if(current_task == parent){
+    //   found_match = true;
+    //   break;
+    // }
+//   }
+//   return found_match;
+// }
 
 inline bool __kmp_task_aff_is_correct_task(
   kmp_info_t * thread, 
@@ -2561,7 +2597,6 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
         // steal it. No other task in victim's deque can be a descendant of the
         // current task.
         __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
-        thread->th.th_task_aff_num_remove_my_task_aborted++;
         KA_TRACE(10,
                 ("__kmp_remove_my_task(exit #1.9): T#%d No tasks to remove: "
                   "ntasks=%d head=%u tail=%u\n",
@@ -2585,7 +2620,6 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
         // If the tail task is not a child, then no other child can appear in the
         // deque.
         __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
-        thread->th.th_task_aff_num_remove_my_task_aborted++;
         KA_TRACE(10,
                 ("__kmp_remove_my_task(exit #2): T#%d No tasks to remove: "
                   "ntasks=%d head=%u tail=%u\n",
@@ -2704,6 +2738,10 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
   KMP_DEBUG_ASSERT(victim_td->td.td_deque != NULL);
 
   taskdata = victim_td->td.td_deque[victim_td->td.td_deque_head];
+  // if(taskdata == NULL)
+  // {
+  //     return NULL;
+  // }
 
   if (is_constrained) {
     // we need to check if the candidate obeys task scheduling constraint:
@@ -2730,7 +2768,6 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
         // steal it. No other task in victim's deque can be a descendant of the
         // current task.
         __kmp_release_bootstrap_lock(&victim_td->td.td_deque_lock);
-        thread->th.th_task_aff_num_steal_search_aborted++;
         KA_TRACE(10, ("__kmp_steal_task(exit #1.9): T#%d could not steal from "
                       "T#%d: task_team=%p "
                       "ntasks=%d head=%u tail=%u\n",
@@ -2754,7 +2791,6 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
         // steal it. No other task in victim's deque can be a descendant of the
         // current task.
         __kmp_release_bootstrap_lock(&victim_td->td.td_deque_lock);
-        thread->th.th_task_aff_num_steal_search_aborted++;
         KA_TRACE(10, ("__kmp_steal_task(exit #2): T#%d could not steal from "
                       "T#%d: task_team=%p "
                       "ntasks=%d head=%u tail=%u\n",
