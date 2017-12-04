@@ -757,7 +757,7 @@ extern char const *__kmp_cpuinfo_file;
 
 #if KMP_USE_TASK_AFFINITY
 // experimental task affinity
-extern void __kmp_set_task_affinity(void * data);
+extern void __kmpc_set_task_affinity(void * data);
 #endif
 
 #endif /* KMP_AFFINITY_SUPPORTED */

@@ -314,7 +314,7 @@ void FTN_STDCALL FTN_SET_TASK_AFFINITY( void * data )
     #ifdef KMP_STUB
         // Nothing.
     #else
-        __kmp_set_task_affinity( data );
+        __kmpc_set_task_affinity( data );
     #endif
 }
 #endif

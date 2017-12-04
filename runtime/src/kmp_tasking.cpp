@@ -1773,7 +1773,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 }
 
 #if KMP_USE_TASK_AFFINITY
-void __kmp_set_task_affinity( void * data )
+void __kmpc_set_task_affinity( void * data )
 {
     int gtid = __kmp_entry_gtid();
     kmp_info_t *thread = __kmp_threads[gtid];

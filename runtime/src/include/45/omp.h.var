@@ -46,10 +46,8 @@
     extern void   __KAI_KMPC_CONVENTION  omp_set_max_active_levels (int);
     extern void   __KAI_KMPC_CONVENTION  omp_set_schedule          (omp_sched_t, int);
 	
-	# if KMP_USE_TASK_AFFINITY
-	extern void   __KAI_KMPC_CONVENTION  kmp_set_task_affinity(void *);
-	# endif
-
+	extern void   __KAI_KMPC_CONVENTION  kmpc_set_task_affinity(void *);
+	
     /* query API functions */
     extern int    __KAI_KMPC_CONVENTION  omp_get_num_threads  (void);
     extern int    __KAI_KMPC_CONVENTION  omp_get_dynamic      (void);
