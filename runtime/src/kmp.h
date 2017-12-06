@@ -2275,9 +2275,8 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
   kmp_int32 td_size_alloc; // The size of task structure, including shareds etc.
 #endif
 #if KMP_USE_TASK_AFFINITY
-  bool td_use_task_affinity_search = false;
+  //bool td_use_task_affinity_search = false;
   void * td_task_affinity_data_pointer = NULL;
-  int td_parent_thread_team_id = -1;
 #endif
 }; // struct kmp_taskdata
 

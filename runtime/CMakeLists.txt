@@ -323,6 +323,10 @@ set(LIBOMP_USE_TASK_AFFINITY FALSE CACHE BOOL
 if(LIBOMP_USE_TASK_AFFINITY AND (${LIBOMP_OMP_VERSION} LESS 45))
   libomp_error_say("Task affinity only available in OpenMP 4.5 or higher")
 endif()
+if(LIBOMP_USE_TASK_AFFINITY)
+  set(LIBOMP_LIBFLAGS "${LIBOMP_LIBFLAGS} -lnuma ")
+endif()
+
 
 # OMPT-support
 set(LIBOMP_OMPT_DEBUG FALSE CACHE BOOL

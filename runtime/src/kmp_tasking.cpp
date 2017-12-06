@@ -29,8 +29,6 @@
 #include <numa.h>
 #include <numaif.h>
 #include <unistd.h>
-
-#define PREFIX_TASK_AFF "T AFFINITY"
 #endif
 
 /* forward declaration */
@@ -1240,11 +1238,6 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
   taskdata->td_dephash = NULL;
   taskdata->td_depnode = NULL;
 #endif
-#if KMP_USE_TASK_AFFINITY
-  // remember on which thread (task team id) task has been created
-  taskdata->td_parent_thread_team_id = gtid;
-  KA_TRACE(10, ("TASK AFFINITY: __kmp_task_alloc(exit): T#%d setting td_parent_thread_team_id task %p\n", gtid, taskdata));
-#endif
 
 // Only need to keep track of child task counts if team parallel and tasking not
 // serialized or if it is a proxy task
@@ -1683,7 +1676,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
         const int page_size = KMP_GET_PAGE_SIZE();
         size_t page_start_address = tmp_address & ~(page_size-1);
-        // page_start_address = tmp_address;
         // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
         
         // check map      
@@ -1735,7 +1727,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
             if (gtid == target_gtid) {
               res = __kmp_omp_task(gtid, new_task, true);
             } else {
-              new_taskdata->td_use_task_affinity_search = true;
+              //new_taskdata->td_use_task_affinity_search = true;
               KA_TRACE(5, ("TASK AFFINITY: T#%d schedule task=%p on thread %d\n", gtid, new_taskdata, target_tid));
               // set correct team
               kmp_int32 pass = 1;
@@ -1850,25 +1842,25 @@ inline bool __kmp_task_aff_is_correct_task(
   // reset pointer
   parent = taskdata->td_parent;
 
-  // first check parent's thread where direct parent has been executed
-  if(taskdata->td_parent_thread_team_id != -1) {
-    int tmp_tid = __kmp_tid_from_gtid(taskdata->td_parent_thread_team_id);
-    current_task = __kmp_threads[taskdata->td_parent_thread_team_id]->th.th_current_task;
-    kmp_int32 cur_lvl = current_task->td_level;
+  // // first check parent's thread where direct parent has been executed
+  // if(taskdata->td_parent_thread_team_id != -1) {
+  //   int tmp_tid = __kmp_tid_from_gtid(taskdata->td_parent_thread_team_id);
+  //   current_task = __kmp_threads[taskdata->td_parent_thread_team_id]->th.th_current_task;
+  //   kmp_int32 cur_lvl = current_task->td_level;
 
-    while (parent != current_task && parent->td_level > cur_lvl) {
-      parent = parent->td_parent; // check generation up to the level of the
-      // KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
-      //               gtid, tmp_tid, victim_td->td.td_deque_ntasks,
-      //               victim_td->td.td_deque_head, victim_td->td.td_deque_tail, current_task, cur_lvl, parent, parent->td_level));
-      // current task
-      KMP_DEBUG_ASSERT(parent != NULL);
-    }
-    if(current_task == parent) {
-      thread->th.th_num_task_aff_search_parent_thread_pointer++;
-      return true;
-    }
-  }
+  //   while (parent != current_task && parent->td_level > cur_lvl) {
+  //     parent = parent->td_parent; // check generation up to the level of the
+  //     // KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
+  //     //               gtid, tmp_tid, victim_td->td.td_deque_ntasks,
+  //     //               victim_td->td.td_deque_head, victim_td->td.td_deque_tail, current_task, cur_lvl, parent, parent->td_level));
+  //     // current task
+  //     KMP_DEBUG_ASSERT(parent != NULL);
+  //   }
+  //   if(current_task == parent) {
+  //     thread->th.th_num_task_aff_search_parent_thread_pointer++;
+  //     return true;
+  //   }
+  // }
 
   // reset pointer
   parent = taskdata->td_parent;
@@ -2552,6 +2544,15 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
 
   thread_data = &task_team->tt.tt_threads_data[__kmp_tid_from_gtid(gtid)];
 
+#if KMP_USE_TASK_AFFINITY
+  // Allocate deque if necessary
+  //kmp_info_t *thread = __kmp_threads[gtid];
+  // No lock needed since only owner can allocate
+  if (thread_data->td.td_deque == NULL) {
+    __kmp_alloc_task_deque(thread, thread_data);
+  }
+#endif
+
   KA_TRACE(10, ("__kmp_remove_my_task(enter): T#%d ntasks=%d head=%u tail=%u\n",
                 gtid, thread_data->td.td_deque_ntasks,
                 thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
@@ -2591,7 +2592,7 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
     //             gtid, thread_data->td.td_deque_ntasks,
     //             thread_data->td.td_deque_head, thread_data->td.td_deque_tail, current, level, parent, parent->td_level));
     
-#if KMP_USE_TASK_AFFINITY
+// #if KMP_USE_TASK_AFFINITY
     // double time1, time2;
     // time1 = get_wall_time2();
     // if(taskdata->td_use_task_affinity_search) {
@@ -2640,7 +2641,7 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
     //     return NULL;
     //   }
     // }
-#else
+// #else
     while (parent != current && parent->td_level > level) {
       parent = parent->td_parent; // check generation up to the level of the
       KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
@@ -2660,7 +2661,7 @@ static kmp_task_t *__kmp_remove_my_task(kmp_info_t *thread, kmp_int32 gtid,
                 thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
       return NULL;
     }
-#endif
+// #endif
   }
 
   thread_data->td.td_deque_tail = tail;
@@ -2697,17 +2698,6 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
 
   victim_tid = victim->th.th_info.ds.ds_tid;
   victim_td = &threads_data[victim_tid];
-
-#if KMP_USE_TASK_AFFINITY
-  // Allocate deque if necessary
-  kmp_info_t *thread = __kmp_threads[gtid];
-  kmp_int32 tid = __kmp_tid_from_gtid(gtid);
-  kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
-  // No lock needed since only owner can allocate
-  if (cur_thread_data->td.td_deque == NULL) {
-    __kmp_alloc_task_deque(thread, cur_thread_data);
-  }
-#endif
 
   KA_TRACE(10, ("__kmp_steal_task(enter): T#%d try to steal from T#%d: "
                 "task_team=%p ntasks=%d "
@@ -2758,7 +2748,7 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
     kmp_int32 level = current->td_level;
     kmp_taskdata_t *parent = taskdata->td_parent;
 
-#if KMP_USE_TASK_AFFINITY
+// #if KMP_USE_TASK_AFFINITY
     // double time1, time2;
     // time1 = get_wall_time2();
     // if(taskdata->td_use_task_affinity_search) {
@@ -2809,7 +2799,7 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
     //     return NULL;
     //   }
     // }
-#else
+// #else
     while (parent != current && parent->td_level > level) {
       parent = parent->td_parent; // check generation up to the level of the
       // current task
@@ -2829,7 +2819,7 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
                     victim_td->td.td_deque_head, victim_td->td.td_deque_tail));
       return NULL;
     }
-#endif
+// #endif
   }
   // Bump head pointer and Wrap.
   victim_td->td.td_deque_head =
@@ -2863,6 +2853,8 @@ static kmp_task_t *__kmp_steal_task(kmp_info_t *victim, kmp_int32 gtid,
        victim_td->td.td_deque_ntasks, victim_td->td.td_deque_head,
        victim_td->td.td_deque_tail));
 
+  if(taskdata == NULL)
+    return NULL;
   task = KMP_TASKDATA_TO_TASK(taskdata);
   return task;
 }
