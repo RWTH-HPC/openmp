@@ -24,6 +24,10 @@
 #if KMP_USE_TASK_AFFINITY
 //#include <unordered_map>
 #include <map>
+
+#define NUMA_DOMAIN_MAX_NR 24
+#define MAX_THREADS_OVERALL 4096
+#define MAX_THREADS_PER_DOMAIN 128
 #endif
 
 /* #define BUILD_PARALLEL_ORDERED 1 */
@@ -2285,6 +2289,7 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 #if KMP_USE_TASK_AFFINITY
   //bool td_use_task_affinity_search = false;
   void * td_task_affinity_data_pointer = NULL;
+  size_t td_task_affinity_data_address = 0;
 #endif
 }; // struct kmp_taskdata
 
@@ -2341,6 +2346,14 @@ typedef struct kmp_base_task_team {
 #if OMP_45_ENABLED
   kmp_int32
       tt_found_proxy_tasks; /* Have we found proxy tasks since last barrier */
+#endif
+
+#if KMP_USE_TASK_AFFINITY
+  kmp_bootstrap_lock_t tt_lock_numa_map;
+  bool tt_numa_domains_set;
+  int tt_num_numa_domains;
+  int *tt_numa_domain_size;
+  int **tt_map_threads_in_domain;
 #endif
 
   KMP_ALIGN_CACHE
@@ -3871,6 +3884,10 @@ extern int numa_domain_size[24];
 extern int map_thread_to_numa_domain[];
 extern kmp_bootstrap_lock_t lock_numa_domain[];
 extern kmp_bootstrap_lock_t lock_numa_map_set;
+
+extern kmp_bootstrap_lock_t lock_incr_numa;
+extern int numa_num_threads_init;
+extern bool numa_all_set_up;
 
 extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
