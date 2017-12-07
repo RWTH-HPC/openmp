@@ -758,6 +758,14 @@ extern char const *__kmp_cpuinfo_file;
 #if KMP_USE_TASK_AFFINITY
 // experimental task affinity
 extern void __kmpc_set_task_affinity(void * data);
+#  ifndef __OMP_H
+typedef enum kmp_task_aff_init_thread_type_t {
+  kmp_task_aff_init_thread_type_first = 0,
+  kmp_task_aff_init_thread_type_random = 1,
+  kmp_task_aff_init_thread_type_lowest_wl = 2
+} kmp_task_aff_init_thread_type_t;
+#  endif // __OMP_H
+extern void  __kmpc_set_task_affinity_init_thread_type(kmp_task_aff_init_thread_type_t init_thread_type);
 #endif
 
 #endif /* KMP_AFFINITY_SUPPORTED */
@@ -3868,6 +3876,7 @@ extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
 extern kmp_bootstrap_lock_t lock_addr_map;
 extern std::map<size_t, int> task_aff_addr_map;
+extern kmp_task_aff_init_thread_type_t task_aff_init_thread_type;
 #endif // KMP_USE_TASK_AFFINITY
 
 #ifdef __cplusplus

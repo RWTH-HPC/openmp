@@ -80,6 +80,7 @@ kmp_bootstrap_lock_t lock_numa_domain[NUMA_DOMAIN_MAX_NR];
 kmp_bootstrap_lock_t lock_numa_map_set;
 kmp_bootstrap_lock_t lock_addr_map;
 std::map<size_t ,int> task_aff_addr_map;
+kmp_task_aff_init_thread_type_t task_aff_init_thread_type = kmp_task_aff_init_thread_type_random;
 #endif // KMP_USE_TASK_AFFINITY
 
 size_t __kmp_stksize = KMP_DEFAULT_STKSIZE;
