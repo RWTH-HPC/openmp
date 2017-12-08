@@ -29,6 +29,7 @@
 #include <numa.h>
 #include <numaif.h>
 #include <unistd.h>
+#include <limits.h>
 #endif
 
 /* forward declaration */
@@ -1828,7 +1829,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         bool found = search != task_aff_addr_map.end();
         
         if(found) {
-          KA_TRACE(5, ("TASK AFFINITY: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
+          KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
           ret_code = 0;
           target_gtid = search->second;
           target_tid = __kmp_tid_from_gtid(target_gtid);
@@ -1836,17 +1837,17 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           target_thread = target_thread_data->td.td_thr;
         }
         else {
-          KA_TRACE(5, ("TASK AFFINITY: T#%d Not Found %lx\n", gtid, page_start_address));
+          KA_TRACE(5, ("__kmpc_omp_task: T#%d Not Found %lx\n", gtid, page_start_address));
           // run move pages
           ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-          KA_TRACE(5, ("TASK AFFINITY: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
+          KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
 
           if(ret_code == 0){
             // get an initial thread that is pinned to corresponding numa domain
             target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
 
             if(target_tid != -1) {
-              KA_TRACE(5, ("TASK AFFINITY: T#%d Setting mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
+              KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
               __kmp_acquire_bootstrap_lock(&lock_addr_map);
               task_aff_addr_map[page_start_address] = target_gtid;
               __kmp_release_bootstrap_lock(&lock_addr_map);
@@ -1867,7 +1868,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           if(target_tid == -1)
           {
             // fall back mode if not possible to find any matching thread
-            KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, target_id: %d\n", gtid, target_tid));
+            KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode, target_id: %d\n", gtid, target_tid));
             res = __kmp_omp_task(gtid, new_task, true);
           } else {
             if (gtid == target_gtid) {
@@ -1878,7 +1879,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           }
         } else {
           // fall back mode if not possible to find any matching thread
-          KA_TRACE(5, ("TASK AFFINITY: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+          KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
           res = __kmp_omp_task(gtid, new_task, true);
         } // if
       }
@@ -1888,7 +1889,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   res = __kmp_omp_task(gtid, new_task, true);
 #endif
 
-  KA_TRACE(10, ("TASK AFFINITY: __kmpc_omp_task(exit): T#%d returning "
+  KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning "
                 "TASK_CURRENT_NOT_QUEUED: loc=%p task=%p\n",
                 gtid, loc_ref, new_taskdata));
 #if OMPT_SUPPORT
@@ -1909,6 +1910,7 @@ void __kmpc_set_task_affinity( void * data )
 
 void __kmpc_set_task_affinity_init_thread_type(kmp_task_aff_init_thread_type_t init_thread_type)
 {
+  fprintf(stderr, "__kmpc_set_task_affinity_init_thread_type: T#%d setting initial thread type to %d\n", __kmp_entry_gtid(), init_thread_type);
   task_aff_init_thread_type = init_thread_type;
 }
 
@@ -2001,16 +2003,18 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
   if(!numa_all_set_up)
     return NULL;
 
+  int nthreads = task_team->tt.tt_nproc;
+
+  // set numa mapping for current task team once
   if(!task_team->tt.tt_numa_domains_set)
   {
     __kmp_acquire_bootstrap_lock( &task_team->tt.tt_lock_numa_map );
     if(!task_team->tt.tt_numa_domains_set)
     {
       double t1;
-      int i, nthreads;
+      int i;
 
       t1 = get_wall_time2();
-      nthreads = task_team->tt.tt_nproc;
       KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain: T#%d Setting up numa map for task team.\n", __kmp_entry_gtid()));
       // get max number of domains to init
       for (i = NUMA_DOMAIN_MAX_NR-1; i >= 0; i--)
@@ -2056,41 +2060,44 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
     }
     __kmp_release_bootstrap_lock( &task_team->tt.tt_lock_numa_map );
   }
+  
+  // if domain is not present in this team
+  if(current_data_domain >= task_team->tt.tt_num_numa_domains)
+    return NULL;
+  // if domain is empty
+  if(task_team->tt.tt_numa_domain_size[current_data_domain] == 0)
+    return NULL;
 
-  kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
-  int n_thread_domain = numa_domain_size[current_data_domain];
-  int tmp_id, tmp_id2;
-
-  if(n_thread_domain > 0) {
-    // check which version to use
-      for(int i = 0; i < n_thread_domain; i++){
-        tmp_id = map_threads_in_numa_domain[current_data_domain][i];
-        // check whether this is valid and in current task team
-        for( int j = 0; j < nthreads_in_team; j++)
-        {
-          //target_thread = task_team->tt.tt_threads[j];
-          target_thread_data = &(threads_data[j]);
-          target_thread = target_thread_data->td.td_thr;
-          tmp_id2 = __kmp_gtid_from_thread(target_thread);
-          if(tmp_id2 == tmp_id){
-            // match: this thread is in task team
-            *target_tid = j;
-            *target_gtid = tmp_id2;
-            break;
-          }
-        }
-        if(*target_tid != -1)
-          break;
+  if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_first) {
+    *target_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][0];
+  } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_lowest_wl) {
+    int min_work = INT_MAX;
+    int tmp_size = task_team->tt.tt_numa_domain_size[current_data_domain];
+    for (int t = 0; t < tmp_size; t++)
+    {
+      // get thread
+      int tmp_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][t];
+      int tmp_tid = __kmp_tid_from_gtid(tmp_gtid);
+      // get current number of threads
+      int tmp_num_tasks = threads_data[tmp_tid].td.td_deque_ntasks;
+      if(tmp_num_tasks == 0){
+        // immediatly quit here because no other thread can be lower
+        *target_gtid = tmp_gtid;
+        break;
       }
-      
-    if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_first) {
-      // TODO
-    } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_lowest_wl) {
-      // TODO
-    } else {
-      // default random
+      if(tmp_num_tasks < min_work){
+        *target_gtid = tmp_gtid;
+        min_work = tmp_num_tasks;
+      }
     }
+  } else {
+    // default random
+    int tmp_rand_idx = rand() % task_team->tt.tt_numa_domain_size[current_data_domain];
+    *target_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][tmp_rand_idx];
   }
+
+  *target_tid = __kmp_tid_from_gtid(*target_gtid);
+  target_thread = __kmp_threads[*target_gtid];
 
   if(*target_tid == -1)
     return NULL;
@@ -3062,7 +3069,13 @@ static inline int __kmp_execute_tasks_template(
   KMP_DEBUG_ASSERT(nthreads > 1);
 #endif
   KMP_DEBUG_ASSERT(TCR_4(*unfinished_threads) >= 0);
-
+#if KMP_USE_TASK_AFFINITY
+  // print information about nr of task currently assigned to this thread
+  int cur_tid = __kmp_tid_from_gtid(gtid);
+  int num_tasks = threads_data[cur_tid].td.td_deque_ntasks;
+  double cur_time = get_wall_time2();
+  fprintf(stderr, "__kmp_execute_tasks_template(task_aff stats):\tT#%d\t%f\t%d\n", gtid, cur_time, num_tasks);
+#endif
   while (1) { // Outer loop keeps trying to find tasks in case of single thread
     // getting tasks from target constructs
     while (1) { // Inner loop to find a task and execute it
