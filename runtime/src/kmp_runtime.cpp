@@ -5810,6 +5810,14 @@ void __kmp_internal_end_atexit(void) {
 #endif
 }
 
+static void __kmp_reap_thread_print_stats(int gtid, char* name, double sum_time, int num) {
+  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread:\tT#%d\t%s\t%d\t%f\tmean:\t%f\tms\n", 
+    gtid,
+    name, 
+    num, sum_time, 
+    sum_time / num);
+}
+
 static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   // It is assumed __kmp_forkjoin_lock is acquired.
 
@@ -5918,38 +5926,12 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   thread->th.th_serial_team = NULL;
 
 #if KMP_USE_TASK_AFFINITY
-  /*if(thread->th.th_task_aff_num_find_numa > 0) {*/  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d find_numa\t%d\t%f\tmean:\t%f\tms\n", thread->th.th_info.ds.ds_gtid, thread->th.th_task_aff_num_find_numa, thread->th.th_task_aff_sum_time_find_numa, thread->th.th_task_aff_sum_time_find_numa / thread->th.th_task_aff_num_find_numa); //}
-  /*if(thread->th.th_task_aff_num_steal_search > 0) {*/  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d steal_search\t%d\t%f\tmean:\t%f\tms\n", thread->th.th_info.ds.ds_gtid, thread->th.th_task_aff_num_steal_search, thread->th.th_task_aff_sum_time_steal_search, thread->th.th_task_aff_sum_time_steal_search / thread->th.th_task_aff_num_steal_search); //}
-  /*if(thread->th.th_task_aff_num_remove_my_task > 0) {*/  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d remove_my_task\t%d\t%f\tmean:\t%f\tms\n", thread->th.th_info.ds.ds_gtid, thread->th.th_task_aff_num_remove_my_task, thread->th.th_task_aff_sum_time_remove_my_task, thread->th.th_task_aff_sum_time_remove_my_task / thread->th.th_task_aff_num_remove_my_task); //} 
 
-
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_task_aff_sum_time_map_find\t%d\t%f\tmean:\t%f\tms\n", 
-    thread->th.th_info.ds.ds_gtid, 
-    thread->th.th_task_aff_sum_time_map_find_num, thread->th.th_task_aff_sum_time_map_find, 
-    thread->th.th_task_aff_sum_time_map_find / thread->th.th_task_aff_sum_time_map_find_num);
-
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_task_aff_sum_time_map_add\t%d\t%f\tmean:\t%f\tms\n", 
-    thread->th.th_info.ds.ds_gtid, 
-    thread->th.th_task_aff_sum_time_map_add_num, thread->th.th_task_aff_sum_time_map_add, 
-    thread->th.th_task_aff_sum_time_map_add / thread->th.th_task_aff_sum_time_map_add_num);
-
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_task_aff_sum_time_numa_find\t%d\t%f\tmean:\t%f\tms\n", 
-    thread->th.th_info.ds.ds_gtid, 
-    thread->th.th_task_aff_sum_time_numa_find_num, thread->th.th_task_aff_sum_time_numa_find, 
-    thread->th.th_task_aff_sum_time_numa_find / thread->th.th_task_aff_sum_time_numa_find_num);
-
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_task_aff_sum_time_numa_get_thread\t%d\t%f\tmean:\t%f\tms\n", 
-    thread->th.th_info.ds.ds_gtid, 
-    thread->th.th_task_aff_sum_time_numa_get_thread_num, thread->th.th_task_aff_sum_time_numa_get_thread, 
-    thread->th.th_task_aff_sum_time_numa_get_thread / thread->th.th_task_aff_sum_time_numa_get_thread_num);
-
-
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_aff_search_steal\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_aff_search_steal);
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_aff_search_remove\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_aff_search_remove);
-
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_task_aff_search_parent_thread_pointer\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_task_aff_search_parent_thread_pointer);
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_task_aff_search_no_parent_thread_pointer\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_task_aff_search_no_parent_thread_pointer);
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread: T#%d th_num_task_aff_search_nr_in_while\t%d\n", thread->th.th_info.ds.ds_gtid, thread->th.th_num_task_aff_search_nr_in_while);
+  __kmp_reap_thread_print_stats(gtid, "gl_numa_map_create", thread->th.th_sum_time_gl_numa_map_create, thread->th.th_num_gl_numa_map_create);
+  __kmp_reap_thread_print_stats(gtid, "map_find", thread->th.th_sum_time_map_find, thread->th.th_num_map_find);
+  __kmp_reap_thread_print_stats(gtid, "map_insert", thread->th.th_sum_time_map_insert, thread->th.th_num_map_insert);
+  __kmp_reap_thread_print_stats(gtid, "map_overall", thread->th.th_sum_time_map_overall, thread->th.th_num_map_overall);
+  
 #endif
   __kmp_free(thread);
 

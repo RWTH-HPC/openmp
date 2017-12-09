@@ -4382,7 +4382,7 @@ void __kmp_build_numa_map(int gtid) {
     // need to check again
     if(!numa_map_set)
     {
-      KA_TRACE(5, ("TASK AFFINITY: Initializing Map once.\n"));
+      KA_TRACE(5, ("__kmp_build_numa_map: Initializing Map once.\n"));
       // initialize map
       for(int i = 0; i < 24; i++){
         map_threads_in_numa_domain[i] = (int *)malloc(sizeof(int) * 128);
@@ -4400,7 +4400,7 @@ void __kmp_build_numa_map(int gtid) {
   //gtid = __kmp_entry_gtid();
   tmp_current_cpu_for_thread = sched_getcpu();
   tmp_numa_node = numa_node_of_cpu(tmp_current_cpu_for_thread);
-  KA_TRACE(5, ("TASK AFFINITY: T#%d, OS Thread: %d, Current CPU: %d, Current NUMA Domain: %d.\n", gtid, os_thread_id, tmp_current_cpu_for_thread, tmp_numa_node));
+  KA_TRACE(5, ("__kmp_build_numa_map: T#%d, OS Thread: %d, Current CPU: %d, Current NUMA Domain: %d.\n", gtid, os_thread_id, tmp_current_cpu_for_thread, tmp_numa_node));
 
   // set corresponding place in list
   map_thread_to_numa_domain[gtid] = tmp_numa_node;
@@ -4416,11 +4416,11 @@ void __kmp_build_numa_map(int gtid) {
       break;
     }
   }
-  KA_TRACE(5, ("TASK AFFINITY: T#%d, Already in list for node %d = %d.\n", gtid, tmp_numa_node, thread_already_in_list));
+  KA_TRACE(5, ("__kmp_build_numa_map: T#%d, Already in list for node %d = %d.\n", gtid, tmp_numa_node, thread_already_in_list));
   if(!thread_already_in_list){
     map_threads_in_numa_domain[tmp_numa_node][idx_max] = gtid;
     numa_domain_size[tmp_numa_node] = idx_max+1;
-    KB_TRACE(5, ("TASK AFFINITY: T#%d, numa_domain_size for node %d is now %d.\n", gtid, tmp_numa_node, numa_domain_size[tmp_numa_node]));
+    KB_TRACE(5, ("__kmp_build_numa_map: T#%d, numa_domain_size for node %d is now %d.\n", gtid, tmp_numa_node, numa_domain_size[tmp_numa_node]));
   }
   __kmp_release_bootstrap_lock( &lock_numa_domain[tmp_numa_node] );
 
@@ -4547,8 +4547,14 @@ void __kmp_affinity_set_init_mask(int gtid, int isa_root) {
     __kmp_set_system_affinity(th->th.th_affin_mask, TRUE);
 
 #if KMP_USE_TASK_AFFINITY
-  if(gtid == 0)
+  if(gtid == 0){
+    double time1;
+    time1 = get_wall_time2();
     __kmp_build_numa_map(gtid);
+    time1 = get_wall_time2()-time1;
+    th->th.th_sum_time_gl_numa_map_create += time1;
+    th->th.th_num_gl_numa_map_create++;
+  }
 #endif
 }
 
@@ -4596,7 +4602,12 @@ void __kmp_affinity_set_place(int gtid) {
   __kmp_set_system_affinity(th->th.th_affin_mask, TRUE);
 
 #if KMP_USE_TASK_AFFINITY
+  double time1;
+  time1 = get_wall_time2();
   __kmp_build_numa_map(gtid);
+  time1 = get_wall_time2()-time1;
+  th->th.th_sum_time_gl_numa_map_create += time1;
+  th->th.th_num_gl_numa_map_create++;
 #endif
 }
 

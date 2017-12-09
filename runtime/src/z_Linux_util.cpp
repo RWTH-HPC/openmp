@@ -777,30 +777,18 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 #if KMP_USE_TASK_AFFINITY
   // init counters and time variable  
   th->th.th_task_affinity_data = NULL;
-  th->th.th_task_aff_sum_time_find_numa = 0.0;
-  th->th.th_task_aff_sum_time_steal_search = 0.0;
-  th->th.th_task_aff_sum_time_remove_my_task = 0.0;
-  th->th.th_task_aff_num_find_numa = 0;
-  th->th.th_task_aff_num_steal_search = 0;
-  th->th.th_task_aff_num_remove_my_task = 0;
 
-  th->th.th_task_aff_sum_time_map_find = 0.0;
-  th->th.th_task_aff_sum_time_map_find_num = 0;
+  th->th.th_sum_time_gl_numa_map_create = 0.0;
+  th->th.th_num_gl_numa_map_create = 0;
 
-  th->th.th_task_aff_sum_time_map_add = 0.0;
-  th->th.th_task_aff_sum_time_map_add_num = 0;
+  th->th.th_sum_time_map_find = 0.0;
+  th->th.th_num_map_find = 0;
 
-  th->th.th_task_aff_sum_time_numa_find = 0.0;
-  th->th.th_task_aff_sum_time_numa_find_num = 0;
+  th->th.th_sum_time_map_insert = 0.0;
+  th->th.th_num_map_insert = 0;
 
-  th->th.th_task_aff_sum_time_numa_get_thread = 0.0;
-  th->th.th_task_aff_sum_time_numa_get_thread_num = 0;
-
-  th->th.th_num_aff_search_steal = 0;
-  th->th.th_num_aff_search_remove = 0;
-  th->th.th_num_task_aff_search_parent_thread_pointer = 0;
-  th->th.th_num_task_aff_search_no_parent_thread_pointer = 0;
-  th->th.th_num_task_aff_search_nr_in_while = 0;
+  th->th.th_sum_time_map_overall = 0.0;
+  th->th.th_num_map_overall = 0;
 #endif
 
 #if KMP_STATS_ENABLED

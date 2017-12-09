@@ -2532,31 +2532,18 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 #endif
 #if KMP_USE_TASK_AFFINITY
   void * th_task_affinity_data;
-  double th_task_aff_sum_time_find_numa;
-  double th_task_aff_sum_time_steal_search;
-  double th_task_aff_sum_time_remove_my_task;
 
-  double th_task_aff_sum_time_map_find;
-  int th_task_aff_sum_time_map_find_num;
+  double  th_sum_time_gl_numa_map_create;
+  int     th_num_gl_numa_map_create;
 
-  double th_task_aff_sum_time_map_add;
-  int th_task_aff_sum_time_map_add_num;
+  double  th_sum_time_map_find;
+  int     th_num_map_find;
 
-  double th_task_aff_sum_time_numa_find;
-  int th_task_aff_sum_time_numa_find_num;
+  double  th_sum_time_map_insert;
+  int     th_num_map_insert;
 
-  double th_task_aff_sum_time_numa_get_thread;
-  int th_task_aff_sum_time_numa_get_thread_num;
-
-  int th_task_aff_num_find_numa;
-  int th_task_aff_num_steal_search;
-  int th_task_aff_num_remove_my_task;
-  int th_num_aff_search_steal;
-  int th_num_aff_search_remove;
-
-  int th_num_task_aff_search_parent_thread_pointer;
-  int th_num_task_aff_search_no_parent_thread_pointer;
-  int th_num_task_aff_search_nr_in_while;
+  double  th_sum_time_map_overall;
+  int     th_num_map_overall;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 

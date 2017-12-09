@@ -352,7 +352,7 @@ static kmp_int32 __kmp_push_task_aff(kmp_int32 gtid, kmp_int32 orig_id, kmp_task
   // Need to recheck as we can get a proxy task from a thread outside of OpenMP
   if (TCR_4(thread_data->td.td_deque_ntasks) >=
       TASK_DEQUE_SIZE(thread_data->td)) {
-    __kmp_realloc_task_deque(thread, thread_data);
+    //__kmp_realloc_task_deque(thread, thread_data);
     __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
     KA_TRACE(20, ("__kmp_push_task_aff: T#%d deque of T#%d is full on 2nd check; returning "
                   "TASK_NOT_PUSHED for task %p, deque size=%d\n",
@@ -552,10 +552,15 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
 #if KMP_USE_TASK_AFFINITY
   if(taskdata->td_task_affinity_data_pointer != NULL) {
     // set gtid in last used location for page address
-    KA_TRACE(5, ("TASK AFFINITY: T#%d Setting last used mapping to %lx ==> %d\n", gtid, taskdata->td_task_affinity_data_address, gtid));
+    KA_TRACE(5, ("__kmp_task_start: T#%d Setting last used mapping to %lx ==> %d\n", gtid, taskdata->td_task_affinity_data_address, gtid));
+    double time1, time2;
+    time1 = get_wall_time2();
     __kmp_acquire_bootstrap_lock(&lock_addr_map);
     task_aff_addr_map[taskdata->td_task_affinity_data_address] = gtid;
     __kmp_release_bootstrap_lock(&lock_addr_map);
+    time2 = get_wall_time2()-time1;
+    thread->th.th_sum_time_map_insert += time2;
+    thread->th.th_num_map_insert++;
   }
 #endif
 
@@ -1801,7 +1806,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       else
       {
         time1 = get_wall_time2();
-
         // Allocate deque if necessary
         kmp_int32 tid = __kmp_tid_from_gtid(gtid);
         kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
@@ -1824,10 +1828,16 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         size_t page_start_address = tmp_address & ~(page_size-1);
         // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
         
+        // // DEBUG
+        // ret_code = 0;
         // check map      
+        time2 = get_wall_time2();
         auto search = task_aff_addr_map.find(page_start_address);
         bool found = search != task_aff_addr_map.end();
-        
+        time2 = get_wall_time2()-time2;
+        thread->th.th_sum_time_map_find += time2;
+        thread->th.th_num_map_find++;
+
         if(found) {
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
           ret_code = 0;
@@ -1848,21 +1858,25 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
             if(target_tid != -1) {
               KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
+              time2 = get_wall_time2();
               __kmp_acquire_bootstrap_lock(&lock_addr_map);
               task_aff_addr_map[page_start_address] = target_gtid;
               __kmp_release_bootstrap_lock(&lock_addr_map);
+              time2 = get_wall_time2()-time2;
+              thread->th.th_sum_time_map_insert += time2;
+              thread->th.th_num_map_insert++;
             }
           }
         }
         
-        time2 = get_wall_time2()-time1;
-        thread->th.th_task_aff_sum_time_find_numa += time2;
-        thread->th.th_task_aff_num_find_numa++;
-
         // reset pointer & save temporary
         new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
         new_taskdata->td_task_affinity_data_address = page_start_address;
         thread->th.th_task_affinity_data = NULL;
+
+        time1 = get_wall_time2()-time1;
+        thread->th.th_sum_time_map_overall += time1;
+        thread->th.th_num_map_overall++;
 
         if(ret_code == 0) {
           if(target_tid == -1)
@@ -1874,6 +1888,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
             if (gtid == target_gtid) {
               res = __kmp_omp_task(gtid, new_task, true);
             } else {
+              //res = __kmp_omp_task(gtid, new_task, true);
               res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
             }
           }
@@ -1943,23 +1958,17 @@ inline bool __kmp_task_aff_is_correct_task(
     // KMP_DEBUG_ASSERT(parent != NULL);
   }
   if(current_task == parent) {
-    thread->th.th_num_task_aff_search_parent_thread_pointer++;
     return true;
   }
   
   // reset pointer
   parent = taskdata->td_parent;
-
-  // reset pointer
-  parent = taskdata->td_parent;
-  thread->th.th_num_task_aff_search_no_parent_thread_pointer++;
   int tmp_nproc = task_team->tt.tt_nproc;
   // kmp_taskdata_t * current_task;
 
   while(parent->td_level >= min_lvl)
   {
     for(int i = 0; i < tmp_nproc; i++) {
-      // thread->th.th_num_task_aff_search_nr_in_while++;
       current_task = __kmp_threads[__kmp_gtid_from_tid(i, thread->th.th_team)]->th.th_current_task;
       // KA_TRACE(10, ("TASK AFFINITY: T#%d Check parent level of thread %d ntasks=%d head=%u tail=%u -- curtask:%p curlvl:%d ptask:%p plvl:%d\n",
       //               gtid, i, victim_td->td.td_deque_ntasks,
@@ -3069,13 +3078,13 @@ static inline int __kmp_execute_tasks_template(
   KMP_DEBUG_ASSERT(nthreads > 1);
 #endif
   KMP_DEBUG_ASSERT(TCR_4(*unfinished_threads) >= 0);
-#if KMP_USE_TASK_AFFINITY
-  // print information about nr of task currently assigned to this thread
-  int cur_tid = __kmp_tid_from_gtid(gtid);
-  int num_tasks = threads_data[cur_tid].td.td_deque_ntasks;
-  double cur_time = get_wall_time2();
-  fprintf(stderr, "__kmp_execute_tasks_template(task_aff stats):\tT#%d\t%f\t%d\n", gtid, cur_time, num_tasks);
-#endif
+// #if KMP_USE_TASK_AFFINITY
+//   // print information about nr of task currently assigned to this thread
+//   int cur_tid = __kmp_tid_from_gtid(gtid);
+//   int num_tasks = threads_data[cur_tid].td.td_deque_ntasks;
+//   double cur_time = get_wall_time2();
+//   fprintf(stderr, "__kmp_execute_tasks_template(task_aff stats):\tT#%d\t%f\t%d\n", gtid, cur_time, num_tasks);
+// #endif
   while (1) { // Outer loop keeps trying to find tasks in case of single thread
     // getting tasks from target constructs
     while (1) { // Inner loop to find a task and execute it
