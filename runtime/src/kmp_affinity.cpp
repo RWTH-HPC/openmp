@@ -4402,6 +4402,9 @@ void __kmp_build_numa_map(int gtid) {
   tmp_numa_node = numa_node_of_cpu(tmp_current_cpu_for_thread);
   KA_TRACE(5, ("__kmp_build_numa_map: T#%d, OS Thread: %d, Current CPU: %d, Current NUMA Domain: %d.\n", gtid, os_thread_id, tmp_current_cpu_for_thread, tmp_numa_node));
 
+  kmp_info_t * thread = __kmp_threads[gtid];
+  thread->th.th_task_aff_my_domain_nr = tmp_numa_node;
+  
   // set corresponding place in list
   map_thread_to_numa_domain[gtid] = tmp_numa_node;
 

@@ -766,10 +766,16 @@ extern void __kmpc_set_task_affinity(void * data);
 typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_first = 0,
   kmp_task_aff_init_thread_type_random = 1,
-  kmp_task_aff_init_thread_type_lowest_wl = 2
+  kmp_task_aff_init_thread_type_lowest_wl = 2,
+  kmp_task_aff_init_thread_type_round_robin = 3
 } kmp_task_aff_init_thread_type_t;
+
+typedef enum kmp_task_aff_map_type_t {
+  kmp_task_aff_map_type_thread = 0,
+  kmp_task_aff_map_type_domain = 1
+} kmp_task_aff_map_type_t;
 #  endif // __OMP_H
-extern void  __kmpc_set_task_affinity_init_thread_type(kmp_task_aff_init_thread_type_t init_thread_type);
+extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type);
 #endif
 
 #endif /* KMP_AFFINITY_SUPPORTED */
@@ -2290,6 +2296,9 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
   //bool td_use_task_affinity_search = false;
   void * td_task_affinity_data_pointer = NULL;
   size_t td_task_affinity_data_address = 0;
+  
+  bool td_task_affinity_scheduled_thread_set = false;
+  int td_task_affinity_scheduled_thread = -1;
 #endif
 }; // struct kmp_taskdata
 
@@ -2353,6 +2362,8 @@ typedef struct kmp_base_task_team {
   bool tt_numa_domains_set;
   int tt_num_numa_domains;
   int *tt_numa_domain_size;
+  int *tt_numa_domain_rr_counter;
+  kmp_bootstrap_lock_t *tt_numa_domain_rr_locks;
   int **tt_map_threads_in_domain;
 #endif
 
@@ -2532,6 +2543,8 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 #endif
 #if KMP_USE_TASK_AFFINITY
   void * th_task_affinity_data;
+  int th_task_aff_my_domain_nr;
+  int *th_numa_domain_rr_counter;
 
   double  th_sum_time_gl_numa_map_create;
   int     th_num_gl_numa_map_create;
@@ -2544,6 +2557,11 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 
   double  th_sum_time_map_overall;
   int     th_num_map_overall;
+
+  int     th_count_task_with_affinity_generated;
+  int     th_count_task_with_affinity_started;
+  int     th_count_task_started_at_correct_thread;
+  int     th_count_task_started_at_correct_domain;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
@@ -3880,7 +3898,9 @@ extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
 extern kmp_bootstrap_lock_t lock_addr_map;
 extern std::map<size_t, int> task_aff_addr_map;
+
 extern kmp_task_aff_init_thread_type_t task_aff_init_thread_type;
+extern kmp_task_aff_map_type_t task_aff_map_type;
 #endif // KMP_USE_TASK_AFFINITY
 
 #ifdef __cplusplus

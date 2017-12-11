@@ -777,6 +777,8 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 #if KMP_USE_TASK_AFFINITY
   // init counters and time variable  
   th->th.th_task_affinity_data = NULL;
+  th->th.th_task_aff_my_domain_nr = -1;
+  th->th.th_numa_domain_rr_counter = NULL;
 
   th->th.th_sum_time_gl_numa_map_create = 0.0;
   th->th.th_num_gl_numa_map_create = 0;
@@ -789,6 +791,11 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 
   th->th.th_sum_time_map_overall = 0.0;
   th->th.th_num_map_overall = 0;
+
+  th->th.th_count_task_with_affinity_generated = 0;
+  th->th.th_count_task_with_affinity_started = 0;
+  th->th.th_count_task_started_at_correct_thread = 0;
+  th->th.th_count_task_started_at_correct_domain = 0;
 #endif
 
 #if KMP_STATS_ENABLED

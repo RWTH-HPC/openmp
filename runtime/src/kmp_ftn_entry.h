@@ -317,12 +317,12 @@ void FTN_STDCALL FTN_SET_TASK_AFFINITY( void * data )
         __kmpc_set_task_affinity( data );
     #endif
 }
-void FTN_STDCALL FTN_SET_TASK_AFFINITY_INIT_THREAD_TYPE( kmp_task_aff_init_thread_type_t init_thread_type )
+void FTN_STDCALL FTN_TASK_AFFINITY_INIT( kmp_task_aff_init_thread_type_t init_thread_type , kmp_task_aff_map_type_t map_type)
 {
     #ifdef KMP_STUB
         // Nothing.
     #else
-        __kmpc_set_task_affinity_init_thread_type( init_thread_type );
+        __kmpc_task_affinity_init( init_thread_type, map_type );
     #endif
 }
 #endif

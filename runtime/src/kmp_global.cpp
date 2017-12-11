@@ -83,6 +83,7 @@ kmp_bootstrap_lock_t lock_addr_map;
 std::map<size_t ,int> task_aff_addr_map;
 
 kmp_task_aff_init_thread_type_t task_aff_init_thread_type = kmp_task_aff_init_thread_type_random;
+kmp_task_aff_map_type_t task_aff_map_type = kmp_task_aff_map_type_thread;
 #endif // KMP_USE_TASK_AFFINITY
 
 size_t __kmp_stksize = KMP_DEFAULT_STKSIZE;
