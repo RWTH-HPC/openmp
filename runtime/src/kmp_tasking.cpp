@@ -1886,17 +1886,17 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Not Found %lx\n", gtid, page_start_address));
           // run move pages
           ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-          KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node %d (retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
+          KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
 
           if(ret_code == 0){
 
-            if(task_aff_map_type == kmp_task_aff_map_type_domain) {
-              if(current_data_domain == thread->th.th_task_aff_my_domain_nr) {
-                // push to local queue if same domain to keep current thread busy
-                target_gtid = gtid;
-                target_tid = __kmp_tid_from_gtid(target_gtid);
-              }
-            }
+            // if(task_aff_map_type == kmp_task_aff_map_type_domain) {
+            //   if(current_data_domain == thread->th.th_task_aff_my_domain_nr) {
+            //     // push to local queue if same domain to keep current thread busy
+            //     target_gtid = gtid;
+            //     target_tid = __kmp_tid_from_gtid(target_gtid);
+            //   }
+            // }
             
             // proceed if no id found
             if(target_tid == -1) {
@@ -1941,8 +1941,8 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
             res = __kmp_omp_task(gtid, new_task, true);
           } else {
             if (gtid == target_gtid) {
-              //res = __kmp_omp_task(gtid, new_task, true);
-              res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
+              res = __kmp_omp_task(gtid, new_task, true);
+              //res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
             } else {
               //res = __kmp_omp_task(gtid, new_task, true);
               res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
@@ -2145,27 +2145,38 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
   } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_lowest_wl) {
     int min_work = INT_MAX;
     int tmp_size = task_team->tt.tt_numa_domain_size[current_data_domain];
+    int cur_id = -1;
+    //__kmp_acquire_bootstrap_lock(&lock_domain_init_thread_region);
     for (int t = 0; t < tmp_size; t++)
     {
       // get thread
       int tmp_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][t];
       int tmp_tid = __kmp_tid_from_gtid(tmp_gtid);
+      target_thread_data = &threads_data[tmp_tid];
+
       // get current number of threads
-      __kmp_acquire_bootstrap_lock(&threads_data[tmp_tid].td.td_deque_lock);
-      int tmp_num_tasks = threads_data[tmp_tid].td.td_deque_ntasks;
-      __kmp_release_bootstrap_lock(&threads_data[tmp_tid].td.td_deque_lock);
+      // __kmp_acquire_bootstrap_lock(&target_thread_data->td.td_deque_lock);
+      int tmp_num_tasks = target_thread_data->td.td_deque_ntasks;
+      // __kmp_release_bootstrap_lock(&target_thread_data->td.td_deque_lock);
+      //double cur_time = get_wall_time2();
+      //KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain:\tT#%d\t%f\ttarget thread with lowest tmp:\tT#%d\twith min work=\t%d.\n", __kmp_entry_gtid(), cur_time, tmp_gtid, tmp_num_tasks));
+
       if(tmp_num_tasks == 0){
         // immediatly quit here because no other thread can be lower
-        *target_gtid = tmp_gtid;
+        cur_id = tmp_gtid;
         min_work = tmp_num_tasks;
         break;
       }
       if(tmp_num_tasks < min_work){
-        *target_gtid = tmp_gtid;
+        cur_id = tmp_gtid;
         min_work = tmp_num_tasks;
       }
     }
-    KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain:\tT#%d\ttarget thread with lowest number of tasks:\tT#%d\twith min work=\t%d.\n", __kmp_entry_gtid(), *target_gtid, min_work));
+    //__kmp_release_bootstrap_lock(&lock_domain_init_thread_region);
+    *target_gtid = cur_id;
+
+    double cur_time = get_wall_time2();
+    KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain:\tT#%d\t%f\ttarget thread with lowest number of tasks:\tT#%d\twith min work=\t%d\tdomain\t%d.\n", __kmp_entry_gtid(), cur_time, *target_gtid, min_work, current_data_domain));
   } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_round_robin) {
     
     if(orig_thread->th.th_numa_domain_rr_counter == NULL) {

@@ -3899,6 +3899,8 @@ extern void __kmp_build_numa_map(int gtid);
 extern kmp_bootstrap_lock_t lock_addr_map;
 extern std::map<size_t, int> task_aff_addr_map;
 
+extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
+
 extern kmp_task_aff_init_thread_type_t task_aff_init_thread_type;
 extern kmp_task_aff_map_type_t task_aff_map_type;
 #endif // KMP_USE_TASK_AFFINITY
