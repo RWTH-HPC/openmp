@@ -2296,10 +2296,12 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
   //bool td_use_task_affinity_search = false;
   void * td_task_affinity_data_pointer = NULL;
   size_t td_task_affinity_data_address = 0;
-  
+
+  // remember where task has been executed and domain where data is located
   bool td_task_affinity_scheduled_thread_set = false;
   int td_task_affinity_scheduled_thread = -1;
-#endif
+  int td_task_affinity_data_domain = -1;
+#endif  
 }; // struct kmp_taskdata
 
 // Make sure padding above worked
@@ -2323,6 +2325,9 @@ typedef struct kmp_base_thread_data {
   kmp_task_stack_t td_susp_tied_tasks; // Stack of suspended tied tasks for task
 // scheduling constraint
 #endif // BUILD_TIED_TASK_STACK
+#if KMP_USE_TASK_AFFINITY
+  int td_idx_in_numa_map;
+#endif
 } kmp_base_thread_data_t;
 
 #define TASK_DEQUE_BITS 8 // Used solely to define INITIAL_TASK_DEQUE_SIZE
@@ -2558,10 +2563,17 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_map_overall;
   int     th_num_map_overall;
 
+  double  th_ts_task_execution;
+  double  th_sum_time_task_execution;
+  int     th_num_task_execution;
+  double  th_sum_time_task_execution_correct_domain;
+  int     th_num_task_execution_correct_domain;
+  
   int     th_count_task_with_affinity_generated;
   int     th_count_task_with_affinity_started;
   int     th_count_task_started_at_correct_thread;
-  int     th_count_task_started_at_correct_domain;
+  int     th_count_task_started_at_correct_threads_domain;
+  int     th_count_task_started_at_correct_data_domain;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 

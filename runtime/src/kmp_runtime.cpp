@@ -5931,11 +5931,14 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_thread_print_stats(gtid, "map_find", thread->th.th_sum_time_map_find, thread->th.th_num_map_find);
   __kmp_reap_thread_print_stats(gtid, "map_insert", thread->th.th_sum_time_map_insert, thread->th.th_num_map_insert);
   __kmp_reap_thread_print_stats(gtid, "map_overall", thread->th.th_sum_time_map_overall, thread->th.th_num_map_overall);
+  __kmp_reap_thread_print_stats(gtid, "task_execution", thread->th.th_sum_time_task_execution, thread->th.th_num_task_execution);
+  __kmp_reap_thread_print_stats(gtid, "task_execution_correct_domain", thread->th.th_sum_time_task_execution_correct_domain, thread->th.th_num_task_execution_correct_domain);
 
   __kmp_reap_thread_print_stats(gtid, "count_task_with_affinity_generated", 0, thread->th.th_count_task_with_affinity_generated);
   __kmp_reap_thread_print_stats(gtid, "count_task_with_affinity_started", 0, thread->th.th_count_task_with_affinity_started);
   __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_thread", 0, thread->th.th_count_task_started_at_correct_thread);
-  __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_domain", 0, thread->th.th_count_task_started_at_correct_domain);
+  __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_threads_domain", 0, thread->th.th_count_task_started_at_correct_threads_domain);
+  __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_data_domain", 0, thread->th.th_count_task_started_at_correct_data_domain);
   
 #endif
   __kmp_free(thread);
