@@ -2563,6 +2563,9 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_map_overall;
   int     th_num_map_overall;
 
+  double  th_sum_time_overhead_numa_task_stealing;
+  int     th_num_overhead_numa_task_stealing;
+
   double  th_ts_task_execution;
   double  th_sum_time_task_execution;
   int     th_num_task_execution;
@@ -3905,6 +3908,7 @@ extern kmp_bootstrap_lock_t lock_numa_map_set;
 extern kmp_bootstrap_lock_t lock_incr_numa;
 extern int numa_num_threads_init;
 extern bool numa_all_set_up;
+extern bool enable_numa_aware_stealing;
 
 extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);

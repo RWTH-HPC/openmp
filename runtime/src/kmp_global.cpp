@@ -78,6 +78,7 @@ kmp_bootstrap_lock_t lock_numa_map_set;
 kmp_bootstrap_lock_t lock_incr_numa;
 int numa_num_threads_init = 0;
 bool numa_all_set_up = false;
+bool enable_numa_aware_stealing = false;
 
 kmp_bootstrap_lock_t lock_addr_map;
 std::map<size_t ,int> task_aff_addr_map;
