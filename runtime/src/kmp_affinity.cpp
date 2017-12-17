@@ -4382,13 +4382,17 @@ void __kmp_build_numa_map(int gtid) {
     // need to check again
     if(!numa_map_set)
     {
+      __kmp_init_bootstrap_lock(&lock_incr_numa);
+      __kmp_init_bootstrap_lock(&lock_addr_map);
+      __kmp_init_bootstrap_lock(&lock_domain_init_thread_region);
       KA_TRACE(5, ("__kmp_build_numa_map: Initializing Map once.\n"));
       // initialize map
-      for(int i = 0; i < 24; i++){
+      for(int i = 0; i < NUMA_DOMAIN_MAX_NR; i++){
         map_threads_in_numa_domain[i] = (int *)malloc(sizeof(int) * 128);
         numa_domain_size[i] = 0;
+        __kmp_init_bootstrap_lock(&lock_numa_domain[i]);
       }
-      for(int i = 0; i < 4096; i++)
+      for(int i = 0; i < MAX_THREADS_OVERALL; i++)
         map_thread_to_numa_domain[i] = -1;
       numa_map_set = true;
     }
@@ -4551,12 +4555,16 @@ void __kmp_affinity_set_init_mask(int gtid, int isa_root) {
 
 #if KMP_USE_TASK_AFFINITY
   if(gtid == 0){
+#if KMP_TASK_AFFINITY_MEASURE_TIME
     double time1;
     time1 = get_wall_time2();
+#endif
     __kmp_build_numa_map(gtid);
+#if KMP_TASK_AFFINITY_MEASURE_TIME
     time1 = get_wall_time2()-time1;
     th->th.th_sum_time_gl_numa_map_create += time1;
     th->th.th_num_gl_numa_map_create++;
+#endif
   }
 #endif
 }
@@ -4605,12 +4613,16 @@ void __kmp_affinity_set_place(int gtid) {
   __kmp_set_system_affinity(th->th.th_affin_mask, TRUE);
 
 #if KMP_USE_TASK_AFFINITY
+#if KMP_TASK_AFFINITY_MEASURE_TIME
   double time1;
   time1 = get_wall_time2();
+#endif
   __kmp_build_numa_map(gtid);
+#if KMP_TASK_AFFINITY_MEASURE_TIME
   time1 = get_wall_time2()-time1;
   th->th.th_sum_time_gl_numa_map_create += time1;
   th->th.th_num_gl_numa_map_create++;
+#endif
 #endif
 }
 
