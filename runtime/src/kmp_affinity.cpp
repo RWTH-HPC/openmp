@@ -4382,9 +4382,6 @@ void __kmp_build_numa_map(int gtid) {
     // need to check again
     if(!numa_map_set)
     {
-      __kmp_init_bootstrap_lock(&lock_incr_numa);
-      __kmp_init_bootstrap_lock(&lock_addr_map);
-      __kmp_init_bootstrap_lock(&lock_domain_init_thread_region);
       KA_TRACE(5, ("__kmp_build_numa_map: Initializing Map once.\n"));
       // initialize map
       for(int i = 0; i < NUMA_DOMAIN_MAX_NR; i++){

@@ -6516,6 +6516,12 @@ static void __kmp_do_serial_initialize(void) {
   __kmp_init_atomic_lock(&__kmp_atomic_lock_32c);
   __kmp_init_bootstrap_lock(&__kmp_forkjoin_lock);
   __kmp_init_bootstrap_lock(&__kmp_exit_lock);
+#if KMP_USE_TASK_AFFINITY
+  __kmp_init_bootstrap_lock(&lock_numa_map_set);
+  __kmp_init_bootstrap_lock(&lock_incr_numa);
+  __kmp_init_bootstrap_lock(&lock_addr_map);
+  __kmp_init_bootstrap_lock(&lock_domain_init_thread_region);
+#endif
 #if KMP_USE_MONITOR
   __kmp_init_bootstrap_lock(&__kmp_monitor_lock);
 #endif

@@ -469,7 +469,7 @@ static kmp_int32 __kmp_push_task(kmp_int32 gtid, kmp_task_t *task) {
       (thread_data->td.td_deque_tail + 1) & TASK_DEQUE_MASK(thread_data->td);
   TCW_4(thread_data->td.td_deque_ntasks,
         TCR_4(thread_data->td.td_deque_ntasks) + 1); // Adjust task count
-
+  
   KA_TRACE(20, ("__kmp_push_task: T#%d returning TASK_SUCCESSFULLY_PUSHED: "
                 "task=%p ntasks=%d head=%u tail=%u\n",
                 gtid, taskdata, thread_data->td.td_deque_ntasks,
@@ -2310,11 +2310,11 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
     // __kmp_release_bootstrap_lock(&task_team->tt.tt_numa_domain_rr_locks[current_data_domain]);
     *target_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][tmp_counter];
   } else {
-    // default random
-    srand(time(NULL));
-    int tmp_rand_idx = rand() % task_team->tt.tt_numa_domain_size[current_data_domain];
-    // kmp_info_t * orig_thread = __kmp_threads[__kmp_entry_gtid()];    
-    // int tmp_rand_idx = __kmp_get_random(orig_thread) % task_team->tt.tt_numa_domain_size[current_data_domain];
+    // // default random
+    // srand(time(NULL));
+    // int tmp_rand_idx = rand() % task_team->tt.tt_numa_domain_size[current_data_domain];
+    kmp_info_t * orig_thread = __kmp_threads[__kmp_entry_gtid()];
+    int tmp_rand_idx = __kmp_get_random(orig_thread) % task_team->tt.tt_numa_domain_size[current_data_domain];
     *target_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][tmp_rand_idx];
   }
 
@@ -3259,66 +3259,7 @@ static inline int __kmp_execute_tasks_template(
           if(enable_numa_aware_stealing && task_team->tt.tt_numa_domains_set) {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
             time1 = get_wall_time2();
-#endif
-            // if(!task_team->tt.tt_numa_domains_set)
-            // {
-            //   __kmp_acquire_bootstrap_lock( &task_team->tt.tt_lock_numa_map );
-            //   if(!task_team->tt.tt_numa_domains_set)
-            //   {
-            //     double t1;
-            //     int i;
-
-            //     t1 = get_wall_time2();
-            //     KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain: T#%d Setting up numa map for task team.\n", __kmp_entry_gtid()));
-            //     // get max number of domains to init
-            //     for (i = NUMA_DOMAIN_MAX_NR-1; i >= 0; i--)
-            //     {
-            //       if(numa_domain_size[i] != 0)
-            //       {
-            //         // set max number
-            //         task_team->tt.tt_num_numa_domains = i+1;
-            //         break;
-            //       }
-            //     }
-
-            //     // allocate stuff
-            //     task_team->tt.tt_numa_domain_size = (int*) malloc(task_team->tt.tt_num_numa_domains * sizeof(int));
-            //     task_team->tt.tt_numa_domain_rr_counter = (int*) malloc(task_team->tt.tt_num_numa_domains * sizeof(int));
-            //     task_team->tt.tt_numa_domain_rr_locks = (kmp_bootstrap_lock_t*) malloc(task_team->tt.tt_num_numa_domains * sizeof(kmp_bootstrap_lock_t));
-                
-            //     task_team->tt.tt_map_threads_in_domain = (int**) malloc(task_team->tt.tt_num_numa_domains * sizeof(int *));
-            //     for (i = 0; i < task_team->tt.tt_num_numa_domains; i++){
-            //       task_team->tt.tt_numa_domain_size[i] = 0;
-            //       task_team->tt.tt_numa_domain_rr_counter[i] = 0;
-            //       task_team->tt.tt_map_threads_in_domain[i] = (int*) malloc(MAX_THREADS_PER_DOMAIN * sizeof(int));
-            //     }
-
-            //     for (i = 0; i < nthreads; i++) {
-            //       // get tid & gid
-            //       int cur_gtid = threads_data[i].td.td_thr->th.th_info.ds.ds_gtid;
-            //       // get numa node
-            //       int tmp_numa_domain = map_thread_to_numa_domain[cur_gtid];
-            //       int tmp_count = task_team->tt.tt_numa_domain_size[tmp_numa_domain];
-            //       task_team->tt.tt_map_threads_in_domain[tmp_numa_domain][tmp_count] = cur_gtid;
-            //       task_team->tt.tt_numa_domain_size[tmp_numa_domain]++;
-            //       KA_TRACE(10, ("setting domain[%d][%d] = %d.\n", tmp_numa_domain, tmp_count, cur_gtid));
-            //     }
-            //     t1 = get_wall_time2()-t1;
-            //     KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain: T#%d Time for setting up %f ms, nthreads=%d, tt_num_numa_domains=%d.\n", __kmp_entry_gtid(), t1, nthreads, task_team->tt.tt_num_numa_domains));
-
-            //     for(i = 0; i < task_team->tt.tt_num_numa_domains; i++)
-            //     {
-            //       int tmp_size = task_team->tt.tt_numa_domain_size[i];
-            //       for (int j = 0; j < tmp_size; j++)
-            //       {
-            //         KA_TRACE(10, ("domain[%d][%d] = %d.\n", i, j, task_team->tt.tt_map_threads_in_domain[i][j]));
-            //       }
-            //     }
-            //     task_team->tt.tt_numa_domains_set = true;
-            //   }
-            //   __kmp_release_bootstrap_lock( &task_team->tt.tt_lock_numa_map );
-            // }
-            
+#endif            
             if(last_stolen_from_was_numa_thread) {
               // remember last choice of successful steal in numa domain
               tmp_victim_gtid = last_stolen_numa_thread;
