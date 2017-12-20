@@ -6521,6 +6521,10 @@ static void __kmp_do_serial_initialize(void) {
   __kmp_init_bootstrap_lock(&lock_incr_numa);
   __kmp_init_bootstrap_lock(&lock_addr_map);
   __kmp_init_bootstrap_lock(&lock_domain_init_thread_region);
+
+  int t = 0;
+  for(t = 0; t < NUMA_DOMAIN_MAX_NR; t++)
+    __kmp_init_bootstrap_lock(&lock_numa_domain[t]);
 #endif
 #if KMP_USE_MONITOR
   __kmp_init_bootstrap_lock(&__kmp_monitor_lock);
