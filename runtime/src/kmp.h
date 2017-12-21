@@ -3905,6 +3905,7 @@ extern int numa_domain_size[24];
 extern int map_thread_to_numa_domain[];
 extern kmp_bootstrap_lock_t lock_numa_domain[];
 extern kmp_bootstrap_lock_t lock_numa_map_set;
+extern kmp_bootstrap_lock_t lock_enable_task_team;
 
 extern kmp_bootstrap_lock_t lock_incr_numa;
 extern int numa_num_threads_init;

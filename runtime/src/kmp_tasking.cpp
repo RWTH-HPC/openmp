@@ -1879,7 +1879,11 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       // need to enable tasking and allocate and assign proper data structures once
       //KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
       if (!KMP_TASKING_ENABLED(task_team)) {
-        __kmp_enable_tasking(task_team, thread);
+        __kmp_acquire_bootstrap_lock(&lock_enable_task_team);
+        if (!KMP_TASKING_ENABLED(task_team)) {
+          __kmp_enable_tasking(task_team, thread);
+        }
+        __kmp_release_bootstrap_lock(&lock_enable_task_team);
       }
       
       kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
@@ -1947,8 +1951,9 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           } else {
             target_gtid = search->second;
 			// DEBUG: also save this information for statistics
-            int tmp_data_domain = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-            new_taskdata->td_task_affinity_data_domain = tmp_data_domain;
+            int tmp_err = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+            if(tmp_err == 0)
+              new_taskdata->td_task_affinity_data_domain = current_data_domain;
 			// DEBUG
 
             // current_data_domain = map_thread_to_numa_domain[target_gtid];
@@ -2189,7 +2194,7 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
       // allocate stuff
       task_team->tt.tt_numa_domain_size = (int*) malloc(task_team->tt.tt_num_numa_domains * sizeof(int));
       task_team->tt.tt_numa_domain_rr_counter = (int*) malloc(task_team->tt.tt_num_numa_domains * sizeof(int));
-      task_team->tt.tt_numa_domain_rr_locks = (kmp_bootstrap_lock_t*) malloc(task_team->tt.tt_num_numa_domains * sizeof(kmp_bootstrap_lock_t));
+      //task_team->tt.tt_numa_domain_rr_locks = (kmp_bootstrap_lock_t*) malloc(task_team->tt.tt_num_numa_domains * sizeof(kmp_bootstrap_lock_t));
       
       task_team->tt.tt_map_threads_in_domain = (int**) malloc(task_team->tt.tt_num_numa_domains * sizeof(int *));
       for (i = 0; i < task_team->tt.tt_num_numa_domains; i++){
@@ -2222,6 +2227,7 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
         }
       }
       task_team->tt.tt_numa_domains_set = true;
+      fprintf(stderr, "__kmp_task_aff_get_initial_thread_in_numa_domain: T#%d Setting numa info for task team\n", __kmp_entry_gtid());
     }
     __kmp_release_bootstrap_lock( &task_team->tt.tt_lock_numa_map );
   }
@@ -3262,6 +3268,7 @@ static inline int __kmp_execute_tasks_template(
 #endif            
             if(last_stolen_from_was_numa_thread) {
               // remember last choice of successful steal in numa domain
+              // TODO: change that and save it in threads struct
               tmp_victim_gtid = last_stolen_numa_thread;
             } else {
               int my_domain = thread->th.th_task_aff_my_domain_nr;
@@ -3370,16 +3377,16 @@ static inline int __kmp_execute_tasks_template(
         __kmp_itt_task_starting(itt_sync_obj);
       }
 #endif /* USE_ITT_BUILD && USE_ITT_NOTIFY */
-#if KMP_USE_TASK_AFFINITY && KMP_DEBUG
-  // print information about nr of task currently assigned to this thread
-  double cur_time = get_wall_time2();
-  for(int i = 0; i < nthreads; i++)
-  {
-    int num_tasks = threads_data[i].td.td_deque_ntasks;
-    int cur_gtid = __kmp_gtid_from_thread(threads_data[i].td.td_thr);
-    fprintf(stderr, "__kmp_execute_tasks_template(task_aff_stats):\tT#%d\t%f\t%d\n", cur_gtid, cur_time, num_tasks);
-  }
-#endif
+// #if KMP_USE_TASK_AFFINITY && KMP_DEBUG
+//   // print information about nr of task currently assigned to this thread
+//   double cur_time = get_wall_time2();
+//   for(int i = 0; i < nthreads; i++)
+//   {
+//     int num_tasks = threads_data[i].td.td_deque_ntasks;
+//     int cur_gtid = __kmp_gtid_from_thread(threads_data[i].td.td_thr);
+//     fprintf(stderr, "__kmp_execute_tasks_template(task_aff_stats):\tT#%d\t%f\t%d\n", cur_gtid, cur_time, num_tasks);
+//   }
+// #endif
       __kmp_invoke_task(gtid, task, current_task);
 #if USE_ITT_BUILD
       if (itt_sync_obj != NULL)

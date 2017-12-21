@@ -6518,6 +6518,7 @@ static void __kmp_do_serial_initialize(void) {
   __kmp_init_bootstrap_lock(&__kmp_exit_lock);
 #if KMP_USE_TASK_AFFINITY
   __kmp_init_bootstrap_lock(&lock_numa_map_set);
+  __kmp_init_bootstrap_lock(&lock_enable_task_team);
   __kmp_init_bootstrap_lock(&lock_incr_numa);
   __kmp_init_bootstrap_lock(&lock_addr_map);
   __kmp_init_bootstrap_lock(&lock_domain_init_thread_region);
