@@ -864,7 +864,15 @@ static void __kmp_free_task(kmp_int32 gtid, kmp_taskdata_t *taskdata,
   ANNOTATE_HAPPENS_BEFORE(taskdata);
 // deallocate the taskdata and shared variable blocks associated with this task
 #if USE_FAST_MEMORY
+#if KMP_USE_TASK_AFFINITY
+  if(enable_numa_aware_stealing){
+    //numa_free(taskdata, taskdata->td_size_alloc);
+  }else{
+    __kmp_fast_free(thread, taskdata);  
+  }
+#else
   __kmp_fast_free(thread, taskdata);
+#endif
 #else /* ! USE_FAST_MEMORY */
   __kmp_thread_free(thread, taskdata);
 #endif
@@ -1343,8 +1351,37 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
 
 // Avoid double allocation here by combining shareds with taskdata
 #if USE_FAST_MEMORY
-  taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset +
-                                                               sizeof_shareds);
+#if KMP_USE_TASK_AFFINITY
+if(enable_numa_aware_stealing)
+{
+	if(thread->th.th_task_affinity_data != NULL)
+	{
+		int current_data_domain = -1;
+		int ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+		if(ret_code == 0 && current_data_domain != thread->th.th_task_aff_my_domain_nr)
+		{
+			// get buffer from different thread that is pinned to NUMA domain
+			srand(time(NULL));
+			int idx_rand = rand() % numa_domain_size[current_data_domain];
+			int tmp_gtid = map_threads_in_numa_domain[current_data_domain][idx_rand];
+			
+			kmp_info_t *tmp_thread = __kmp_threads[tmp_gtid];
+			// fprintf(stderr, "__kmp_task_alloc: T#%d allocating taskdata on NUMA node %d using thread T#%d\n", gtid, current_data_domain, tmp_gtid);
+
+			// taskdata = (kmp_taskdata_t *)numa_alloc_onnode(shareds_offset + sizeof_shareds, current_data_domain);
+			taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(tmp_thread, shareds_offset + sizeof_shareds);
+		} else {
+			taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds);
+		} 
+	} else {
+		taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds); 
+	}
+} else {
+	taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds);
+}
+#else
+  taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds);
+#endif
 #else /* ! USE_FAST_MEMORY */
   taskdata = (kmp_taskdata_t *)__kmp_thread_malloc(thread, shareds_offset +
                                                                sizeof_shareds);
@@ -3196,7 +3233,7 @@ static inline int __kmp_execute_tasks_template(
   KMP_DEBUG_ASSERT(TCR_4(*unfinished_threads) >= 0);
   bool last_stolen_from_was_numa_thread = false;
   int last_stolen_numa_thread = -1;
-  int max_numa_tries_before_normal = 2;
+  int max_numa_tries_before_normal = 1;
   int count_numa_tries = 0;
 
   while (1) { // Outer loop keeps trying to find tasks in case of single thread
