@@ -5935,12 +5935,15 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_thread_print_stats(gtid, "overhead_numa_task_stealing", thread->th.th_sum_time_overhead_numa_task_stealing, thread->th.th_num_overhead_numa_task_stealing);
   __kmp_reap_thread_print_stats(gtid, "task_execution_correct_domain", thread->th.th_sum_time_task_execution_correct_domain, thread->th.th_num_task_execution_correct_domain);
 
+  __kmp_reap_thread_print_stats(gtid, "count_overall_tasks_generated", 0, thread->th.th_count_overall_tasks_generated);
   __kmp_reap_thread_print_stats(gtid, "count_task_with_affinity_generated", 0, thread->th.th_count_task_with_affinity_generated);
   __kmp_reap_thread_print_stats(gtid, "count_task_with_affinity_started", 0, thread->th.th_count_task_with_affinity_started);
   __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_thread", 0, thread->th.th_count_task_started_at_correct_thread);
   __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_threads_domain", 0, thread->th.th_count_task_started_at_correct_threads_domain);
   __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_data_domain", 0, thread->th.th_count_task_started_at_correct_data_domain);
-  
+
+  __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode1", 0, thread->th.th_count_task_pushed_in_fallback_mode1);  
+  __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode2", 0, thread->th.th_count_task_pushed_in_fallback_mode2);  
 #endif
   __kmp_free(thread);
 

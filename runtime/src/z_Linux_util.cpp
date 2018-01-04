@@ -795,17 +795,20 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
   th->th.th_sum_time_overhead_numa_task_stealing = 0.0;
   th->th.th_num_overhead_numa_task_stealing = 0;
 
-  th->th.th_ts_task_execution = 0.0;
   th->th.th_sum_time_task_execution = 0.0;
   th->th.th_num_task_execution = 0;
   th->th.th_sum_time_task_execution_correct_domain = 0.0;
   th->th.th_num_task_execution_correct_domain = 0;
   
+  th->th.th_count_overall_tasks_generated = 0;
   th->th.th_count_task_with_affinity_generated = 0;
   th->th.th_count_task_with_affinity_started = 0;
   th->th.th_count_task_started_at_correct_thread = 0;
   th->th.th_count_task_started_at_correct_threads_domain = 0;
   th->th.th_count_task_started_at_correct_data_domain = 0;
+
+  th->th.th_count_task_pushed_in_fallback_mode1 = 0;
+  th->th.th_count_task_pushed_in_fallback_mode2 = 0;
 #endif
 
 #if KMP_STATS_ENABLED

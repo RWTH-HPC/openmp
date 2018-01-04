@@ -2302,6 +2302,9 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
   bool td_task_affinity_scheduled_thread_set = false;
   int td_task_affinity_scheduled_thread = -1;
   int td_task_affinity_data_domain = -1;
+
+  double td_ts_task_execution = 0.0;
+  double td_ts_task_execution_current_sum = 0.0;
 #endif  
 }; // struct kmp_taskdata
 
@@ -2567,17 +2570,20 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_overhead_numa_task_stealing;
   int     th_num_overhead_numa_task_stealing;
 
-  double  th_ts_task_execution;
   double  th_sum_time_task_execution;
   int     th_num_task_execution;
   double  th_sum_time_task_execution_correct_domain;
   int     th_num_task_execution_correct_domain;
   
+  int     th_count_overall_tasks_generated;
   int     th_count_task_with_affinity_generated;
   int     th_count_task_with_affinity_started;
   int     th_count_task_started_at_correct_thread;
   int     th_count_task_started_at_correct_threads_domain;
   int     th_count_task_started_at_correct_data_domain;
+
+  int     th_count_task_pushed_in_fallback_mode1;
+  int     th_count_task_pushed_in_fallback_mode2;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
