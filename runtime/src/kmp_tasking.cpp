@@ -561,18 +561,9 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
            ("__kmp_task_start(enter_aff):\tT#%d\tstarting task %p: current_task=%p\n",
             gtid, taskdata, current_task));
 
-  // KA_TRACE(10,
-  //          ("__kmp_task_start(enter): T#%d starting task %p: current_task=%p\n",
-  //           gtid, taskdata, current_task));
-
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
 
 #if KMP_USE_TASK_AFFINITY
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-  // measure time to execute task
-  taskdata->td_ts_task_execution = get_wall_time2();
-#endif
-
   if(taskdata->td_task_affinity_scheduled_thread_set)
   {
     thread->th.th_count_task_with_affinity_started++;
@@ -609,27 +600,7 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
       thread->th.th_sum_time_map_insert += time1;
       thread->th.th_num_map_insert++;
 #endif
-    } //else { // kmp_task_aff_map_type_domain
-    //   int my_domain = thread->th.th_task_aff_my_domain_nr;
-    //   int set_domain = task_aff_addr_map[taskdata->td_task_affinity_data_address];
-
-    //   if(my_domain != set_domain) {
-    //     // set gtid in last used location for page address
-    //     KA_TRACE(5, ("__kmp_task_start: T#%d Setting last used mapping to %lx ==> %d\n", gtid, taskdata->td_task_affinity_data_address, gtid));
-// #if KMP_TASK_AFFINITY_MEASURE_TIME
-    //     double time1;
-    //     time1 = get_wall_time2();
-// #endif
-    //     __kmp_acquire_bootstrap_lock(&lock_addr_map);
-    //     task_aff_addr_map[taskdata->td_task_affinity_data_address] = my_domain;
-    //     __kmp_release_bootstrap_lock(&lock_addr_map);
-// #if KMP_TASK_AFFINITY_MEASURE_TIME
-    //     time1 = get_wall_time2()-time1;
-    //     thread->th.th_sum_time_map_insert += time1;
-    //     thread->th.th_num_map_insert++;
-// #endif
-    //   }
-    // }
+    }
   }
 #endif
 
@@ -637,6 +608,16 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
   // TODO: GEH - make sure root team implicit task is initialized properly.
   // KMP_DEBUG_ASSERT( current_task -> td_flags.executing == 1 );
   current_task->td_flags.executing = 0;
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+  // need to interrupt time measurement for current task here 
+  // because of waiting time where other tasks might be executed
+  // only do that if not already done by taskwait
+  if(current_task->td_ts_task_execution != -1){
+    current_task->td_ts_task_execution_current_sum += get_wall_time2() - current_task->td_ts_task_execution;
+    current_task->td_ts_task_execution = -1;
+    KA_TRACE(10, ("__kmp_task_start: T#%d interrupted time measurement for task %p\n", gtid, current_task));
+  }
+#endif
 
 // Add task to stack if tied
 #ifdef BUILD_TIED_TASK_STACK
@@ -654,6 +635,11 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
                    taskdata->td_flags.tiedness == TASK_UNTIED);
   taskdata->td_flags.started = 1;
   taskdata->td_flags.executing = 1;
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+  // measure time to execute task
+  taskdata->td_ts_task_execution = get_wall_time2();
+  KA_TRACE(10, ("__kmp_task_start: T#%d started time measurement for task %p\n", gtid, taskdata));
+#endif
   KMP_DEBUG_ASSERT(taskdata->td_flags.complete == 0);
   KMP_DEBUG_ASSERT(taskdata->td_flags.freed == 0);
 
@@ -959,7 +945,8 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   //double ts = get_wall_time2() - taskdata->td_ts_task_execution;
   taskdata->td_ts_task_execution_current_sum += (get_wall_time2() - taskdata->td_ts_task_execution);
   double ts = taskdata->td_ts_task_execution_current_sum;
-  KA_TRACE(20, ("__kmp_task_finish: T#%d TASK_EXECUTION_TIME of task %p is\t%f\n", gtid, taskdata, ts));
+  //fprintf(stderr, "__kmp_task_finish: T#%d TASK_EXECUTION_TIME of task %p is\t%f\n", gtid, taskdata, ts);
+  //KA_TRACE(20, ("__kmp_task_finish: T#%d TASK_EXECUTION_TIME of task %p is\t%f\n", gtid, taskdata, ts));
 
   if(taskdata->td_task_affinity_scheduled_thread_set)
   {
@@ -969,9 +956,15 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
     {
       thread->th.th_sum_time_task_execution_correct_domain += ts;
       thread->th.th_num_task_execution_correct_domain++;
+#if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
+      fprintf(stderr, "__kmp_task_finish: corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", gtid, taskdata, tmp_domain, ts);
+#endif
     } else {
       thread->th.th_sum_time_task_execution += ts;
       thread->th.th_num_task_execution++;
+#if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
+      fprintf(stderr, "__kmp_task_finish: in_corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", gtid, taskdata, tmp_domain, ts);
+#endif
     }
   }else{
     thread->th.th_sum_time_task_execution += ts;
@@ -1005,11 +998,12 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
       thread->th.th_current_task = resumed_task; // restore current_task
       resumed_task->td_flags.executing = 1; // resume previous task
 
-#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-      // restablish time measurement again
-      // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
-      resumed_task->td_ts_task_execution = get_wall_time2();
-#endif
+// #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+//       // restablish time measurement again
+//       // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
+//       resumed_task->td_ts_task_execution = get_wall_time2();
+//       KA_TRACE(10, ("__kmp_task_finish: T#%d resumed time measurement for task %p\n", gtid, resumed_task));
+// #endif
 
       KA_TRACE(10, ("__kmp_task_finish(exit): T#%d partially done task %p, "
                     "resuming task %p\n",
@@ -1101,11 +1095,12 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   // TODO: GEH - make sure root team implicit task is initialized properly.
   // KMP_DEBUG_ASSERT( resumed_task->td_flags.executing == 0 );
   resumed_task->td_flags.executing = 1; // resume previous task
-#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-      // restablish time measurement again
-      // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
-      resumed_task->td_ts_task_execution = get_wall_time2();
-#endif
+// #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+//       // restablish time measurement again
+//       // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
+//       resumed_task->td_ts_task_execution = get_wall_time2();
+//       KA_TRACE(10, ("__kmp_task_finish: T#%d resumed time measurement for task %p\n", gtid, resumed_task));
+// #endif
 
   KA_TRACE(
       10, ("__kmp_task_finish(exit): T#%d finished task %p, resuming task %p\n",
@@ -1510,6 +1505,19 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
     }
   }
 
+#if KMP_USE_TASK_AFFINITY
+  taskdata->td_task_affinity_data_pointer = NULL;
+  taskdata->td_task_affinity_data_address = 0;
+
+  // remember where task has been executed and domain where data is located
+  taskdata->td_task_affinity_scheduled_thread_set = false;
+  taskdata->td_task_affinity_scheduled_thread = -1;
+  taskdata->td_task_affinity_data_domain = -1;
+
+  taskdata->td_ts_task_execution = -1;
+  taskdata->td_ts_task_execution_current_sum = 0.0;
+#endif
+
   KA_TRACE(20, ("__kmp_task_alloc(exit): T#%d created task %p parent=%p\n",
                 gtid, taskdata, taskdata->td_parent));
   ANNOTATE_HAPPENS_BEFORE(task);
@@ -1769,175 +1777,175 @@ kmp_int32 res;
   }
 #endif
 
-#if KMP_USE_TASK_AFFINITY
-  kmp_info_t *thread = __kmp_threads[gtid];
-  thread->th.th_count_overall_tasks_generated++;
+// #if KMP_USE_TASK_AFFINITY
+//   kmp_info_t *thread = __kmp_threads[gtid];
+//   thread->th.th_count_overall_tasks_generated++;
 
-  if(__kmp_tasking_mode == tskm_immediate_exec)
-  {
-    // do not use task queue but execute immediately
-    res = __kmp_omp_task(gtid, new_task, true);
-  } else {
-    double time1, time2;
-    kmp_task_team_t *task_team = thread->th.th_task_team;
+//   if(__kmp_tasking_mode == tskm_immediate_exec)
+//   {
+//     // do not use task queue but execute immediately
+//     res = __kmp_omp_task(gtid, new_task, true);
+//   } else {
+//     double time1, time2;
+//     kmp_task_team_t *task_team = thread->th.th_task_team;
     
-    // if single threaded
-    if(task_team == NULL)
-    {
-      res = __kmp_omp_task(gtid, new_task, true);
-    } else {
-      kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
+//     // if single threaded
+//     if(task_team == NULL)
+//     {
+//       res = __kmp_omp_task(gtid, new_task, true);
+//     } else {
+//       kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
 
-      // need to enable tasking and allocate and assign proper data structures once
-      //KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
-      if (!KMP_TASKING_ENABLED(task_team)) {
-        __kmp_acquire_bootstrap_lock(&lock_enable_task_team);
-        if (!KMP_TASKING_ENABLED(task_team)) {
-          __kmp_enable_tasking(task_team, thread);
-        }
-        __kmp_release_bootstrap_lock(&lock_enable_task_team);
-      }
+//       // need to enable tasking and allocate and assign proper data structures once
+//       //KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
+//       if (!KMP_TASKING_ENABLED(task_team)) {
+//         __kmp_acquire_bootstrap_lock(&lock_enable_task_team);
+//         if (!KMP_TASKING_ENABLED(task_team)) {
+//           __kmp_enable_tasking(task_team, thread);
+//         }
+//         __kmp_release_bootstrap_lock(&lock_enable_task_team);
+//       }
       
-      kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
-      KMP_DEBUG_ASSERT(__kmp_tasking_mode != NULL);
+//       kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
+//       KMP_DEBUG_ASSERT(__kmp_tasking_mode != NULL);
 
-      if(thread->th.th_task_affinity_data == NULL || nthreads_in_team <= 1)
-      {
-        // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
-        res = __kmp_omp_task(gtid, new_task, true);
-      }
-      else
-      {
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-        time1 = get_wall_time2();
-#endif
-        // Allocate deque if necessary
-        kmp_int32 tid = __kmp_tid_from_gtid(gtid);
-        kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
+//       if(thread->th.th_task_affinity_data == NULL || nthreads_in_team <= 1)
+//       {
+//         // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
+//         res = __kmp_omp_task(gtid, new_task, true);
+//       }
+//       else
+//       {
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//         time1 = get_wall_time2();
+// #endif
+//         // Allocate deque if necessary
+//         kmp_int32 tid = __kmp_tid_from_gtid(gtid);
+//         kmp_thread_data_t *cur_thread_data = &(threads_data[tid]);
         
-        // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
-        // check address for numa domain
-        int current_data_domain = -1;
-        int ret_code = -1;
-        int target_tid = -1;
-        int target_gtid = -1;
-        kmp_info_t * target_thread = NULL;
+//         // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
+//         // check address for numa domain
+//         int current_data_domain = -1;
+//         int ret_code = -1;
+//         int target_tid = -1;
+//         int target_gtid = -1;
+//         kmp_info_t * target_thread = NULL;
 
-        // get address and page from current pointer
-        size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
-        const int page_size = KMP_GET_PAGE_SIZE();
-        size_t page_start_address = tmp_address & ~(page_size-1);
-        void * page_boundary_pointer = (void *) page_start_address;
-        // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
+//         // get address and page from current pointer
+//         size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
+//         const int page_size = KMP_GET_PAGE_SIZE();
+//         size_t page_start_address = tmp_address & ~(page_size-1);
+//         void * page_boundary_pointer = (void *) page_start_address;
+//         // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
         
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-        time2 = get_wall_time2();
-#endif
-        // check map
-        auto search = task_aff_addr_map.find(page_start_address);
-        bool found = search != task_aff_addr_map.end();
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-        time2 = get_wall_time2()-time2;
-        thread->th.th_sum_time_map_find += time2;
-        thread->th.th_num_map_find++;
-#endif
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//         time2 = get_wall_time2();
+// #endif
+//         // check map
+//         auto search = task_aff_addr_map.find(page_start_address);
+//         bool found = search != task_aff_addr_map.end();
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//         time2 = get_wall_time2()-time2;
+//         thread->th.th_sum_time_map_find += time2;
+//         thread->th.th_num_map_find++;
+// #endif
 
-        if(found) {
-          KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
-          ret_code = 0;
-          if(task_aff_map_type == kmp_task_aff_map_type_domain) {
-            //int cur_domain = search->second;
-            current_data_domain = search->second;
-            target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
-            new_taskdata->td_task_affinity_data_domain = current_data_domain;
-          } else {
-            target_gtid = search->second;
-			// DEBUG: also save this information for statistics
-            //int tmp_err = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-            int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
-            if(tmp_err == 0 && current_data_domain >= 0)
-              new_taskdata->td_task_affinity_data_domain = current_data_domain;
-			// DEBUG
-            // set data domain to some value >= 0; not really used but necessary to not run into fallback mode
-            current_data_domain = 0;
+//         if(found) {
+//           KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
+//           ret_code = 0;
+//           if(task_aff_map_type == kmp_task_aff_map_type_domain) {
+//             //int cur_domain = search->second;
+//             current_data_domain = search->second;
+//             target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
+//             new_taskdata->td_task_affinity_data_domain = current_data_domain;
+//           } else {
+//             target_gtid = search->second;
+// 			// DEBUG: also save this information for statistics
+//             //int tmp_err = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+//             int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
+//             if(tmp_err == 0 && current_data_domain >= 0)
+//               new_taskdata->td_task_affinity_data_domain = current_data_domain;
+// 			// DEBUG
+//             // set data domain to some value >= 0; not really used but necessary to not run into fallback mode
+//             current_data_domain = 0;
 
-              target_tid = __kmp_tid_from_gtid(target_gtid);
-              kmp_thread_data_t *target_thread_data = &(threads_data[target_tid]);
-              target_thread = target_thread_data->td.td_thr;
-          }
-        } else {
-          KA_TRACE(5, ("__kmpc_omp_task: T#%d Not Found %lx\n", gtid, page_start_address));
-          // run move pages
-          //ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-          ret_code = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
-          KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
+//               target_tid = __kmp_tid_from_gtid(target_gtid);
+//               kmp_thread_data_t *target_thread_data = &(threads_data[target_tid]);
+//               target_thread = target_thread_data->td.td_thr;
+//           }
+//         } else {
+//           KA_TRACE(5, ("__kmpc_omp_task: T#%d Not Found %lx\n", gtid, page_start_address));
+//           // run move pages
+//           //ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+//           ret_code = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
+//           KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
 
-          if(ret_code == 0 && current_data_domain >= 0) {
-            new_taskdata->td_task_affinity_data_domain = current_data_domain;
+//           if(ret_code == 0 && current_data_domain >= 0) {
+//             new_taskdata->td_task_affinity_data_domain = current_data_domain;
 
-            target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);  
+//             target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);  
             
-              if(target_tid != -1) {
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-                time2 = get_wall_time2();
-#endif
-                if(task_aff_map_type == kmp_task_aff_map_type_domain) {
-                  KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
-                  __kmp_acquire_bootstrap_lock(&lock_addr_map);
-                  task_aff_addr_map[page_start_address] = current_data_domain;
-                  __kmp_release_bootstrap_lock(&lock_addr_map);
-                } else { 
-                  KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
-                  __kmp_acquire_bootstrap_lock(&lock_addr_map);
-                  task_aff_addr_map[page_start_address] = target_gtid;
-                  __kmp_release_bootstrap_lock(&lock_addr_map);
-                }
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-                time2 = get_wall_time2()-time2;
-                thread->th.th_sum_time_map_insert += time2;
-                thread->th.th_num_map_insert++;
-#endif
-              }
-          }
-        }
+//               if(target_tid != -1) {
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//                 time2 = get_wall_time2();
+// #endif
+//                 if(task_aff_map_type == kmp_task_aff_map_type_domain) {
+//                   KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
+//                   __kmp_acquire_bootstrap_lock(&lock_addr_map);
+//                   task_aff_addr_map[page_start_address] = current_data_domain;
+//                   __kmp_release_bootstrap_lock(&lock_addr_map);
+//                 } else { 
+//                   KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
+//                   __kmp_acquire_bootstrap_lock(&lock_addr_map);
+//                   task_aff_addr_map[page_start_address] = target_gtid;
+//                   __kmp_release_bootstrap_lock(&lock_addr_map);
+//                 }
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//                 time2 = get_wall_time2()-time2;
+//                 thread->th.th_sum_time_map_insert += time2;
+//                 thread->th.th_num_map_insert++;
+// #endif
+//               }
+//           }
+//         }
         
-        // reset pointer & save temporary
-        new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
-        new_taskdata->td_task_affinity_data_address = page_start_address;
-        thread->th.th_task_affinity_data = NULL;
+//         // reset pointer & save temporary
+//         new_taskdata->td_task_affinity_data_pointer = thread->th.th_task_affinity_data;
+//         new_taskdata->td_task_affinity_data_address = page_start_address;
+//         thread->th.th_task_affinity_data = NULL;
 
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-        time1 = get_wall_time2()-time1;
-        thread->th.th_sum_time_map_overall += time1;
-        thread->th.th_num_map_overall++;
-#endif
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//         time1 = get_wall_time2()-time1;
+//         thread->th.th_sum_time_map_overall += time1;
+//         thread->th.th_num_map_overall++;
+// #endif
 
-        if(ret_code == 0 && current_data_domain >= 0) {
-          if(target_tid == -1)
-          {
-            // fall back mode if not possible to find any matching thread
-            KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode 1 (should not happen under normal circumstances) , target_id: %d\n", gtid, target_tid));
-            thread->th.th_count_task_pushed_in_fallback_mode1++;
-            res = __kmp_omp_task(gtid, new_task, true);
-          } else {
-            if (gtid == target_gtid) {
-              res = __kmp_omp_task(gtid, new_task, true);
-              //res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
-            } else {
-              //res = __kmp_omp_task(gtid, new_task, true);
-              res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
-            }
-          }
-        } else {
-          // fall back mode if not possible to find any matching thread or not a correct numa domain for poninter
-          KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
-          thread->th.th_count_task_pushed_in_fallback_mode2++;
-          res = __kmp_omp_task(gtid, new_task, true);
-        } // if
-      }
-    }
-  }
-#else
+//         if(ret_code == 0 && current_data_domain >= 0) {
+//           if(target_tid == -1)
+//           {
+//             // fall back mode if not possible to find any matching thread
+//             KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode 1 (should not happen under normal circumstances) , target_id: %d\n", gtid, target_tid));
+//             thread->th.th_count_task_pushed_in_fallback_mode1++;
+//             res = __kmp_omp_task(gtid, new_task, true);
+//           } else {
+//             if (gtid == target_gtid) {
+//               res = __kmp_omp_task(gtid, new_task, true);
+//               //res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
+//             } else {
+//               //res = __kmp_omp_task(gtid, new_task, true);
+//               res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
+//             }
+//           }
+//         } else {
+//           // fall back mode if not possible to find any matching thread or not a correct numa domain for poninter
+//           KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode, ret_code: %d\n", gtid, ret_code));
+//           thread->th.th_count_task_pushed_in_fallback_mode2++;
+//           res = __kmp_omp_task(gtid, new_task, true);
+//         } // if
+//       }
+//     }
+//   }
+// #else
   /* Should we execute the new task or queue it? For now, let's just always try
      to queue it.  If the queue fills up, then we'll execute it.  */
 
@@ -1947,7 +1955,7 @@ kmp_int32 res;
     new_taskdata->td_flags.task_serial = 1;
     __kmp_invoke_task(gtid, new_task, current_task);
   }
-#endif
+// #endif
 
   KA_TRACE(
       10,
@@ -2708,6 +2716,18 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     thread = __kmp_threads[gtid];
     taskdata = thread->th.th_current_task;
 
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+  // need to interrupt time measurement for current task here 
+  // because of waiting time where other tasks might be executed
+
+  // only do that if not already done by taskwait
+  if(taskdata->td_ts_task_execution != -1){
+    taskdata->td_ts_task_execution_current_sum += get_wall_time2() - taskdata->td_ts_task_execution;
+    taskdata->td_ts_task_execution = -1;
+    KA_TRACE(10, ("__kmpc_omp_taskwait: T#%d interrupted time measurement for task %p\n", gtid, taskdata));
+  }
+#endif
+
 // Debugger: The taskwait is active. Store location and thread encountered the
 // taskwait.
 #if USE_ITT_BUILD
@@ -2731,12 +2751,6 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
                               thread->th.th_task_team->tt.tt_found_proxy_tasks);
 #endif
     if (must_wait) {
-
-#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-      // need to interrupt time measurement for current task here 
-      // because of waiting time where other tasks might be executed
-      taskdata->td_ts_task_execution_current_sum += get_wall_time2() - taskdata->td_ts_task_execution;
-#endif
       kmp_flag_32 flag(
           RCAST(volatile kmp_uint32 *, &taskdata->td_incomplete_child_tasks),
           0U);
@@ -2755,6 +2769,12 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     // negated.
     taskdata->td_taskwait_thread = -taskdata->td_taskwait_thread;
 
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+      // restablish time measurement again
+      // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
+      taskdata->td_ts_task_execution = get_wall_time2();
+      KA_TRACE(10, ("__kmpc_omp_taskwait: T#%d resumed time measurement for task %p\n", gtid, taskdata));
+#endif
     ANNOTATE_HAPPENS_AFTER(taskdata);
   }
 
