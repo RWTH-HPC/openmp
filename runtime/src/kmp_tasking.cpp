@@ -282,6 +282,17 @@ static void __kmp_pop_task_stack(kmp_int32 gtid, kmp_info_t *thread,
 #endif /* BUILD_TIED_TASK_STACK */
 
 #if KMP_USE_TASK_AFFINITY
+
+// add functions necessary to build hash list for address map
+
+enum { KMP_MAP_HASH_OTHER_SIZE = 97, KMP_MAP_HASH_MASTER_SIZE = 997 };
+
+static inline kmp_int32 __kmp_map_hash_hash(kmp_intptr_t addr, size_t hsize) {
+  // TODO alternate to try: set = (((Addr64)(addrUsefulBits * 9.618)) %
+  // m_num_sets );
+  return ((addr >> 6) ^ (addr >> 2)) % hsize;
+}
+
 //  __kmp_push_task: Add a task to the thread's deque
 static kmp_int32 __kmp_push_task_aff(kmp_int32 gtid, kmp_int32 orig_id, kmp_task_t *task) {
   kmp_info_t *thread = __kmp_threads[gtid];
@@ -3455,10 +3466,13 @@ static inline int __kmp_execute_tasks_template(
   KMP_DEBUG_ASSERT(nthreads > 1);
 #endif
   KMP_DEBUG_ASSERT(TCR_4(*unfinished_threads) >= 0);
+
+#if KMP_USE_TASK_AFFINITY  
   bool last_stolen_from_was_numa_thread = false;
   int last_stolen_numa_thread = -1;
-  int max_numa_tries_before_normal = 1;
+  int max_numa_tries_before_normal = KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES;
   int count_numa_tries = 0;
+#endif
 
   while (1) { // Outer loop keeps trying to find tasks in case of single thread
     // getting tasks from target constructs
@@ -3522,6 +3536,9 @@ static inline int __kmp_execute_tasks_template(
           int tmp_victim_tid = -1;
           int tmp_victim_gtid = -1;
           double time1, time2;
+          time1 = 0;
+          time2 = 0;
+
           task = NULL;
           if(enable_numa_aware_stealing && task_team->tt.tt_numa_domains_set) {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
@@ -3580,6 +3597,7 @@ static inline int __kmp_execute_tasks_template(
             last_stolen_from_was_numa_thread = true;
             last_stolen_numa_thread = tmp_victim_gtid;
 
+            // fprintf(stderr, "__kmp_execute_tasks_template: T#%d NUMA aware stealing worked .. reset counter\n", gtid);
             count_numa_tries = 0;
             
             // fprintf(stderr, "NUMA steal: T#%d NUMA stealing SUCCESS from thread T#%d\n", gtid, tmp_victim_gtid);
@@ -3597,8 +3615,13 @@ static inline int __kmp_execute_tasks_template(
             if(enable_numa_aware_stealing && task_team->tt.tt_numa_domains_set) {
               count_numa_tries++;
               if(count_numa_tries < max_numa_tries_before_normal){
+                // stop here and retry numa aware stealing
+                // fprintf(stderr, "__kmp_execute_tasks_template: T#%d NUMA aware stealing with max_numa_tries_before_normal = %d, count_numa_tries = %d\n", gtid, max_numa_tries_before_normal, count_numa_tries);
+                continue;
+              } else {
+                // reset counter because maximum reached
+                // fprintf(stderr, "__kmp_execute_tasks_template: T#%d NUMA aware stealing failed .. fallback stealing .. reset counter\n", gtid);
                 count_numa_tries = 0;
-                break;
               }
             }
             // fprintf(stderr, "NUMA steal: T#%d NUMA stealing noc successful from T#%d\n", gtid, tmp_victim_gtid);
