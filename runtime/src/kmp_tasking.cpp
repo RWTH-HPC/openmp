@@ -2481,7 +2481,7 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
         }
       }
       task_team->tt.tt_numa_domains_set = true;
-      fprintf(stderr, "__kmp_task_aff_get_initial_thread_in_numa_domain: T#%d Setting numa info for task team\n", __kmp_entry_gtid());
+      //fprintf(stderr, "__kmp_task_aff_get_initial_thread_in_numa_domain: T#%d Setting numa info for task team\n", __kmp_entry_gtid());
     }
     __kmp_release_bootstrap_lock( &task_team->tt.tt_lock_numa_map );
   }
@@ -3661,16 +3661,16 @@ static inline int __kmp_execute_tasks_template(
         __kmp_itt_task_starting(itt_sync_obj);
       }
 #endif /* USE_ITT_BUILD && USE_ITT_NOTIFY */
-// #if KMP_USE_TASK_AFFINITY && KMP_DEBUG
-//   // print information about nr of task currently assigned to this thread
-//   double cur_time = get_wall_time2();
-//   for(int i = 0; i < nthreads; i++)
-//   {
-//     int num_tasks = threads_data[i].td.td_deque_ntasks;
-//     int cur_gtid = __kmp_gtid_from_thread(threads_data[i].td.td_thr);
-//     fprintf(stderr, "__kmp_execute_tasks_template(task_aff_stats):\tT#%d\t%f\t%d\n", cur_gtid, cur_time, num_tasks);
-//   }
-// #endif
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION
+  // print information about nr of task currently assigned to this thread
+  double cur_time = get_wall_time2();
+  for(int i = 0; i < nthreads; i++)
+  {
+    int num_tasks = threads_data[i].td.td_deque_ntasks;
+    int cur_gtid = __kmp_gtid_from_thread(threads_data[i].td.td_thr);
+    fprintf(stderr, "__kmp_execute_tasks_template(task_aff_stats):\tT#%d\t%f\t%d\n", cur_gtid, cur_time, num_tasks);
+  }
+#endif
       __kmp_invoke_task(gtid, task, current_task);
 #if USE_ITT_BUILD
       if (itt_sync_obj != NULL)
