@@ -393,11 +393,11 @@ static kmp_int32 __kmp_push_task_aff(kmp_int32 gtid, kmp_int32 orig_id, kmp_task
                 orig_id, gtid, taskdata, thread_data->td.td_deque_ntasks,
                 thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
 
-  __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
-  
   taskdata->td_task_affinity_scheduled_thread = gtid;
   taskdata->td_task_affinity_scheduled_thread_set = true;
   orig_thread->th.th_count_task_with_affinity_generated++;
+  __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+  
   return TASK_SUCCESSFULLY_PUSHED;
 }
 #endif
@@ -489,7 +489,6 @@ static kmp_int32 __kmp_push_task(kmp_int32 gtid, kmp_task_t *task) {
                 gtid, taskdata, thread_data->td.td_deque_ntasks,
                 thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
 
-  __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
 #if KMP_USE_TASK_AFFINITY
   if(taskdata->td_task_affinity_data_pointer != NULL)
   {
@@ -498,6 +497,7 @@ static kmp_int32 __kmp_push_task(kmp_int32 gtid, kmp_task_t *task) {
   taskdata->td_task_affinity_scheduled_thread = gtid;
   taskdata->td_task_affinity_scheduled_thread_set = true;
 #endif
+  __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
   return TASK_SUCCESSFULLY_PUSHED;
 }
 
@@ -624,7 +624,7 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
   // because of waiting time where other tasks might be executed
   // only do that if not already done by taskwait
   if(current_task->td_ts_task_execution != -1){
-    current_task->td_ts_task_execution_current_sum += get_wall_time2() - current_task->td_ts_task_execution;
+    current_task->td_ts_task_execution_current_sum += (get_wall_time2() - current_task->td_ts_task_execution);
     current_task->td_ts_task_execution = -1;
     KA_TRACE(10, ("__kmp_task_start: T#%d interrupted time measurement for task %p\n", gtid, current_task));
   }
@@ -953,11 +953,8 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
 
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-  //double ts = get_wall_time2() - taskdata->td_ts_task_execution;
   taskdata->td_ts_task_execution_current_sum += (get_wall_time2() - taskdata->td_ts_task_execution);
   double ts = taskdata->td_ts_task_execution_current_sum;
-  //fprintf(stderr, "__kmp_task_finish: T#%d TASK_EXECUTION_TIME of task %p is\t%f\n", gtid, taskdata, ts);
-  //KA_TRACE(20, ("__kmp_task_finish: T#%d TASK_EXECUTION_TIME of task %p is\t%f\n", gtid, taskdata, ts));
 
   if(taskdata->td_task_affinity_scheduled_thread_set)
   {
@@ -2133,7 +2130,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       }
       
       kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
-      KMP_DEBUG_ASSERT(__kmp_tasking_mode != NULL);
+      KMP_DEBUG_ASSERT(__kmp_tasking_mode != 0);
 
       if(thread->th.th_task_affinity_data == NULL || nthreads_in_team <= 1)
       {
@@ -2417,7 +2414,7 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
   *target_gtid = -1;
 
   // if not all threads registered in global list
-  if(!numa_all_set_up)
+  if(!numa_all_set_up) //TODO: RACE?
     return NULL;
 
   int nthreads = task_team->tt.tt_nproc;
@@ -2732,8 +2729,8 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
   // because of waiting time where other tasks might be executed
 
   // only do that if not already done by taskwait
-  if(taskdata->td_ts_task_execution != -1){
-    taskdata->td_ts_task_execution_current_sum += get_wall_time2() - taskdata->td_ts_task_execution;
+  if(taskdata->td_ts_task_execution != -1) {
+    taskdata->td_ts_task_execution_current_sum += (get_wall_time2() - taskdata->td_ts_task_execution);
     taskdata->td_ts_task_execution = -1;
     KA_TRACE(10, ("__kmpc_omp_taskwait: T#%d interrupted time measurement for task %p\n", gtid, taskdata));
   }
@@ -3465,7 +3462,7 @@ static inline int __kmp_execute_tasks_template(
 #else
   KMP_DEBUG_ASSERT(nthreads > 1);
 #endif
-  KMP_DEBUG_ASSERT(TCR_4(*unfinished_threads) >= 0);
+  KMP_DEBUG_ASSERT(TCR_4(*unfinished_threads) >= 0); // TODO: Data Race????
 
 #if KMP_USE_TASK_AFFINITY  
   bool last_stolen_from_was_numa_thread = false;
@@ -3661,16 +3658,16 @@ static inline int __kmp_execute_tasks_template(
         __kmp_itt_task_starting(itt_sync_obj);
       }
 #endif /* USE_ITT_BUILD && USE_ITT_NOTIFY */
-#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION
-  // print information about nr of task currently assigned to this thread
-  double cur_time = get_wall_time2();
-  for(int i = 0; i < nthreads; i++)
-  {
-    int num_tasks = threads_data[i].td.td_deque_ntasks;
-    int cur_gtid = __kmp_gtid_from_thread(threads_data[i].td.td_thr);
-    fprintf(stderr, "__kmp_execute_tasks_template(task_aff_stats):\tT#%d\t%f\t%d\n", cur_gtid, cur_time, num_tasks);
-  }
-#endif
+// #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION
+//   // print information about nr of task currently assigned to this thread
+//   double cur_time = get_wall_time2();
+//   for(int i = 0; i < nthreads; i++)
+//   {
+//     int num_tasks = threads_data[i].td.td_deque_ntasks;
+//     int cur_gtid = __kmp_gtid_from_thread(threads_data[i].td.td_thr);
+//     fprintf(stderr, "__kmp_execute_tasks_template(task_aff_stats):\tT#%d\t%f\t%d\n", cur_gtid, cur_time, num_tasks);
+//   }
+// #endif
       __kmp_invoke_task(gtid, task, current_task);
 #if USE_ITT_BUILD
       if (itt_sync_obj != NULL)
@@ -3720,7 +3717,7 @@ static inline int __kmp_execute_tasks_template(
       if (!*thread_finished) {
         kmp_int32 count;
 
-        count = KMP_TEST_THEN_DEC32(unfinished_threads) - 1;
+        count = KMP_TEST_THEN_DEC32(unfinished_threads) - 1; // TODO: Data Race????
         KA_TRACE(20, ("__kmp_execute_tasks_template: T#%d dec "
                       "unfinished_threads to %d task_team=%p\n",
                       gtid, count, task_team));

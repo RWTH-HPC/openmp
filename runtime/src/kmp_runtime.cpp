@@ -5810,13 +5810,15 @@ void __kmp_internal_end_atexit(void) {
 #endif
 }
 
-static void __kmp_reap_thread_print_stats(int gtid, char* name, double sum_time, int num) {
+#if KMP_USE_TASK_AFFINITY
+static void __kmp_reap_thread_print_stats(int gtid, const char* name, double sum_time, int num) {
   fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread:\tT#%d\t%s\t%d\t%f\tmean:\t%f\tms\n", 
     gtid,
     name, 
     num, sum_time, 
     sum_time / num);
 }
+#endif
 
 static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   // It is assumed __kmp_forkjoin_lock is acquired.
@@ -5925,8 +5927,7 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_team(thread->th.th_serial_team);
   thread->th.th_serial_team = NULL;
 
-#if KMP_USE_TASK_AFFINITY
-
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_PRINT_END_STATISTICS
   __kmp_reap_thread_print_stats(gtid, "gl_numa_map_create", thread->th.th_sum_time_gl_numa_map_create, thread->th.th_num_gl_numa_map_create);
   __kmp_reap_thread_print_stats(gtid, "map_find", thread->th.th_sum_time_map_find, thread->th.th_num_map_find);
   __kmp_reap_thread_print_stats(gtid, "map_insert", thread->th.th_sum_time_map_insert, thread->th.th_num_map_insert);
