@@ -298,7 +298,7 @@ static kmp_int32 __kmp_push_task_aff(kmp_int32 gtid, kmp_int32 orig_id, kmp_task
   kmp_info_t *thread = __kmp_threads[gtid];
   kmp_info_t *orig_thread = __kmp_threads[orig_id];
   kmp_taskdata_t *taskdata = KMP_TASK_TO_TASKDATA(task);
-  kmp_task_team_t *task_team = thread->th.th_task_team;
+  kmp_task_team_t *task_team = orig_thread->th.th_task_team;
   kmp_int32 tid = __kmp_tid_from_gtid(gtid);
   kmp_thread_data_t *thread_data;
 
@@ -328,23 +328,27 @@ static kmp_int32 __kmp_push_task_aff(kmp_int32 gtid, kmp_int32 orig_id, kmp_task
   if(task_team == NULL)
     return TASK_NOT_PUSHED;
     
-  KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
-  if (!KMP_TASKING_ENABLED(task_team)) {
-    __kmp_enable_tasking(task_team, thread);
-  }
+  // KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
+  // if (!KMP_TASKING_ENABLED(task_team)) {
+  //   __kmp_enable_tasking(task_team, thread);
+  // }
   KMP_DEBUG_ASSERT(TCR_4(task_team->tt.tt_found_tasks) == TRUE);
   KMP_DEBUG_ASSERT(TCR_PTR(task_team->tt.tt_threads_data) != NULL);
 
   // Find tasking deque specific to encountering thread
   thread_data = &task_team->tt.tt_threads_data[tid];
 
-  // No lock needed since only owner can allocate
-  if (thread_data->td.td_deque == NULL) {
-    return TASK_NOT_PUSHED;
-    //__kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
-    //__kmp_alloc_task_deque(thread, thread_data);
-    //__kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+  //volatile kmp_taskdata_t *** tmp_deque_check = &thread_data->td.td_deque;
+  //while(*tmp_deque_check == NULL){
+  while(thread_data->td.td_deque == NULL){
+    // wait as long as target thread has initialized its queue
   }
+  // if (thread_data->td.td_deque == NULL) {
+  //   return TASK_NOT_PUSHED;
+  //   //__kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
+  //   //__kmp_alloc_task_deque(thread, thread_data);
+  //   //__kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+  // }
 
   // Check if deque is full
   if (TCR_4(thread_data->td.td_deque_ntasks) >=
@@ -956,6 +960,7 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   taskdata->td_ts_task_execution_current_sum += (get_wall_time2() - taskdata->td_ts_task_execution);
   double ts = taskdata->td_ts_task_execution_current_sum;
 
+  //fprintf(stderr, "__kmp_task_finish: TASK_EXECUTION_TIME of task\t%p\tof thread T#%d is\t%f\n", taskdata, gtid, ts);
   if(taskdata->td_task_affinity_scheduled_thread_set)
   {
     //int tmp_domain = map_thread_to_numa_domain[taskdata->td_task_affinity_scheduled_thread];
@@ -1034,8 +1039,10 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
         1;
     KMP_DEBUG_ASSERT(children >= 0);
 #if OMP_40_ENABLED
-    if (taskdata->td_taskgroup)
-      KMP_TEST_THEN_DEC32((kmp_int32 *)(&taskdata->td_taskgroup->count));
+    if (taskdata->td_taskgroup){
+      int tmp_count = KMP_TEST_THEN_DEC32((kmp_int32 *)(&taskdata->td_taskgroup->count)) -1;
+      //fprintf(stderr, "%f __kmp_task_finish: T#%d decr taskgroup->count to %d\n", get_wall_time2(), gtid, tmp_count);
+    }
 #if OMP_45_ENABLED
   }
   // if we found proxy tasks there could exist a dependency chain
@@ -1504,7 +1511,10 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
     KMP_TEST_THEN_INC32(&parent_task->td_incomplete_child_tasks);
 #if OMP_40_ENABLED
     if (parent_task->td_taskgroup)
-      KMP_TEST_THEN_INC32((kmp_int32 *)(&parent_task->td_taskgroup->count));
+      {
+      int tmp_count = KMP_TEST_THEN_INC32((kmp_int32 *)(&parent_task->td_taskgroup->count)) + 1;
+      //fprintf(stderr, "%f __kmp_task_alloc: T#%d incr taskgroup->count to %d\n", get_wall_time2(), gtid, tmp_count);
+      }
 #endif
     // Only need to keep track of allocated child tasks for explicit tasks since
     // implicit not deallocated
@@ -4709,8 +4719,10 @@ kmp_task_t *__kmp_task_dup_alloc(kmp_info_t *thread, kmp_task_t *task_src) {
   // not serialized
   if (!(taskdata->td_flags.team_serial || taskdata->td_flags.tasking_ser)) {
     KMP_TEST_THEN_INC32(&parent_task->td_incomplete_child_tasks);
-    if (parent_task->td_taskgroup)
-      KMP_TEST_THEN_INC32(&parent_task->td_taskgroup->count);
+    if (parent_task->td_taskgroup){
+      int tmp_count = KMP_TEST_THEN_INC32(&parent_task->td_taskgroup->count) + 1;
+      //fprintf(stderr, "%f __kmp_task_dup_alloc: T#%d incr taskgroup->count to %d\n",get_wall_time2(), __kmp_entry_gtid(), tmp_count);
+    }
     // Only need to keep track of allocated child tasks for explicit tasks since
     // implicit not deallocated
     if (taskdata->td_parent->td_flags.tasktype == TASK_EXPLICIT)

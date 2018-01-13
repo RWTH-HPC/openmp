@@ -27,9 +27,8 @@ static const char *unknown = "unknown";
    the debugging package has not been initialized yet, and only "0" will print
    debugging output since the environment variables have not been read. */
 
-#ifdef KMP_DEBUG
+
 static int trace_level = 5;
-#endif
 
 /* LOG_ID_BITS  = ( 1 + floor( log_2( max( log_per_phy - 1, 1 ))))
  * APIC_ID      = (PHY_ID << LOG_ID_BITS) | LOG_ID

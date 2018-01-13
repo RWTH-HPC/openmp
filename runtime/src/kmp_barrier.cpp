@@ -1564,9 +1564,7 @@ void __kmp_join_barrier(int gtid) {
   kmp_uint nproc;
   kmp_info_t *master_thread;
   int tid;
-#ifdef KMP_DEBUG
   int team_id;
-#endif /* KMP_DEBUG */
 #if USE_ITT_BUILD
   void *itt_sync_obj = NULL;
 #if USE_ITT_NOTIFY
