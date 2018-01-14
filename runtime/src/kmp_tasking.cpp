@@ -623,16 +623,6 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
   // TODO: GEH - make sure root team implicit task is initialized properly.
   // KMP_DEBUG_ASSERT( current_task -> td_flags.executing == 1 );
   current_task->td_flags.executing = 0;
-#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-  // need to interrupt time measurement for current task here 
-  // because of waiting time where other tasks might be executed
-  // only do that if not already done by taskwait
-  if(current_task->td_ts_task_execution != -1){
-    current_task->td_ts_task_execution_current_sum += (get_wall_time2() - current_task->td_ts_task_execution);
-    current_task->td_ts_task_execution = -1;
-    KA_TRACE(10, ("__kmp_task_start: T#%d interrupted time measurement for task %p\n", gtid, current_task));
-  }
-#endif
 
 // Add task to stack if tied
 #ifdef BUILD_TIED_TASK_STACK
@@ -650,11 +640,6 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
                    taskdata->td_flags.tiedness == TASK_UNTIED);
   taskdata->td_flags.started = 1;
   taskdata->td_flags.executing = 1;
-#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-  // measure time to execute task
-  taskdata->td_ts_task_execution = get_wall_time2();
-  KA_TRACE(10, ("__kmp_task_start: T#%d started time measurement for task %p\n", gtid, taskdata));
-#endif
   KMP_DEBUG_ASSERT(taskdata->td_flags.complete == 0);
   KMP_DEBUG_ASSERT(taskdata->td_flags.freed == 0);
 
@@ -957,32 +942,8 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
 
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-  taskdata->td_ts_task_execution_current_sum += (get_wall_time2() - taskdata->td_ts_task_execution);
-  double ts = taskdata->td_ts_task_execution_current_sum;
-
-  //fprintf(stderr, "__kmp_task_finish: TASK_EXECUTION_TIME of task\t%p\tof thread T#%d is\t%f\n", taskdata, gtid, ts);
-  if(taskdata->td_task_affinity_scheduled_thread_set)
-  {
-    //int tmp_domain = map_thread_to_numa_domain[taskdata->td_task_affinity_scheduled_thread];
-    int tmp_domain = taskdata->td_task_affinity_data_domain;
-    if(thread->th.th_task_aff_my_domain_nr == tmp_domain)
-    {
-      thread->th.th_sum_time_task_execution_correct_domain += ts;
-      thread->th.th_num_task_execution_correct_domain++;
-#if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
-      fprintf(stderr, "__kmp_task_finish: corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", gtid, taskdata, tmp_domain, ts);
-#endif
-    } else {
-      thread->th.th_sum_time_task_execution += ts;
-      thread->th.th_num_task_execution++;
-#if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
-      fprintf(stderr, "__kmp_task_finish: in_corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", gtid, taskdata, tmp_domain, ts);
-#endif
-    }
-  }else{
-    thread->th.th_sum_time_task_execution += ts;
-    thread->th.th_num_task_execution++;
-  }
+  stop_task_execution_measurement(taskdata);
+  finish_task_execution_measurement(taskdata, thread);
 #endif
 
 // Pop task from stack if tied
@@ -1010,14 +971,6 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
       }
       thread->th.th_current_task = resumed_task; // restore current_task
       resumed_task->td_flags.executing = 1; // resume previous task
-
-// #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-//       // restablish time measurement again
-//       // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
-//       resumed_task->td_ts_task_execution = get_wall_time2();
-//       KA_TRACE(10, ("__kmp_task_finish: T#%d resumed time measurement for task %p\n", gtid, resumed_task));
-// #endif
-
       KA_TRACE(10, ("__kmp_task_finish(exit): T#%d partially done task %p, "
                     "resuming task %p\n",
                     gtid, taskdata, resumed_task));
@@ -1110,13 +1063,6 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
   // TODO: GEH - make sure root team implicit task is initialized properly.
   // KMP_DEBUG_ASSERT( resumed_task->td_flags.executing == 0 );
   resumed_task->td_flags.executing = 1; // resume previous task
-// #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-//       // restablish time measurement again
-//       // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
-//       resumed_task->td_ts_task_execution = get_wall_time2();
-//       KA_TRACE(10, ("__kmp_task_finish: T#%d resumed time measurement for task %p\n", gtid, resumed_task));
-// #endif
-
   KA_TRACE(
       10, ("__kmp_task_finish(exit): T#%d finished task %p, resuming task %p\n",
            gtid, taskdata, resumed_task));
@@ -1709,6 +1655,10 @@ static void __kmp_invoke_task(kmp_int32 gtid, kmp_task_t *task,
 #if OMPT_SUPPORT
     if (__builtin_expect(ompt_enabled.enabled,0)) __ompt_task_start(task, current_task, gtid);
 #endif
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+    stop_task_execution_measurement(current_task);
+    start_task_execution_measurement(taskdata);
+#endif
 
 #ifdef KMP_GOMP_COMPAT
     if (taskdata->td_flags.native) {
@@ -1722,6 +1672,10 @@ static void __kmp_invoke_task(kmp_int32 gtid, kmp_task_t *task,
 
 #if OMPT_SUPPORT
     if (__builtin_expect(ompt_enabled.enabled,0)) __ompt_task_finish(task, current_task);
+#endif
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+    stop_task_execution_measurement(taskdata);
+    start_task_execution_measurement(current_task);
 #endif
 #if OMP_40_ENABLED
   }
@@ -2649,6 +2603,9 @@ static kmp_int32 __ompt_enabled_taskwait(ident_t *loc_ref, kmp_int32 gtid,
           ompt_sync_region_taskwait, ompt_scope_begin, my_parallel_data,
           my_task_data, return_address);
     }
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+  stop_task_execution_measurement(taskdata);
+#endif
 
 // Debugger: The taskwait is active. Store location and thread encountered the
 // taskwait.
@@ -2702,6 +2659,9 @@ static kmp_int32 __ompt_enabled_taskwait(ident_t *loc_ref, kmp_int32 gtid,
           my_task_data, return_address);
     }
     taskdata->ompt_task_info.frame.reenter_runtime_frame = NULL;
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
+    start_task_execution_measurement(taskdata);
+#endif
 
     ANNOTATE_HAPPENS_AFTER(taskdata);
   }
@@ -2733,17 +2693,8 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
   if (__kmp_tasking_mode != tskm_immediate_exec) {
     thread = __kmp_threads[gtid];
     taskdata = thread->th.th_current_task;
-
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-  // need to interrupt time measurement for current task here 
-  // because of waiting time where other tasks might be executed
-
-  // only do that if not already done by taskwait
-  if(taskdata->td_ts_task_execution != -1) {
-    taskdata->td_ts_task_execution_current_sum += (get_wall_time2() - taskdata->td_ts_task_execution);
-    taskdata->td_ts_task_execution = -1;
-    KA_TRACE(10, ("__kmpc_omp_taskwait: T#%d interrupted time measurement for task %p\n", gtid, taskdata));
-  }
+  stop_task_execution_measurement(taskdata);
 #endif
 
 // Debugger: The taskwait is active. Store location and thread encountered the
@@ -2786,12 +2737,8 @@ kmp_int32 __kmpc_omp_taskwait(ident_t *loc_ref, kmp_int32 gtid) {
     // Debugger:  The taskwait is completed. Location remains, but thread is
     // negated.
     taskdata->td_taskwait_thread = -taskdata->td_taskwait_thread;
-
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
-      // restablish time measurement again
-      // FIXME: What happens if UNTIED task is moved to other thread? ==> Find more suitable location to do that.
-      taskdata->td_ts_task_execution = get_wall_time2();
-      KA_TRACE(10, ("__kmpc_omp_taskwait: T#%d resumed time measurement for task %p\n", gtid, taskdata));
+  start_task_execution_measurement(taskdata);
 #endif
     ANNOTATE_HAPPENS_AFTER(taskdata);
   }

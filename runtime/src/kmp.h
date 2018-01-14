@@ -30,7 +30,7 @@
 #define MAX_THREADS_PER_DOMAIN 128
 #define KMP_TASK_AFFINITY_MEASURE_TIME 1
 #define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
-#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
+#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 0
 #define KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES 2
 #define KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION 0
 #endif
@@ -3931,6 +3931,48 @@ extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 extern kmp_task_aff_init_thread_type_t task_aff_init_thread_type;
 extern kmp_task_aff_map_type_t task_aff_map_type;
+
+static void start_task_execution_measurement(kmp_taskdata_t* taskdata) {
+  if(taskdata->td_ts_task_execution == -1) {
+    KA_TRACE(10, ("start_task_execution_measurement: T#%d resumed time measurement for task %p\n", __kmp_gtid, taskdata));
+    taskdata->td_ts_task_execution = get_wall_time2();
+  }
+}
+
+static void stop_task_execution_measurement(kmp_taskdata_t* taskdata) {
+  if(taskdata->td_ts_task_execution != -1) {
+    taskdata->td_ts_task_execution_current_sum += (get_wall_time2() - taskdata->td_ts_task_execution);
+    taskdata->td_ts_task_execution = -1;
+    KA_TRACE(10, ("stop_task_execution_measurement: T#%d interrupted time measurement for task %p\n", __kmp_gtid, taskdata));
+  }
+}
+
+static void finish_task_execution_measurement(kmp_taskdata_t* taskdata, kmp_info_t *thread) {
+  double ts = taskdata->td_ts_task_execution_current_sum;
+  //fprintf(stderr, "__kmp_task_finish: TASK_EXECUTION_TIME of task\t%p\tof thread T#%d is\t%f\n", taskdata, gtid, ts);
+  if(taskdata->td_task_affinity_scheduled_thread_set)
+  {
+    //int tmp_domain = map_thread_to_numa_domain[taskdata->td_task_affinity_scheduled_thread];
+    int tmp_domain = taskdata->td_task_affinity_data_domain;
+    if(thread->th.th_task_aff_my_domain_nr == tmp_domain)
+    {
+      thread->th.th_sum_time_task_execution_correct_domain += ts;
+      thread->th.th_num_task_execution_correct_domain++;
+#if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
+      fprintf(stderr, "finish_task_execution_measurement: corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+#endif
+    } else {
+      thread->th.th_sum_time_task_execution += ts;
+      thread->th.th_num_task_execution++;
+#if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
+      fprintf(stderr, "finish_task_execution_measurement: in_corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+#endif
+    }
+  }else{
+    thread->th.th_sum_time_task_execution += ts;
+    thread->th.th_num_task_execution++;
+  }
+}
 #endif // KMP_USE_TASK_AFFINITY
 
 #ifdef __cplusplus
