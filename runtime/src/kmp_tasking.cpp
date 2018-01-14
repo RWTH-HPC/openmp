@@ -340,15 +340,15 @@ static kmp_int32 __kmp_push_task_aff(kmp_int32 gtid, kmp_int32 orig_id, kmp_task
 
   //volatile kmp_taskdata_t *** tmp_deque_check = &thread_data->td.td_deque;
   //while(*tmp_deque_check == NULL){
-  while(thread_data->td.td_deque == NULL){
-    // wait as long as target thread has initialized its queue
-  }
-  // if (thread_data->td.td_deque == NULL) {
-  //   return TASK_NOT_PUSHED;
-  //   //__kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
-  //   //__kmp_alloc_task_deque(thread, thread_data);
-  //   //__kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+  // while(thread_data->td.td_deque == NULL){
+  //   // wait as long as target thread has initialized its queue
   // }
+  if (thread_data->td.td_deque == NULL) {
+    return TASK_NOT_PUSHED;
+    //__kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
+    //__kmp_alloc_task_deque(thread, thread_data);
+    //__kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+  }
 
   // Check if deque is full
   if (TCR_4(thread_data->td.td_deque_ntasks) >=
