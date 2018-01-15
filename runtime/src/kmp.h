@@ -28,9 +28,10 @@
 #define NUMA_DOMAIN_MAX_NR 24
 #define MAX_THREADS_OVERALL 4096
 #define MAX_THREADS_PER_DOMAIN 128
+#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 1
 #define KMP_TASK_AFFINITY_MEASURE_TIME 1
 #define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
-#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 0
+#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
 #define KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES 2
 #define KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION 0
 #endif
@@ -2202,6 +2203,34 @@ typedef struct kmp_dephash {
 #endif
 } kmp_dephash_t;
 
+
+#if KMP_USE_TASK_AFFINITY
+// hash functionality that is used for map
+
+enum { KMP_MAPHASH_OTHER_SIZE = 97, KMP_MAPHASH_MASTER_SIZE = 997 };
+
+// typedef union kmp_mapnode kmp_mapnode_t;
+// typedef struct kmp_mapnode_list kmp_mapnode_list_t;
+typedef struct kmp_maphash_entry kmp_maphash_entry_t;
+
+struct kmp_maphash_entry {
+  kmp_intptr_t addr;
+  kmp_int32 val;
+  // kmp_mapnode_t *last_out;
+  // kmp_mapnode_list_t *last_ins;
+  kmp_maphash_entry_t *next_in_bucket;
+};
+
+typedef struct kmp_maphash {
+  kmp_maphash_entry_t **buckets;
+  size_t size;
+#ifdef KMP_DEBUG
+  kmp_uint32 nelements;
+  kmp_uint32 nconflicts;
+#endif
+} kmp_maphash_t;
+#endif
+
 #endif
 
 #ifdef BUILD_TIED_TASK_STACK
@@ -3926,6 +3955,12 @@ extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
 extern kmp_bootstrap_lock_t lock_addr_map;
 extern std::map<size_t, int> task_aff_addr_map;
+
+// forward declaration of map functions
+extern kmp_maphash_t *__kmp_maphash_create(kmp_info_t *thread);
+extern inline kmp_int32 __kmp_maphash_hash(kmp_intptr_t addr, size_t hsize);
+extern kmp_maphash_entry * __kmp_maphash_find(kmp_info_t *thread, kmp_maphash_t *h, kmp_intptr_t addr);
+extern kmp_maphash_t * task_aff_addr_map2;
 
 extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 

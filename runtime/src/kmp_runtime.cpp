@@ -3895,6 +3895,11 @@ int __kmp_register_root(int initial_thread) {
   KMP_MB();
   __kmp_release_bootstrap_lock(&__kmp_forkjoin_lock);
 
+#if KMP_USE_TASK_AFFINITY
+  // initilize global map
+  task_aff_addr_map2 = __kmp_maphash_create(root_thread);
+#endif
+
   return gtid;
 }
 

@@ -84,6 +84,8 @@ bool enable_numa_aware_stealing = false;
 kmp_bootstrap_lock_t lock_addr_map;
 std::map<size_t ,int> task_aff_addr_map;
 
+kmp_maphash_t * task_aff_addr_map2;
+
 kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 kmp_task_aff_init_thread_type_t task_aff_init_thread_type = kmp_task_aff_init_thread_type_random;

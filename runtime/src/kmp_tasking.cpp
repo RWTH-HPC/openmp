@@ -282,15 +282,69 @@ static void __kmp_pop_task_stack(kmp_int32 gtid, kmp_info_t *thread,
 #endif /* BUILD_TIED_TASK_STACK */
 
 #if KMP_USE_TASK_AFFINITY
+kmp_maphash_t *__kmp_maphash_create(kmp_info_t *thread) {
+  kmp_maphash_t *h;
 
-// add functions necessary to build hash list for address map
+  size_t h_size;
+  h_size = KMP_MAPHASH_MASTER_SIZE;
+  //h_size = KMP_DEPHASH_OTHER_SIZE;
 
-enum { KMP_MAP_HASH_OTHER_SIZE = 97, KMP_MAP_HASH_MASTER_SIZE = 997 };
+  kmp_int32 size = h_size * sizeof(kmp_maphash_entry_t *) + sizeof(kmp_maphash_t);
 
-static inline kmp_int32 __kmp_map_hash_hash(kmp_intptr_t addr, size_t hsize) {
+#if USE_FAST_MEMORY
+  h = (kmp_maphash_t *)__kmp_fast_allocate(thread, size);
+#else
+  h = (kmp_maphash_t *)__kmp_thread_malloc(thread, size);
+#endif
+  h->size = h_size;
+
+#ifdef KMP_DEBUG
+  h->nelements = 0;
+  h->nconflicts = 0;
+#endif
+  h->buckets = (kmp_maphash_entry **)(h + 1);
+
+  for (size_t i = 0; i < h_size; i++)
+    h->buckets[i] = 0;
+
+  return h;
+}
+
+inline kmp_int32 __kmp_maphash_hash(kmp_intptr_t addr, size_t hsize) {
   // TODO alternate to try: set = (((Addr64)(addrUsefulBits * 9.618)) %
   // m_num_sets );
   return ((addr >> 6) ^ (addr >> 2)) % hsize;
+}
+
+kmp_maphash_entry * __kmp_maphash_find(kmp_info_t *thread, kmp_maphash_t *h, kmp_intptr_t addr) {
+  kmp_int32 bucket = __kmp_maphash_hash(addr, h->size);
+
+  kmp_maphash_entry_t *entry;
+  for (entry = h->buckets[bucket]; entry; entry = entry->next_in_bucket)
+    if (entry->addr == addr)
+      break;
+
+  if (entry == NULL) {
+// create entry. This is only done by one thread so no locking required
+// MAYBE THIS MIGHT CHANGE: bucket lock
+#if USE_FAST_MEMORY
+    entry = (kmp_maphash_entry_t *)__kmp_fast_allocate(thread, sizeof(kmp_maphash_entry_t));
+#else
+    entry = (kmp_maphash_entry_t *)__kmp_thread_malloc(thread, sizeof(kmp_maphash_entry_t));
+#endif
+    entry->addr = addr;
+    entry->val = -1; // init value to -1
+    // entry->last_out = NULL;
+    // entry->last_ins = NULL;
+    entry->next_in_bucket = h->buckets[bucket];
+    h->buckets[bucket] = entry; //WTF? ref to self?
+#ifdef KMP_DEBUG
+    h->nelements++;
+    if (entry->next_in_bucket)
+      h->nconflicts++;
+#endif
+  }
+  return entry;
 }
 
 //  __kmp_push_task: Add a task to the thread's deque
@@ -607,9 +661,14 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
       double time1;
       time1 = get_wall_time2();
 #endif
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
       __kmp_acquire_bootstrap_lock(&lock_addr_map);
       task_aff_addr_map[taskdata->td_task_affinity_data_address] = gtid;
       __kmp_release_bootstrap_lock(&lock_addr_map);
+#else
+      kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) taskdata->td_task_affinity_data_address);
+      cur_entry->val = gtid;
+#endif
 #if KMP_TASK_AFFINITY_MEASURE_TIME
       time1 = get_wall_time2()-time1;
       thread->th.th_sum_time_map_insert += time1;
@@ -2129,14 +2188,18 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         void * page_boundary_pointer = (void *) page_start_address;
         // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
         
-        // // DEBUG
-        // ret_code = 0;
         // check map
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time2 = get_wall_time2();
 #endif
+        // try to find entry
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
         auto search = task_aff_addr_map.find(page_start_address);
         bool found = search != task_aff_addr_map.end();
+#else
+        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
+        bool found = cur_entry->val != -1;
+#endif
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time2 = get_wall_time2()-time2;
         thread->th.th_sum_time_map_find += time2;
@@ -2144,11 +2207,19 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #endif
 
         if(found) {
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
+#else
+          KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, cur_entry->addr, cur_entry->val));
+#endif
           ret_code = 0;
           if(task_aff_map_type == kmp_task_aff_map_type_domain) {
-            //int cur_domain = search->second;
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
             current_data_domain = search->second;
+#else
+            current_data_domain = cur_entry->val;
+#endif
+
             // if(cur_domain == thread->th.th_task_aff_my_domain_nr) {
             //   // push to local queue if same domain to keep current thread busy
             //   target_gtid = gtid;
@@ -2158,7 +2229,12 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
             // }
             new_taskdata->td_task_affinity_data_domain = current_data_domain;
           } else {
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
             target_gtid = search->second;
+#else
+            target_gtid = cur_entry->val;
+#endif
+
 			// DEBUG: also save this information for statistics
             //int tmp_err = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
             int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
@@ -2210,14 +2286,22 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #endif
                 if(task_aff_map_type == kmp_task_aff_map_type_domain) {
                   KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                   __kmp_acquire_bootstrap_lock(&lock_addr_map);
                   task_aff_addr_map[page_start_address] = current_data_domain;
                   __kmp_release_bootstrap_lock(&lock_addr_map);
+#else
+                  cur_entry->val = current_data_domain;
+#endif
                 } else { 
                   KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                   __kmp_acquire_bootstrap_lock(&lock_addr_map);
                   task_aff_addr_map[page_start_address] = target_gtid;
                   __kmp_release_bootstrap_lock(&lock_addr_map);
+#else
+                  cur_entry->val = target_gtid;
+#endif
                 }
 #if KMP_TASK_AFFINITY_MEASURE_TIME
                 time2 = get_wall_time2()-time2;
