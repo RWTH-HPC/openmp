@@ -809,6 +809,8 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 
   th->th.th_count_task_pushed_in_fallback_mode1 = 0;
   th->th.th_count_task_pushed_in_fallback_mode2 = 0;
+
+  th->th.th_task_affinity_msg = NULL;
 #endif
 
 #if KMP_STATS_ENABLED

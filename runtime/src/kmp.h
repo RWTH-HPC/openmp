@@ -782,6 +782,7 @@ typedef enum kmp_task_aff_map_type_t {
 } kmp_task_aff_map_type_t;
 #  endif // __OMP_H
 extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type);
+extern void  __kmpc_task_affinity_set_msg(char * msg);
 #endif
 
 #endif /* KMP_AFFINITY_SUPPORTED */
@@ -2617,6 +2618,8 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 
   int     th_count_task_pushed_in_fallback_mode1;
   int     th_count_task_pushed_in_fallback_mode2;
+
+  char * th_task_affinity_msg;
 #endif // KMP_USE_TASK_AFFINITY
 } kmp_base_info_t;
 
@@ -3997,11 +4000,13 @@ static void finish_task_execution_measurement(kmp_taskdata_t* taskdata, kmp_info
       fprintf(stderr, "finish_task_execution_measurement: corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
 #endif
     } else {
+      //if(tmp_domain != -1 || !enable_numa_aware_stealing) {
       thread->th.th_sum_time_task_execution += ts;
       thread->th.th_num_task_execution++;
 #if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
       fprintf(stderr, "finish_task_execution_measurement: in_corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
 #endif
+      //}
     }
   }else{
     thread->th.th_sum_time_task_execution += ts;

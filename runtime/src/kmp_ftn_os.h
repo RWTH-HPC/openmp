@@ -46,6 +46,7 @@
 #define FTN_GET_AFFINITY_MASK_PROC kmp_get_affinity_mask_proc
 #define FTN_SET_TASK_AFFINITY kmpc_set_task_affinity
 #define FTN_TASK_AFFINITY_INIT kmpc_task_affinity_init
+#define FTN_TASK_AFFINITY_SET_MSG kmpc_task_affinity_set_msg
 
 #define FTN_MALLOC kmp_malloc
 #define FTN_ALIGNED_MALLOC kmp_aligned_malloc
@@ -169,6 +170,7 @@
 #define FTN_GET_AFFINITY_MASK_PROC kmp_get_affinity_mask_proc_
 #define FTN_SET_TASK_AFFINITY kmpc_set_task_affinity_
 #define FTN_TASK_AFFINITY_INIT kmpc_task_affinity_init_
+#define FTN_TASK_AFFINITY_SET_MSG kmpc_task_affinity_set_msg_
 
 #define FTN_MALLOC kmp_malloc_
 #define FTN_ALIGNED_MALLOC kmp_aligned_malloc_
@@ -294,6 +296,7 @@
 #define FTN_GET_AFFINITY_MASK_PROC KMP_GET_AFFINITY_MASK_PROC
 #define FTN_SET_TASK_AFFINITY KMPC_SET_TASK_AFFINITY
 #define FTN_TASK_AFFINITY_INIT KMPC_TASK_AFFINITY_INIT
+#define FTN_TASK_AFFINITY_SET_MSG KMPC_TASK_AFFINITY_SET_MSG
 
 #define FTN_MALLOC KMP_MALLOC
 #define FTN_ALIGNED_MALLOC KMP_ALIGNED_MALLOC
@@ -419,6 +422,7 @@
 #define FTN_GET_AFFINITY_MASK_PROC KMP_GET_AFFINITY_MASK_PROC_
 #define FTN_SET_TASK_AFFINITY KMPC_SET_TASK_AFFINITY_
 #define FTN_TASK_AFFINITY_INIT KMPC_TASK_AFFINITY_INIT_
+#define FTN_TASK_AFFINITY_SET_MSG KMPC_TASK_AFFINITY_SET_MSG_
 
 #define FTN_MALLOC KMP_MALLOC_
 #define FTN_ALIGNED_MALLOC KMP_ALIGNED_MALLOC_

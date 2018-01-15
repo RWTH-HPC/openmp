@@ -2127,6 +2127,14 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #if KMP_USE_TASK_AFFINITY
   kmp_info_t *thread = __kmp_threads[gtid];
   thread->th.th_count_overall_tasks_generated++;
+
+  if(thread->th.th_task_affinity_msg)
+  {
+    // print debug msg that has been passed by program
+    fprintf(stderr, "th_task_affinity_msg: T#%d task=%p current_task:%p parent_task:%p Message:%s\n", gtid, new_taskdata, thread->th.th_current_task, new_taskdata->td_parent, thread->th.th_task_affinity_msg);
+    thread->th.th_task_affinity_msg = NULL;
+  }
+
   if(__kmp_tasking_mode == tskm_immediate_exec)
   {
     // do not use task queue but execute immediately
@@ -2379,6 +2387,11 @@ void __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type,
   fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting map type to %d\n", __kmp_entry_gtid(), map_type);
   task_aff_map_type = map_type;
   enable_numa_aware_stealing = true;
+}
+
+void __kmpc_task_affinity_set_msg(char * msg) {
+  kmp_info_t *thread = __kmp_threads[__kmp_entry_gtid()];
+  thread->th.th_task_affinity_msg = msg;
 }
 
 inline bool __kmp_task_aff_is_correct_task(
