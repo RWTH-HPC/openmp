@@ -70,7 +70,8 @@
         kmp_task_aff_init_thread_type_first = 0,
         kmp_task_aff_init_thread_type_random = 1,
         kmp_task_aff_init_thread_type_lowest_wl = 2,
-        kmp_task_aff_init_thread_type_round_robin = 3
+        kmp_task_aff_init_thread_type_round_robin = 3,
+        kmp_task_aff_init_thread_type_lowest_elasped = 4
     } kmp_task_aff_init_thread_type_t;
 
     typedef enum kmp_task_aff_map_type_t {

@@ -21,6 +21,7 @@
 #include <unistd.h>
 # include <sys/time.h>
 # include <time.h>
+# include <float.h>
 #if KMP_USE_TASK_AFFINITY
 //#include <unordered_map>
 #include <map>
@@ -28,7 +29,7 @@
 #define NUMA_DOMAIN_MAX_NR 24
 #define MAX_THREADS_OVERALL 4096
 #define MAX_THREADS_PER_DOMAIN 128
-#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 1
+#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 0
 #define KMP_TASK_AFFINITY_MEASURE_TIME 1
 #define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
 #define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
@@ -773,7 +774,8 @@ typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_first = 0,
   kmp_task_aff_init_thread_type_random = 1,
   kmp_task_aff_init_thread_type_lowest_wl = 2,
-  kmp_task_aff_init_thread_type_round_robin = 3
+  kmp_task_aff_init_thread_type_round_robin = 3,
+  kmp_task_aff_init_thread_type_lowest_elasped = 4
 } kmp_task_aff_init_thread_type_t;
 
 typedef enum kmp_task_aff_map_type_t {
@@ -3997,14 +3999,14 @@ static void finish_task_execution_measurement(kmp_taskdata_t* taskdata, kmp_info
       thread->th.th_sum_time_task_execution_correct_domain += ts;
       thread->th.th_num_task_execution_correct_domain++;
 #if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
-      fprintf(stderr, "finish_task_execution_measurement: corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+      fprintf(stderr, "finish_task_execution_measurement: corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
 #endif
     } else {
       //if(tmp_domain != -1 || !enable_numa_aware_stealing) {
       thread->th.th_sum_time_task_execution += ts;
       thread->th.th_num_task_execution++;
 #if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
-      fprintf(stderr, "finish_task_execution_measurement: in_corr_domain T#%d TASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+      fprintf(stderr, "finish_task_execution_measurement: in_corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
 #endif
       //}
     }
