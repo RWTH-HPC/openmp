@@ -3444,7 +3444,7 @@ static inline int __kmp_execute_tasks_template(
         }
 
         if (!asleep) {
-#if KMP_USE_TASK_AFFINITY
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED
           int tmp_victim_tid = -1;
           int tmp_victim_gtid = -1;
           double time1, time2;
@@ -3542,7 +3542,7 @@ static inline int __kmp_execute_tasks_template(
           task = __kmp_steal_task(other_thread, gtid, task_team,
                                   unfinished_threads, thread_finished,
                                   is_constrained);
-#if KMP_USE_TASK_AFFINITY
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED
           }
 #endif
         }
