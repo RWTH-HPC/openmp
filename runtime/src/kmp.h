@@ -2604,6 +2604,8 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_map_overall;
   int     th_num_map_overall;
 
+  double  th_sum_time_kmpc_omp_task;
+
   double  th_sum_time_overhead_numa_task_stealing;
   int     th_num_overhead_numa_task_stealing;
 

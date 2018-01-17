@@ -5937,6 +5937,7 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_thread_print_stats(gtid, "map_find", thread->th.th_sum_time_map_find, thread->th.th_num_map_find);
   __kmp_reap_thread_print_stats(gtid, "map_insert", thread->th.th_sum_time_map_insert, thread->th.th_num_map_insert);
   __kmp_reap_thread_print_stats(gtid, "map_overall", thread->th.th_sum_time_map_overall, thread->th.th_num_map_overall);
+  __kmp_reap_thread_print_stats(gtid, "time_kmpc_omp_task", thread->th.th_sum_time_kmpc_omp_task, 1);
   __kmp_reap_thread_print_stats(gtid, "task_execution", thread->th.th_sum_time_task_execution, thread->th.th_num_task_execution);
   __kmp_reap_thread_print_stats(gtid, "overhead_numa_task_stealing", thread->th.th_sum_time_overhead_numa_task_stealing, thread->th.th_num_overhead_numa_task_stealing);
   __kmp_reap_thread_print_stats(gtid, "task_execution_correct_domain", thread->th.th_sum_time_task_execution_correct_domain, thread->th.th_num_task_execution_correct_domain);

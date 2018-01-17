@@ -1931,9 +1931,13 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #if KMP_DEBUG || OMPT_SUPPORT || KMP_USE_TASK_AFFINITY
   kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
 #endif
-    kmp_info_t * tmpthread = __kmp_threads[gtid];
+  kmp_info_t * tmpthread = __kmp_threads[gtid];
   KA_TRACE(10, ("__kmpc_omp_task(enter): T#%d loc=%p task=%p current_task:%p parent_of_current:%p\n", gtid, loc_ref,
                 new_taskdata, tmpthread->th.th_current_task, tmpthread->th.th_current_task->td_parent));
+
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+  double t_overall = get_wall_time2();
+#endif
 
 #if OMPT_SUPPORT
   kmp_taskdata_t *parent = NULL;
@@ -2197,6 +2201,10 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
   if (__builtin_expect(ompt_enabled.enabled && parent != NULL,0)) {
     parent->ompt_task_info.frame.reenter_runtime_frame = NULL;
   }
+#endif
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+  t_overall = get_wall_time2() - t_overall;
+  tmpthread->th.th_sum_time_kmpc_omp_task += t_overall;
 #endif
   return res;
 }

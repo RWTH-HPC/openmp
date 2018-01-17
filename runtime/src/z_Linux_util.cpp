@@ -792,6 +792,8 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
   th->th.th_sum_time_map_overall = 0.0;
   th->th.th_num_map_overall = 0;
 
+  th->th.th_sum_time_kmpc_omp_task = 0.0;
+
   th->th.th_sum_time_overhead_numa_task_stealing = 0.0;
   th->th.th_num_overhead_numa_task_stealing = 0;
 
