@@ -1985,7 +1985,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       kmp_int32 nthreads_in_team = task_team->tt.tt_nproc;
 
       // need to enable tasking and allocate and assign proper data structures once
-      //KMP_DEBUG_ASSERT(__kmp_tasking_mode != tskm_immediate_exec);
       if (!KMP_TASKING_ENABLED(task_team)) {
         __kmp_acquire_bootstrap_lock(&lock_enable_task_team);
         if (!KMP_TASKING_ENABLED(task_team)) {
@@ -2062,13 +2061,19 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
             current_data_domain = cur_entry->val;
 #endif
 
-            // if(current_data_domain == thread->th.th_task_aff_my_domain_nr) {
-            //   // push to local queue if same domain to keep current thread busy
-            //   target_gtid = gtid;
-            //   target_tid = __kmp_tid_from_gtid(target_gtid);
-            // } else {
+            // handle special case for kmp_task_aff_init_thread_type_private
+            if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_private) {
+              if(current_data_domain == thread->th.th_task_aff_my_domain_nr) {
+                // push to local queue if same domain to keep current thread busy
+                target_gtid = gtid;
+                target_tid = __kmp_tid_from_gtid(target_gtid);
+              } else {
+                target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
+              }
+            } else {
               target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
-            // }
+            }
+            
             new_taskdata->td_task_affinity_data_domain = current_data_domain;
           } else {
 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
@@ -2106,21 +2111,19 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           if(ret_code == 0 && current_data_domain >= 0) {
             new_taskdata->td_task_affinity_data_domain = current_data_domain;
 
-            // if(task_aff_map_type == kmp_task_aff_map_type_domain) {
-            //   if(current_data_domain == thread->th.th_task_aff_my_domain_nr) {
-            //     // push to local queue if same domain to keep current thread busy
-            //     target_gtid = gtid;
-            //     target_tid = __kmp_tid_from_gtid(gtid);
-            //   } else {
-            //     target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
-            //   }
-            // }
-            
-            // //proceed if no id found
-            // if(target_tid == -1) {
-              //get an initial thread that is pinned to corresponding numa domain
+            if(task_aff_map_type == kmp_task_aff_map_type_domain) {
+              // domain mode
+              if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_private && current_data_domain == thread->th.th_task_aff_my_domain_nr) {
+                // push to local queue if same domain to keep current thread busy
+                target_gtid = gtid;
+                target_tid = __kmp_tid_from_gtid(gtid);
+              } else {
+                target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
+              }
+            } else {
+              // thread mode
               target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
-            // }
+            }
 
               if(target_tid != -1) {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
@@ -2175,9 +2178,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           } else {
             if (gtid == target_gtid) {
               res = __kmp_omp_task(gtid, new_task, true);
-              //res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
             } else {
-              //res = __kmp_omp_task(gtid, new_task, true);
               res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
             }
           }
@@ -2219,9 +2220,9 @@ void __kmpc_set_task_affinity( void * data )
 
 void __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type)
 {
-  fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting initial thread type to %d\n", __kmp_entry_gtid(), init_thread_type);
-  task_aff_init_thread_type = init_thread_type;
-  fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting map type to %d\n", __kmp_entry_gtid(), map_type);
+  // fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting initial thread type to %d\n", __kmp_entry_gtid(), init_thread_type);
+  // fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting map type to %d\n", __kmp_entry_gtid(), map_type);
+  task_aff_init_thread_type = init_thread_type;  
   task_aff_map_type = map_type;
   enable_numa_aware_stealing = true;
 }
@@ -2390,7 +2391,7 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
 
   if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_first) {
     *target_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][0];
-  } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_lowest_wl) {
+  } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_lowest_wl || task_aff_init_thread_type == kmp_task_aff_init_thread_type_private) {
     int min_work = INT_MAX;
     int tmp_size = task_team->tt.tt_numa_domain_size[current_data_domain];
     int cur_id = -1;
@@ -2429,38 +2430,6 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
     double cur_time = -1;
 #endif
     KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain:\tT#%d\t%f\ttarget thread with lowest number of tasks:\tT#%d\twith min work=\t%d\tdomain\t%d.\n", __kmp_entry_gtid(), cur_time, *target_gtid, min_work, current_data_domain));
-  } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_lowest_elasped) {
-    double min_elapsed = DBL_MAX;
-    int tmp_size = task_team->tt.tt_numa_domain_size[current_data_domain];
-    int cur_id = -1;
-    
-    for (int t = 0; t < tmp_size; t++)
-    {
-      // get thread
-      int tmp_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][t];
-      kmp_info_t * tmp_thread = __kmp_threads[tmp_gtid];
-      double elapsed_time = (tmp_thread->th.th_sum_time_task_execution + tmp_thread->th.th_sum_time_task_execution_correct_domain);
-
-      if(elapsed_time == 0){
-        // immediatly quit here because no other thread can be lower
-        cur_id = tmp_gtid;
-        min_elapsed = elapsed_time;
-        break;
-      }
-      if(elapsed_time < min_elapsed){
-        cur_id = tmp_gtid;
-        min_elapsed = elapsed_time;
-      }
-    }
-    
-    *target_gtid = cur_id;
-
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-    double cur_time = get_wall_time2();
-#else
-    double cur_time = -1;
-#endif
-    KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain:\tT#%d\t%f\ttarget thread with lowest elapsed task time:\tT#%d\twith min work=\t%f\tdomain\t%d.\n", __kmp_entry_gtid(), cur_time, *target_gtid, min_elapsed, current_data_domain));
   } else if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_round_robin) {
 
     int cur_gtid = __kmp_entry_gtid();
@@ -3460,6 +3429,9 @@ static inline int __kmp_execute_tasks_template(
           time2 = 0;
 
           task = NULL;
+          // also check if task team holds tasks with affinity.. otherwise do not use numa aware stealing
+          //volatile int * num_aff_tasks = &(task_team->tt.tt_num_tasks_with_aff);
+          //if(enable_numa_aware_stealing && task_team->tt.tt_numa_domains_set && *num_aff_tasks > 0) {
           if(enable_numa_aware_stealing && task_team->tt.tt_numa_domains_set) {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
             time1 = get_wall_time2();
@@ -3532,6 +3504,7 @@ static inline int __kmp_execute_tasks_template(
             last_stolen_numa_thread = -1;
 
             // just do that if numa aware stealing is enabled
+            //if(enable_numa_aware_stealing && task_team->tt.tt_numa_domains_set && *num_aff_tasks > 0) {
             if(enable_numa_aware_stealing && task_team->tt.tt_numa_domains_set) {
               count_numa_tries++;
               if(count_numa_tries <= max_numa_tries_before_normal){
@@ -4069,6 +4042,9 @@ static kmp_task_team_t *__kmp_allocate_task_team(kmp_info_t *thread,
   TCW_4(task_team->tt.tt_numa_domains_set, FALSE);
   // init lock here
   __kmp_init_bootstrap_lock(&task_team->tt.tt_lock_numa_map);
+
+  __kmp_init_bootstrap_lock(&task_team->tt.tt_lock_tasks_with_affinity);
+  task_team->tt.tt_num_tasks_with_aff = 0;
 #endif
 
   TCW_4(task_team->tt.tt_found_tasks, FALSE);

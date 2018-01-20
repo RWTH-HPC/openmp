@@ -29,7 +29,7 @@
 #define NUMA_DOMAIN_MAX_NR 24
 #define MAX_THREADS_OVERALL 4096
 #define MAX_THREADS_PER_DOMAIN 128
-#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 0
+#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 1
 #define KMP_TASK_AFFINITY_MEASURE_TIME 1
 #define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
 #define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
@@ -776,7 +776,7 @@ typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_random = 1,
   kmp_task_aff_init_thread_type_lowest_wl = 2,
   kmp_task_aff_init_thread_type_round_robin = 3,
-  kmp_task_aff_init_thread_type_lowest_elasped = 4
+  kmp_task_aff_init_thread_type_private = 4
 } kmp_task_aff_init_thread_type_t;
 
 typedef enum kmp_task_aff_map_type_t {
@@ -2411,6 +2411,9 @@ typedef struct kmp_base_task_team {
   int *tt_numa_domain_rr_counter;
   kmp_bootstrap_lock_t *tt_numa_domain_rr_locks;
   int **tt_map_threads_in_domain;
+
+  kmp_bootstrap_lock_t tt_lock_tasks_with_affinity;
+  int tt_num_tasks_with_aff;
 #endif
 
   KMP_ALIGN_CACHE
