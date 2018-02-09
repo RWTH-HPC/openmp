@@ -72,6 +72,15 @@
         integer (kind=omp_lock_hint_kind), parameter :: kmp_lock_hint_rtm            = 131072
         integer (kind=omp_lock_hint_kind), parameter :: kmp_lock_hint_adaptive       = 262144
 
+        integer (kind=omp_integer_kind), parameter :: kmp_task_aff_init_thread_type_first = 0
+        integer (kind=omp_integer_kind), parameter :: kmp_task_aff_init_thread_type_random = 1
+        integer (kind=omp_integer_kind), parameter :: kmp_task_aff_init_thread_type_lowest_wl = 2
+        integer (kind=omp_integer_kind), parameter :: kmp_task_aff_init_thread_type_round_robin = 3
+        integer (kind=omp_integer_kind), parameter :: kmp_task_aff_init_thread_type_private = 4
+
+        integer (kind=omp_integer_kind), parameter :: kmp_task_aff_map_type_thread = 0
+        integer (kind=omp_integer_kind), parameter :: kmp_task_aff_map_type_domain = 1
+
         interface
 
 !         ***
@@ -357,6 +366,17 @@
 !         ***
 !         *** kmp_* entry points
 !         ***
+
+          subroutine kmpc_set_task_affinity(ptr) bind(c)
+            import
+            integer (kind=kmp_pointer_kind), value :: ptr
+          end subroutine kmpc_set_task_affinity
+
+          subroutine kmpc_task_affinity_init(strategy_type, mode_type) bind(c)
+            import
+            integer (kind=omp_integer_kind), value :: strategy_type
+            integer (kind=omp_integer_kind), value :: mode_type
+          end subroutine kmpc_task_affinity_init
 
           subroutine kmp_set_stacksize(size)
             use omp_lib_kinds
