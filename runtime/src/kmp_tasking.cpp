@@ -1734,7 +1734,9 @@ static void __kmp_invoke_task(kmp_int32 gtid, kmp_task_t *task,
 #endif
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
     stop_task_execution_measurement(taskdata);
-    start_task_execution_measurement(current_task);
+    // do not resume current task here, just after taskwait construct
+    // rest is waiting time in barrier
+    // start_task_execution_measurement(current_task);
 #endif
 #if OMP_40_ENABLED
   }
