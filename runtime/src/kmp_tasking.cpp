@@ -399,9 +399,9 @@ static kmp_int32 __kmp_push_task_aff(kmp_int32 gtid, kmp_int32 orig_id, kmp_task
   // }
   if (thread_data->td.td_deque == NULL) {
     return TASK_NOT_PUSHED;
-    //__kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
-    //__kmp_alloc_task_deque(thread, thread_data);
-    //__kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
+    // __kmp_acquire_bootstrap_lock(&thread_data->td.td_deque_lock);
+    // __kmp_alloc_task_deque(thread, thread_data);
+    // __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
   }
 
   // Check if deque is full
@@ -1863,11 +1863,19 @@ kmp_int32 __kmp_omp_task_aff(kmp_int32 gtid, kmp_int32 target_gtid, kmp_task_t *
   if (__kmp_push_task_aff(target_gtid, gtid, new_task) == TASK_NOT_PUSHED) // if cannot defer
 #endif
   { // Execute this task immediately
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//     double time2 = get_wall_time2();
+// #endif
     KA_TRACE(10, ("__kmp_omp_task_aff: T#%d immediatly executing task.\n", gtid));
     kmp_taskdata_t *current_task = __kmp_threads[gtid]->th.th_current_task;
     if (serialize_immediate)
       new_taskdata->td_flags.task_serial = 1;
     __kmp_invoke_task(gtid, new_task, current_task);
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//     time2 = get_wall_time2()-time2;
+//     __kmp_threads[gtid]->th.th_sum_time_pushing_inaff += time2;
+//     __kmp_threads[gtid]->th.th_num_pushing_inaff++;
+// #endif
   }
 
   ANNOTATE_HAPPENS_BEFORE(new_task);
@@ -1939,6 +1947,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
   double t_overall = get_wall_time2();
+  double time1, time2;
 #endif
 
 #if OMPT_SUPPORT
@@ -1976,7 +1985,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
     // do not use task queue but execute immediately
     res = __kmp_omp_task(gtid, new_task, true);
   } else {
-    double time1, time2;
     kmp_task_team_t *task_team = thread->th.th_task_team;
     
     // if single threaded
@@ -2000,8 +2008,16 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
       if(thread->th.th_task_affinity_data == NULL || nthreads_in_team <= 1)
       {
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+        time1 = get_wall_time2();
+#endif
         // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data is NULL.\n", gtid));
         res = __kmp_omp_task(gtid, new_task, true);
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+        time1 = get_wall_time2()-time1;
+        thread->th.th_sum_time_pushing += time1;
+        thread->th.th_num_pushing++;
+#endif
       }
       else
       {
@@ -2085,8 +2101,16 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #endif
 
 			// DEBUG: also save this information for statistics
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+            time2 = get_wall_time2();
+#endif
             //int tmp_err = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
             int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+            time2 = get_wall_time2()-time2;
+            thread->th.th_sum_time_identify_pyhiscal_location += time2;
+            thread->th.th_num_identify_pyhiscal_location++;
+#endif
             if(tmp_err == 0 && current_data_domain >= 0)
               new_taskdata->td_task_affinity_data_domain = current_data_domain;
 			// DEBUG
@@ -2106,8 +2130,16 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         } else {
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Not Found %lx\n", gtid, page_start_address));
           // run move pages
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+          time2 = get_wall_time2();
+#endif
           //ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
           ret_code = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+          time2 = get_wall_time2()-time2;
+          thread->th.th_sum_time_identify_pyhiscal_location += time2;
+          thread->th.th_num_identify_pyhiscal_location++;
+#endif
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
 
           if(ret_code == 0 && current_data_domain >= 0) {
@@ -2168,6 +2200,8 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         time1 = get_wall_time2()-time1;
         thread->th.th_sum_time_map_overall += time1;
         thread->th.th_num_map_overall++;
+
+        time1 = get_wall_time2();
 #endif
 
         if(ret_code == 0 && current_data_domain >= 0) {
@@ -2181,7 +2215,15 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
             if (gtid == target_gtid) {
               res = __kmp_omp_task(gtid, new_task, true);
             } else {
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+              time2 = get_wall_time2();
+#endif
               res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+              time2 = get_wall_time2()-time2;
+              thread->th.th_sum_time_pushing_inaff += time2;
+              thread->th.th_num_pushing_inaff++;
+#endif
             }
           }
         } else {
@@ -2190,11 +2232,24 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           thread->th.th_count_task_pushed_in_fallback_mode2++;
           res = __kmp_omp_task(gtid, new_task, true);
         } // if
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+        time1 = get_wall_time2()-time1;
+        thread->th.th_sum_time_pushing += time1;
+        thread->th.th_num_pushing++;
+#endif
       }
     }
   }
 #else
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+  time1 = get_wall_time2();
+#endif
   res = __kmp_omp_task(gtid, new_task, true);
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+  time1 = get_wall_time2()-time1;
+  tmpthread->th.th_sum_time_pushing += time1;
+  tmpthread->th.th_num_pushing++;
+#endif
 #endif
 
   KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning "
@@ -3481,11 +3536,11 @@ static inline int __kmp_execute_tasks_template(
 #endif
           }
           if(task != NULL) {
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-            // stealing worked - so no overhead for kmp_steal_task counted
-            thread->th.th_sum_time_overhead_numa_task_stealing += time1;
-            thread->th.th_num_overhead_numa_task_stealing++;
-#endif
+// #if KMP_TASK_AFFINITY_MEASURE_TIME
+//             // stealing worked - so no overhead for kmp_steal_task counted
+//             thread->th.th_sum_time_overhead_numa_task_stealing += time1;
+//             thread->th.th_num_overhead_numa_task_stealing++;
+// #endif
 
             victim =  __kmp_tid_from_gtid(tmp_victim_gtid);
             last_stolen_from_was_numa_thread = true;
@@ -3499,7 +3554,8 @@ static inline int __kmp_execute_tasks_template(
           } else {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
             // numa stealing didnt work - so overhead for kmp_steal_task due to second call that is necessary
-            thread->th.th_sum_time_overhead_numa_task_stealing += time1+time2;
+            // thread->th.th_sum_time_overhead_numa_task_stealing += time1+time2;
+            thread->th.th_sum_time_overhead_numa_task_stealing += time2;
             thread->th.th_num_overhead_numa_task_stealing++;
 #endif
             last_stolen_from_was_numa_thread = false;

@@ -29,10 +29,10 @@
 #define NUMA_DOMAIN_MAX_NR 24
 #define MAX_THREADS_OVERALL 4096
 #define MAX_THREADS_PER_DOMAIN 128
-#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 1
+#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 0
 #define KMP_TASK_AFFINITY_MEASURE_TIME 1
-#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
-#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 0
+#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 0
+#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
 #define KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES 2
 #define KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED 1
 #define KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION 0
@@ -2608,6 +2608,15 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   int     th_num_map_overall;
 
   double  th_sum_time_kmpc_omp_task;
+  
+  double  th_sum_time_identify_pyhiscal_location;
+  int     th_num_identify_pyhiscal_location;
+
+  double  th_sum_time_pushing;
+  int     th_num_pushing;
+
+  double  th_sum_time_pushing_inaff;
+  int     th_num_pushing_inaff;
 
   double  th_sum_time_overhead_numa_task_stealing;
   int     th_num_overhead_numa_task_stealing;
