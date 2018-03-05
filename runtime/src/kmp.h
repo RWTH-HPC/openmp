@@ -29,6 +29,7 @@
 #define NUMA_DOMAIN_MAX_NR 24
 #define MAX_THREADS_OVERALL 4096
 #define MAX_THREADS_PER_DOMAIN 128
+#define KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION 0
 #define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 0
 #define KMP_TASK_AFFINITY_MEASURE_TIME 1
 #define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 0
@@ -2604,13 +2605,16 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_map_insert;
   int     th_num_map_insert;
 
+  int     th_count_map_found;
+  int     th_count_map_not_found;
+
   double  th_sum_time_map_overall;
   int     th_num_map_overall;
 
   double  th_sum_time_kmpc_omp_task;
   
-  double  th_sum_time_identify_pyhiscal_location;
-  int     th_num_identify_pyhiscal_location;
+  double  th_sum_time_identify_physical_location;
+  int     th_num_identify_physical_location;
 
   double  th_sum_time_pushing;
   int     th_num_pushing;

@@ -5941,7 +5941,7 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_thread_print_stats(gtid, "task_execution", thread->th.th_sum_time_task_execution, thread->th.th_num_task_execution);
   __kmp_reap_thread_print_stats(gtid, "overhead_numa_task_stealing", thread->th.th_sum_time_overhead_numa_task_stealing, thread->th.th_num_overhead_numa_task_stealing);
   __kmp_reap_thread_print_stats(gtid, "task_execution_correct_domain", thread->th.th_sum_time_task_execution_correct_domain, thread->th.th_num_task_execution_correct_domain);
-  __kmp_reap_thread_print_stats(gtid, "time_identify_pyhiscal_location", thread->th.th_sum_time_identify_pyhiscal_location, thread->th.th_num_identify_pyhiscal_location);
+  __kmp_reap_thread_print_stats(gtid, "time_identify_physical_location", thread->th.th_sum_time_identify_physical_location, thread->th.th_num_identify_physical_location);
   __kmp_reap_thread_print_stats(gtid, "time_pushing", thread->th.th_sum_time_pushing, thread->th.th_num_pushing);
   __kmp_reap_thread_print_stats(gtid, "time_pushing_inaff", thread->th.th_sum_time_pushing_inaff, thread->th.th_num_pushing_inaff);
 
@@ -5953,7 +5953,10 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_data_domain", 0, thread->th.th_count_task_started_at_correct_data_domain);
 
   __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode1", 0, thread->th.th_count_task_pushed_in_fallback_mode1);  
-  __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode2", 0, thread->th.th_count_task_pushed_in_fallback_mode2);  
+  __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode2", 0, thread->th.th_count_task_pushed_in_fallback_mode2);
+
+  __kmp_reap_thread_print_stats(gtid, "count_map_found", 0, thread->th.th_count_map_found);
+  __kmp_reap_thread_print_stats(gtid, "count_map_not_found", 0, thread->th.th_count_map_not_found);
 #endif
   __kmp_free(thread);
 

@@ -789,13 +789,16 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
   th->th.th_sum_time_map_insert = 0.0;
   th->th.th_num_map_insert = 0;
 
+  th->th.th_count_map_found = 0;
+  th->th.th_count_map_not_found = 0;
+
   th->th.th_sum_time_map_overall = 0.0;
   th->th.th_num_map_overall = 0;
 
   th->th.th_sum_time_kmpc_omp_task = 0.0;
 
-  th->th.th_sum_time_identify_pyhiscal_location = 0.0;
-  th->th.th_num_identify_pyhiscal_location = 0;
+  th->th.th_sum_time_identify_physical_location = 0.0;
+  th->th.th_num_identify_physical_location = 0;
 
   th->th.th_sum_time_pushing = 0.0;
   th->th.th_num_pushing = 0;

@@ -2059,6 +2059,9 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
         bool found = cur_entry->val != -1;
 #endif
+#if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+        found = false;
+#endif
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time2 = get_wall_time2()-time2;
         thread->th.th_sum_time_map_find += time2;
@@ -2071,6 +2074,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #else
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, cur_entry->addr, cur_entry->val));
 #endif
+          thread->th.th_count_map_found++;
           ret_code = 0;
           if(task_aff_map_type == kmp_task_aff_map_type_domain) {
 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
@@ -2108,8 +2112,8 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
             int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
 #if KMP_TASK_AFFINITY_MEASURE_TIME
             time2 = get_wall_time2()-time2;
-            thread->th.th_sum_time_identify_pyhiscal_location += time2;
-            thread->th.th_num_identify_pyhiscal_location++;
+            thread->th.th_sum_time_identify_physical_location += time2;
+            thread->th.th_num_identify_physical_location++;
 #endif
             if(tmp_err == 0 && current_data_domain >= 0)
               new_taskdata->td_task_affinity_data_domain = current_data_domain;
@@ -2129,6 +2133,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           }
         } else {
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Not Found %lx\n", gtid, page_start_address));
+          thread->th.th_count_map_not_found++;
           // run move pages
 #if KMP_TASK_AFFINITY_MEASURE_TIME
           time2 = get_wall_time2();
@@ -2137,8 +2142,8 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           ret_code = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
 #if KMP_TASK_AFFINITY_MEASURE_TIME
           time2 = get_wall_time2()-time2;
-          thread->th.th_sum_time_identify_pyhiscal_location += time2;
-          thread->th.th_num_identify_pyhiscal_location++;
+          thread->th.th_sum_time_identify_physical_location += time2;
+          thread->th.th_num_identify_physical_location++;
 #endif
           KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
 
