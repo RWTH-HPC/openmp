@@ -32,8 +32,8 @@
 #define KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION 0
 #define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 0
 #define KMP_TASK_AFFINITY_MEASURE_TIME 1
-#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 0
-#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
+#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
+#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 0
 #define KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES 2
 #define KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED 1
 #define KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION 0
@@ -787,6 +787,7 @@ typedef enum kmp_task_aff_map_type_t {
 #  endif // __OMP_H
 extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type);
 extern void  __kmpc_task_affinity_set_msg(char * msg);
+extern void  __kmpc_task_affinity_taskexectimes_set_enabled(int enabled);
 #endif
 
 #endif /* KMP_AFFINITY_SUPPORTED */
@@ -3974,6 +3975,7 @@ extern kmp_bootstrap_lock_t lock_incr_numa;
 extern int numa_num_threads_init;
 extern bool numa_all_set_up;
 extern bool enable_numa_aware_stealing;
+extern int taskexectimes_enabled;
 
 extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
@@ -4018,14 +4020,16 @@ static void finish_task_execution_measurement(kmp_taskdata_t* taskdata, kmp_info
       thread->th.th_sum_time_task_execution_correct_domain += ts;
       thread->th.th_num_task_execution_correct_domain++;
 #if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
-      fprintf(stderr, "finish_task_execution_measurement: corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+      if(taskexectimes_enabled)
+        fprintf(stderr, "finish_task_execution_measurement: corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
 #endif
     } else {
       //if(tmp_domain != -1 || !enable_numa_aware_stealing) {
       thread->th.th_sum_time_task_execution += ts;
       thread->th.th_num_task_execution++;
 #if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
-      fprintf(stderr, "finish_task_execution_measurement: in_corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+      if(taskexectimes_enabled)
+        fprintf(stderr, "finish_task_execution_measurement: in_corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
 #endif
       //}
     }

@@ -47,6 +47,7 @@
 #define FTN_SET_TASK_AFFINITY kmpc_set_task_affinity
 #define FTN_TASK_AFFINITY_INIT kmpc_task_affinity_init
 #define FTN_TASK_AFFINITY_SET_MSG kmpc_task_affinity_set_msg
+#define FTN_TASKEXECTIMES_SET_ENABLED kmpc_task_affinity_taskexectimes_set_enabled
 
 #define FTN_MALLOC kmp_malloc
 #define FTN_ALIGNED_MALLOC kmp_aligned_malloc
@@ -171,6 +172,7 @@
 #define FTN_SET_TASK_AFFINITY kmpc_set_task_affinity_
 #define FTN_TASK_AFFINITY_INIT kmpc_task_affinity_init_
 #define FTN_TASK_AFFINITY_SET_MSG kmpc_task_affinity_set_msg_
+#define FTN_TASKEXECTIMES_SET_ENABLED kmpc_task_affinity_taskexectimes_set_enabled_
 
 #define FTN_MALLOC kmp_malloc_
 #define FTN_ALIGNED_MALLOC kmp_aligned_malloc_
@@ -297,6 +299,7 @@
 #define FTN_SET_TASK_AFFINITY KMPC_SET_TASK_AFFINITY
 #define FTN_TASK_AFFINITY_INIT KMPC_TASK_AFFINITY_INIT
 #define FTN_TASK_AFFINITY_SET_MSG KMPC_TASK_AFFINITY_SET_MSG
+#define FTN_TASKEXECTIMES_SET_ENABLED KMPC_TASK_AFFINITY_TASKEXECTIMES_SET_ENABLED
 
 #define FTN_MALLOC KMP_MALLOC
 #define FTN_ALIGNED_MALLOC KMP_ALIGNED_MALLOC
@@ -423,6 +426,7 @@
 #define FTN_SET_TASK_AFFINITY KMPC_SET_TASK_AFFINITY_
 #define FTN_TASK_AFFINITY_INIT KMPC_TASK_AFFINITY_INIT_
 #define FTN_TASK_AFFINITY_SET_MSG KMPC_TASK_AFFINITY_SET_MSG_
+#define FTN_TASKEXECTIMES_SET_ENABLED KMPC_TASK_AFFINITY_TASKEXECTIMES_SET_ENABLED_
 
 #define FTN_MALLOC KMP_MALLOC_
 #define FTN_ALIGNED_MALLOC KMP_ALIGNED_MALLOC_

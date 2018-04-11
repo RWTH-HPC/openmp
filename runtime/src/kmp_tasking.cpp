@@ -2280,6 +2280,12 @@ void __kmpc_set_task_affinity( void * data )
     thread->th.th_task_affinity_data = data;
 }
 
+void __kmpc_task_affinity_taskexectimes_set_enabled( int enabled )
+{
+    // just set global parameter
+    taskexectimes_enabled = enabled;
+}
+
 void __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type)
 {
   // fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting initial thread type to %d\n", __kmp_entry_gtid(), init_thread_type);

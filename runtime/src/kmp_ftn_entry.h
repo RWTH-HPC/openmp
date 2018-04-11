@@ -333,6 +333,14 @@ void FTN_STDCALL FTN_TASK_AFFINITY_SET_MSG(char* msg)
         __kmpc_task_affinity_set_msg( msg );
     #endif
 }
+void FTN_STDCALL FTN_TASKEXECTIMES_SET_ENABLED( int enabled )
+{
+    #ifdef KMP_STUB
+        // Nothing.
+    #else
+        __kmpc_task_affinity_taskexectimes_set_enabled( enabled );
+    #endif
+}
 #endif
 
 /* ------------------------------------------------------------------------ */
