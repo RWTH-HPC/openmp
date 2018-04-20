@@ -83,7 +83,11 @@ bool enable_numa_aware_stealing = false;
 int taskexectimes_enabled = 1;
 
 kmp_bootstrap_lock_t lock_addr_map;
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP == 1
 std::map<size_t ,int> task_aff_addr_map;
+#else
+std::unordered_map<size_t ,int> task_aff_addr_map;
+#endif
 
 kmp_maphash_t * task_aff_addr_map2;
 

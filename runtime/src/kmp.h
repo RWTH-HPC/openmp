@@ -23,16 +23,19 @@
 # include <time.h>
 # include <float.h>
 #if KMP_USE_TASK_AFFINITY
-//#include <unordered_map>
+#include <unordered_map>
 #include <map>
 
 #define NUMA_DOMAIN_MAX_NR 24
 #define MAX_THREADS_OVERALL 4096
 #define MAX_THREADS_PER_DOMAIN 128
 #define KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION 0
-#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 0
-#define KMP_TASK_AFFINITY_MEASURE_TIME 1
-#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
+// 0: own implementation using hashlists
+// 1: default c++ map
+// 2: default c++ unordered_map
+#define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 1
+#define KMP_TASK_AFFINITY_MEASURE_TIME 0
+#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 0
 #define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 0
 #define KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES 2
 #define KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED 1
@@ -3980,7 +3983,11 @@ extern int taskexectimes_enabled;
 extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
 extern kmp_bootstrap_lock_t lock_addr_map;
+#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP == 1
 extern std::map<size_t, int> task_aff_addr_map;
+#else
+extern std::unordered_map<size_t, int> task_aff_addr_map;
+#endif
 
 // forward declaration of map functions
 extern kmp_maphash_t *__kmp_maphash_create(kmp_info_t *thread);
