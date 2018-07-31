@@ -773,7 +773,7 @@ extern char const *__kmp_cpuinfo_file;
 
 #if KMP_USE_TASK_AFFINITY
 // experimental task affinity
-extern void __kmpc_set_task_affinity(void * data);
+extern void __kmpc_set_task_affinity(void * data_start, void * data_end);
 #  ifndef __OMP_H
 typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_first = 0,
@@ -2238,6 +2238,21 @@ typedef struct kmp_maphash {
   kmp_uint32 nconflicts;
 #endif
 } kmp_maphash_t;
+
+typedef struct kmp_task_affinity_info {
+kmp_intptr_t base_addr;
+size_t len;
+union {
+struct {
+bool flag1 : 1;
+bool flag2 : 1;
+} s;
+kmp_int32 pad_flags;
+} flags;
+} kmp_task_affinity_info_t;
+//extern kmp_task_affinity_info_t kmp_task_affinity_info
+
+kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task, kmp_int32 naffins, kmp_task_affinity_info_t *affin_list);
 #endif
 
 #endif
@@ -2340,6 +2355,9 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
   void * td_task_affinity_data_pointer = NULL;
   size_t td_task_affinity_data_address = 0;
 
+  kmp_task_affinity_info_t *affinity_info;
+  kmp_int32 naffin = 0;
+
   // remember where task has been executed and domain where data is located
   bool td_task_affinity_scheduled_thread_set = false;
   int td_task_affinity_scheduled_thread = -1;
@@ -2347,7 +2365,7 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 
   double td_ts_task_execution = 0.0;
   double td_ts_task_execution_current_sum = 0.0;
-#endif  
+#endif
 }; // struct kmp_taskdata
 
 // Make sure padding above worked
@@ -2596,7 +2614,8 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   kmp_stats_list *th_stats;
 #endif
 #if KMP_USE_TASK_AFFINITY
-  void * th_task_affinity_data;
+  kmp_task_affinity_info *th_task_affinity_data;
+  kmp_int32 naffin;
   int th_task_aff_my_domain_nr;
   int *th_numa_domain_rr_counter;
 
@@ -2616,7 +2635,7 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   int     th_num_map_overall;
 
   double  th_sum_time_kmpc_omp_task;
-  
+
   double  th_sum_time_identify_physical_location;
   int     th_num_identify_physical_location;
 
@@ -2633,7 +2652,7 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   int     th_num_task_execution;
   double  th_sum_time_task_execution_correct_domain;
   int     th_num_task_execution_correct_domain;
-  
+
   int     th_count_overall_tasks_generated;
   int     th_count_task_with_affinity_generated;
   int     th_count_task_with_affinity_started;

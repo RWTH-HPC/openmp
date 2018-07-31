@@ -63,9 +63,9 @@
     extern int    __KAI_KMPC_CONVENTION  omp_get_max_active_levels   (void);
     extern void   __KAI_KMPC_CONVENTION  omp_get_schedule            (omp_sched_t *, int *);
     extern int    __KAI_KMPC_CONVENTION  omp_get_max_task_priority   (void);
-	
+
     /* task affinity features under evaluation */
-	extern void   __KAI_KMPC_CONVENTION  kmpc_set_task_affinity(void *);
+	extern void   __KAI_KMPC_CONVENTION  kmpc_set_task_affinity(void *, void *);
     typedef enum kmp_task_aff_init_thread_type_t {
         kmp_task_aff_init_thread_type_first = 0,
         kmp_task_aff_init_thread_type_random = 1,
@@ -82,7 +82,7 @@
     extern void   __KAI_KMPC_CONVENTION  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t, kmp_task_aff_map_type_t);
     extern void   __KAI_KMPC_CONVENTION  kmpc_task_affinity_set_msg(char * msg);
     extern void   __KAI_KMPC_CONVENTION  kmpc_task_affinity_taskexectimes_set_enabled(int);
-	
+
     /* lock API functions */
     typedef struct omp_lock_t {
         void * _lk;
@@ -215,7 +215,7 @@
         omp_control_tool_flush = 3,
         omp_control_tool_end = 4
     } omp_control_tool_t;
-    
+
     extern int __KAI_KMPC_CONVENTION omp_control_tool(int, int, void*);
 
 #   undef __KAI_KMPC_CONVENTION
@@ -231,4 +231,3 @@
 #   endif
 
 #endif /* __OMP_H */
-

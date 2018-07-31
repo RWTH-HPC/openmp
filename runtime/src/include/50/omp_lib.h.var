@@ -358,9 +358,10 @@
 !       ***
 !       *** kmp_* entry points
 !       ***
-        subroutine kmpc_set_task_affinity(ptr) bind(c)
+        subroutine kmpc_set_task_affinity(ptr_start, ptr_end) bind(c)
           import
-          integer (kind=kmp_pointer_kind), value :: ptr
+          integer (kind=kmp_pointer_kind), value :: ptr_start
+          integer (kind=kmp_pointer_kind), value :: ptr_end
         end subroutine kmpc_set_task_affinity
 
         subroutine kmpc_task_affinity_init(strategy_type, mode_type) bind(c)
@@ -368,7 +369,7 @@
           integer (kind=omp_integer_kind), value :: strategy_type
           integer (kind=omp_integer_kind), value :: mode_type
         end subroutine kmpc_task_affinity_init
-        
+
         subroutine kmp_set_stacksize(size) bind(c)
           import
           integer (kind=omp_integer_kind), value :: size
@@ -679,4 +680,3 @@
 !$omp declare target(omp_init_nest_lock_with_hint )
 !DIR$ ENDIF
 !DIR$ ENDIF
-
