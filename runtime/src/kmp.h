@@ -2352,8 +2352,8 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 #endif
 #if KMP_USE_TASK_AFFINITY
   //bool td_use_task_affinity_search = false;
-  void * td_task_affinity_data_pointer = NULL;
-  size_t td_task_affinity_data_address = 0;
+  //void * td_task_affinity_data_pointer = NULL;
+  //size_t td_task_affinity_data_address = 0;
 
   kmp_task_affinity_info_t *affinity_info;
   kmp_int32 naffin = 0;
