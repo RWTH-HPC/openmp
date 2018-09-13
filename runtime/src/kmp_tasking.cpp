@@ -1940,13 +1940,13 @@ void inline map_count(int naffin, int n, int page_loc[naffin][n], int* x, int* y
 }
 
 int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t *new_taskdata, int *target_tid2, int *target_gtid2, int *ret_code2, kmp_int32 naffin, kmp_task_affinity_info *aff_info){
+    const int page_size = KMP_GET_PAGE_SIZE();
     KA_TRACE(1, ("+++++ affinity_schedule: T#? " "#registred affinities %d\n",naffin));
     KA_TRACE(50, ("+++ aff_data[0] addr: %p \n", aff_info[0].base_addr));
     KA_TRACE(50,("+++ data 0 domain %d\n",task_aff_addr_map.find(aff_info[0].base_addr & ~(page_size-1))->second))
     kmp_task_team_t *task_team = thread->th.th_task_team;
     kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
     size_t page_start_address;
-    const int page_size = KMP_GET_PAGE_SIZE();
     int current_data_domain = -1;
     int target_tid = -1;
     int target_gtid = -1;
@@ -2121,11 +2121,11 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     //return tid, gtid
     *target_tid2 = target_tid;
     *target_gtid2 = target_gtid;
-    *ret_code2 = ret_code
+    *ret_code2 = ret_code;
 
     //bool found =  task_aff_addr_map.find(aff_info[x].base_addr + y*skipLen[x]) != task_aff_addr_map.end();
     //*page_start_address = (size_t) (aff_info[x].base_addr + y*skipLen[x]) & ~(page_size-1);
-    KA_TRACE(50, ("+++++ affinity_schedule: curr_data_domain %d, found %d, page_start_addr %p\n",page_loc[x][y], found, page_start_address[x][y]));
+    KA_TRACE(50, ("+++++ affinity_schedule: curr_data_domain %d, found %d, page_start_addr %p\n",current_data_domain, found, page_start_address));
     return current_data_domain;
 }
 
@@ -2245,7 +2245,6 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         int target_gtid = -1;
         int current_data_domain = affinity_schedule(gtid, thread, new_taskdata, &target_tid, &target_gtid, &ret_code, thread->th.naffin, thread->th.th_task_affinity_data);
         //void * page_boundary_pointer = (void *) page_start_address;
-        KA_TRACE(50,("++ &data domain %d, start_addr %p\n",current_data_domain, page_boundary_pointer));
 #if 0//0
         // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
         // check address for numa domain
