@@ -788,7 +788,7 @@ typedef enum kmp_task_aff_map_type_t {
   kmp_task_aff_map_type_domain = 1
 } kmp_task_aff_map_type_t;
 #  endif // __OMP_H
-extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type);
+extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type, int affinity_schedule, int affinity_num);
 extern void  __kmpc_task_affinity_set_msg(char * msg);
 extern void  __kmpc_task_affinity_taskexectimes_set_enabled(int enabled);
 #endif
@@ -4018,6 +4018,8 @@ extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 extern kmp_task_aff_init_thread_type_t task_aff_init_thread_type;
 extern kmp_task_aff_map_type_t task_aff_map_type;
+extern int task_aff_schedule_type;
+extern int task_aff_schedule_num;
 
 static void start_task_execution_measurement(kmp_taskdata_t* taskdata) {
   if(taskdata->td_ts_task_execution == -1) {

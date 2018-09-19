@@ -1955,29 +1955,31 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
 
 //TODO
 #define TASK_AFFINITY_S1 1
-    int n = 10;
+    int n = task_aff_schedule_num;
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
     time2 = get_wall_time2();
 #endif
 
-#if TASK_AFFINITY_S1
-
-    //divide in N equal sized parts and get domain for ea
     bool found = true;
     int page_loc [naffin][n];
     void * page_boundary_pointer [naffin][n];
     int skipLen[naffin];
+
+    if (task_aff_schedule_type == 1){
+
+    //divide in N equal sized parts and get domain for ea
+    std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
     for (int i=0;i<naffin;i++){
         skipLen[i] = aff_info[i].len/n;
         int skip = 0;
         for (int j=0;j<n;j++){
-                #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-            page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
-            page_loc[i][j] = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1))->second;
-            found = false;//TODO
-            //found = found and (page_loc[i][j] != task_aff_addr_map.end());
-                #else
+            #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
+                tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+                found = found and (tmp != task_aff_addr_map.end());
+                page_loc[i][j] =  tmp->second;
+            #else
             kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
             bool found = found and (cur_entry->val != -1);
             page_loc[i][j] = cur_entry->val;
@@ -1985,13 +1987,9 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
             skip += skipLen[i];
         }
     }
+    }
 
-#endif
-#if TASK_AFFINITY_S2
-//TODO
-#endif
-#if TASK_AFFINITY_S3
-#endif
+    //TODO: other strategies
 
 #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
         found = false;
@@ -2001,14 +1999,14 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         thread->th.th_sum_time_map_find += time2;
         thread->th.th_num_map_find++;
 #endif
-
+    KA_TRACE(50, ("+++++ found? %d\n", found));
     if (found) {
         thread->th.th_count_map_found++;
         ret_code = 0;
         int x=-1;
         int y=-1;
         map_count(naffin, n, page_loc, &x, &y);
-
+        KA_TRACE(50, ("+++++ best pos %d %d\n", x, y));
         if(task_aff_map_type == kmp_task_aff_map_type_domain) {
             //count data domains and find most used one for: default map, found=true
             current_data_domain = page_loc[x][y];
@@ -2074,8 +2072,10 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
             int x=-1;
             int y=-1;
             map_count(naffin, n, page_loc, &x,&y);
+            KA_TRACE(1, ("+++++ best pos %d %d (not found)\n", x, y));
             current_data_domain = page_loc[x][y];
             page_start_address = (size_t) &page_boundary_pointer[x][y];
+            KA_TRACE(1, ("+++++ curr_data_dom %d page_start_addr%p\n", current_data_domain, page_start_address));
 
             if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_private && current_data_domain == thread->th.th_task_aff_my_domain_nr) {
               // push to local queue if same domain to keep current thread busy
@@ -2522,13 +2522,15 @@ void __kmpc_task_affinity_taskexectimes_set_enabled( int enabled )
     taskexectimes_enabled = enabled;
 }
 
-void __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type)
+void __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type, int affinity_schedule, int affinity_num)
 {
   // fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting initial thread type to %d\n", __kmp_entry_gtid(), init_thread_type);
   // fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting map type to %d\n", __kmp_entry_gtid(), map_type);
   task_aff_init_thread_type = init_thread_type;
   task_aff_map_type = map_type;
   enable_numa_aware_stealing = true;
+  task_aff_schedule_type = affinity_schedule;
+  task_aff_schedule_num = affinity_num;
 }
 
 void __kmpc_task_affinity_set_msg(char * msg) {

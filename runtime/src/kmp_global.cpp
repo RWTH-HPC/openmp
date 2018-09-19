@@ -95,6 +95,8 @@ kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 kmp_task_aff_init_thread_type_t task_aff_init_thread_type = kmp_task_aff_init_thread_type_random;
 kmp_task_aff_map_type_t task_aff_map_type = kmp_task_aff_map_type_thread;
+int task_aff_schedule_type = 1;
+int task_aff_schedule_num = 1;
 #endif // KMP_USE_TASK_AFFINITY
 
 size_t __kmp_stksize = KMP_DEFAULT_STKSIZE;

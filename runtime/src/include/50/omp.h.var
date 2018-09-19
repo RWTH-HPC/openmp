@@ -79,7 +79,7 @@
         kmp_task_aff_map_type_domain = 1
     } kmp_task_aff_map_type_t;
 
-    extern void   __KAI_KMPC_CONVENTION  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t, kmp_task_aff_map_type_t);
+    extern void   __KAI_KMPC_CONVENTION  kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t, kmp_task_aff_map_type_t, int, int);
     extern void   __KAI_KMPC_CONVENTION  kmpc_task_affinity_set_msg(char * msg);
     extern void   __KAI_KMPC_CONVENTION  kmpc_task_affinity_taskexectimes_set_enabled(int);
 
