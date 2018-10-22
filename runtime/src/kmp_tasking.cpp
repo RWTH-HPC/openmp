@@ -1920,22 +1920,82 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
   ANNOTATE_HAPPENS_BEFORE(new_task);
   return TASK_CURRENT_NOT_QUEUED;
 }
-
-void inline map_count(int naffin, int n, int page_loc[naffin][n], int* x, int* y){
+//searches page_loc[naffine][n] array for the dependency to use (weighted) based on the strategy to use
+void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int n, int page_loc[naffin][n], int* x, int* y, int strat){
     //TODO map lock
-    int max = 0;
-    int* cur;
-    std::map<int,int> m;
-    for (int i=0; i < naffin; i++) {
-        for (int j=0;j<n;j++){
-            cur = &page_loc[i][j];
-            m[*cur]++;
-            if (m[*cur] > max) {
-                max = m[*cur];
-                *x=i;
-                *y=j;
+    if (strat == 1){
+        //overall, no further balancing
+        int max = 0;
+        int* cur;
+        std::map<int,int> m;
+        for (int i=0; i < naffin; i++) {
+            for (int j=0;j<n;j++){
+                cur = &page_loc[i][j];
+                if (cur != -1){
+                    //-1 is a placeholder for e.g. arrays of size 1 (don't increase their weight)
+                    m[*cur]++;
+                }
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
             }
         }
+        return;
+    }
+    else if (strat == 2){
+        //balace ny affinity, every affinity as important
+        int max = 0;
+        int* cur;
+        std::map<int,int> m;
+        for (int i=0; i < naffin; i++) {
+            for (int j=0;j<n;j++){
+                cur = &page_loc[i][j];
+                if (cur == -1){
+                    //instead replace -1 by same location
+                    page_loc[i][j] = page_loc[i][j-1];
+                }
+                m[*cur]++;
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
+            }
+        }
+        return;
+    }
+
+    else if (strat == 3){
+        //balance by size
+        int max = 0;
+        int* cur;
+        std::map<int,int> m;
+        for (int i=0; i < naffin; i++) {
+            for (int j=0;j<n;j++){
+                cur = &page_loc[i][j];
+                if (cur == -1){
+                    //instead replace -1 by same location
+                    page_loc[i][j] = page_loc[i][j-1];
+                }
+                m[*cur]+=aff_info[i].len;//weight by length
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
+            }
+        }
+        return;
+        }
+    }
+
+    else if (strat == 0){
+        //choose first affinity, first entry
+        *x=0;
+        *y=0;
+        return ;
     }
 }
 
@@ -1962,34 +2022,117 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
 #endif
 
     bool found = true;
-    int page_loc [naffin][n];
+    int page_loc [naffin][n] = {-1};
     void * page_boundary_pointer [naffin][n];
     int skipLen[naffin];
 
-    if (task_aff_schedule_type == 1){
+    //first digit is for weighted strategy and last 2 digits for selection strategy
+    if (task_aff_schedule_type%100 == 1){
 
-    //divide in N equal sized parts and get domain for ea
-    std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
-    for (int i=0;i<naffin;i++){
-        skipLen[i] = aff_info[i].len/n;
-        int skip = 0;
-        for (int j=0;j<n;j++){
-            #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
-                tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
-                found = found and (tmp != task_aff_addr_map.end());
-                page_loc[i][j] =  tmp->second;
-            #else
-            kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
-            bool found = found and (cur_entry->val != -1);
-            page_loc[i][j] = cur_entry->val;
+        //divide in N equal sized parts and get domain for ea
+        std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
+        for (int i=0;i<naffin;i++){
+            skipLen[i] = aff_info[i].len/n;
+            int skip = 0;
+            if (skipLen[i] < page_size){
+                //e.g. for 1 elelemt arrays
+                //skipLen[i] = page_size;
+                while (skip <= aff_info[i].len){
+                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                        page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
+                        tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+                        found = found and (tmp != task_aff_addr_map.end());
+                        page_loc[i][j] =  tmp->second;
+                    #else
+                        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
+                        bool found = found and (cur_entry->val != -1);
+                        page_loc[i][j] = cur_entry->val;
+                    #endif
+                    skip += page_size;
+                }
+            }
+            for (int j=0;j<n;j++){
+                #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
+                    tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+                    found = found and (tmp != task_aff_addr_map.end());
+                    page_loc[i][j] =  tmp->second;
+                #else
+                    kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
+                    bool found = found and (cur_entry->val != -1);
+                    page_loc[i][j] = cur_entry->val;
                 #endif
-            skip += skipLen[i];
+                skip += skipLen[i];
+            }
         }
-    }
     }
 
     //TODO: other strategies
+    else if (task_aff_schedule_type%100 == 2){
+        //check every N-page
+        std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
+        for (int i=0;i<naffin;i++){
+            //skipLen[i] = page_size*n;
+            int skip = 0;
+            while (skip <= aff_info[i].len){
+                #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
+                    tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+                    found = found and (tmp != task_aff_addr_map.end());
+                    page_loc[i][j] =  tmp->second;
+                #else
+                    kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
+                    bool found = found and (cur_entry->val != -1);
+                    page_loc[i][j] = cur_entry->val;
+                #endif
+                skip +=  page_size*n;
+            }
+        }
+    }
+
+    else if (task_aff_schedule_type%100 == 3){
+        //first and last page
+        std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
+        for (int i=0;i<naffin;i++){
+            skipLen[i] = aff_info[i].len;
+            if (aff_info[i].len < page_size){
+                //only check last page, if not same
+                skipLen[i] = page_size;
+            }
+            int skip = 0;
+            while (skip <= aff_info[i].len){
+                #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
+                    tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+                    found = found and (tmp != task_aff_addr_map.end());
+                    page_loc[i][j] =  tmp->second;
+                #else
+                    kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
+                    bool found = found and (cur_entry->val != -1);
+                    page_loc[i][j] = cur_entry->val;
+                #endif
+                skip += skipLen[i];
+            }
+        }
+    }
+
+    else if (task_aff_schedule_type%100 == 0){
+        //first addr
+        std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
+        for (int i=0;i<naffin;i++){
+            #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                page_boundary_pointer[i][0] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
+                tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+                found = found and (tmp != task_aff_addr_map.end());
+                page_loc[i][0] =  tmp->second;
+            #else
+                kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
+                bool found = found and (cur_entry->val != -1);
+                page_loc[i][0] = cur_entry->val;
+            #endif
+            }
+        }
+    }
 
 #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
         found = false;
@@ -2005,7 +2148,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         ret_code = 0;
         int x=-1;
         int y=-1;
-        map_count(naffin, n, page_loc, &x, &y);
+        map_count_weighted(aff_info, naffin, n, page_loc, &x, &y,task_aff_schedule_type/100);
         KA_TRACE(50, ("+++++ best pos %d %d\n", x, y));
         if(task_aff_map_type == kmp_task_aff_map_type_domain) {
             //count data domains and find most used one for: default map, found=true
@@ -2071,7 +2214,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         if (ret_code == 0 and page_loc[0][0] != NULL){
             int x=-1;
             int y=-1;
-            map_count(naffin, n, page_loc, &x,&y);
+            map_count_weighted(aff_info, naffin, n, page_loc, &x,&y, task_aff_schedule_type/100);
             KA_TRACE(1, ("+++++ best pos %d %d (not found)\n", x, y));
             current_data_domain = page_loc[x][y];
             page_start_address = (size_t) &page_boundary_pointer[x][y];
