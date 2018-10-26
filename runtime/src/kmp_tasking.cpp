@@ -1931,7 +1931,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int
         for (int i=0; i < naffin; i++) {
             for (int j=0;j<n;j++){
                 cur = &page_loc[i][j];
-                if (cur != -1){
+                if (*cur != -1){
                     //-1 is a placeholder for e.g. arrays of size 1 (don't increase their weight)
                     m[*cur]++;
                 }
@@ -1952,7 +1952,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int
         for (int i=0; i < naffin; i++) {
             for (int j=0;j<n;j++){
                 cur = &page_loc[i][j];
-                if (cur == -1){
+                if (*cur == -1){
                     //instead replace -1 by same location
                     page_loc[i][j] = page_loc[i][j-1];
                 }
@@ -1975,7 +1975,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int
         for (int i=0; i < naffin; i++) {
             for (int j=0;j<n;j++){
                 cur = &page_loc[i][j];
-                if (cur == -1){
+                if (*cur == -1){
                     //instead replace -1 by same location
                     page_loc[i][j] = page_loc[i][j-1];
                 }
@@ -1988,14 +1988,13 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int
             }
         }
         return;
-        }
     }
 
     else if (strat == 0){
         //choose first affinity, first entry
         *x=0;
         *y=0;
-        return ;
+        return;
     }
 }
 
@@ -2013,17 +2012,16 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     int ret_code = -1;
     kmp_info_t * target_thread = NULL;
 
-//TODO
-#define TASK_AFFINITY_S1 1
+    if (task_aff_schedule_num < 1){task_aff_schedule_num = 1;}
     const int n = task_aff_schedule_num;
-    if (n<1){n=1;}
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
     time2 = get_wall_time2();
 #endif
 
     bool found = true;
-    int page_loc [naffin][n] = {-1};
+    int page_loc [naffin][n];
+    memset(page_loc, -1, sizeof(page_loc));
     void * page_boundary_pointer [naffin][n];
     int skipLen[naffin];
     int skip;
@@ -2063,9 +2061,11 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     else if (task_aff_schedule_type%100 == 2){
         //check every N-page
         std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
+        int j;
         for (int i=0;i<naffin;i++){
             //skipLen[i] = page_size*n;
             skip = 0;
+            j = 0;
             while (skip <= aff_info[i].len){
                 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
@@ -2078,13 +2078,15 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
                     page_loc[i][j] = cur_entry->val;
                 #endif
                 skip +=  page_size*n;
+                j++;
             }
         }
     }
 
     else if (task_aff_schedule_type%100 == 3){
-        //first and last page
+        //first and last page (last only if first != last)
         std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
+        int j;
         for (int i=0;i<naffin;i++){
             skipLen[i] = aff_info[i].len;
             if (aff_info[i].len < page_size){
@@ -2092,6 +2094,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
                 skipLen[i] = page_size;
             }
             skip = 0;
+            j=0;
             while (skip <= aff_info[i].len){
                 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
@@ -2104,6 +2107,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
                     page_loc[i][j] = cur_entry->val;
                 #endif
                 skip += skipLen[i];
+                j++;
             }
         }
     }
@@ -2122,7 +2126,6 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
                 bool found = found and (cur_entry->val != -1);
                 page_loc[i][0] = cur_entry->val;
             #endif
-            }
         }
     }
 
