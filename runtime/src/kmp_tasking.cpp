@@ -1922,14 +1922,14 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
 }
 //searches page_loc[naffine][n] array for the dependency to use (weighted) based on the strategy to use
 void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int n, int page_loc[naffin][n], int* x, int* y, int strat){
-    //TODO map lock
+    KA_TRACE(50,("+++ start count_weight strat w%d pageloc00 %d\n",strat,page_loc[0][0]));
     if (strat == 1){
         //overall, no further balancing
         int max = 0;
         int* cur;
         std::map<int,int> m;
         for (int i=0; i < naffin; i++) {
-            for (int j=0;j<n;j++){
+            for (int j=0; j < n; j++){
                 cur = &page_loc[i][j];
                 if (*cur != -1){
                     //-1 is a placeholder for e.g. arrays of size 1 (don't increase their weight)
@@ -1950,7 +1950,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int
         int* cur;
         std::map<int,int> m;
         for (int i=0; i < naffin; i++) {
-            for (int j=0;j<n;j++){
+            for (int j=0; j < n; j++){
                 cur = &page_loc[i][j];
                 if (*cur == -1){
                     //instead replace -1 by same location
@@ -1973,7 +1973,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int
         int* cur;
         std::map<int,int> m;
         for (int i=0; i < naffin; i++) {
-            for (int j=0;j<n;j++){
+            for (int j=0; j < n; j++){
                 cur = &page_loc[i][j];
                 if (*cur == -1){
                     //instead replace -1 by same location
@@ -2001,7 +2001,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, int naffin, int
 int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t *new_taskdata, int *target_tid2, int *target_gtid2, int *ret_code2, kmp_int32 naffin, kmp_task_affinity_info *aff_info){
     const int page_size = KMP_GET_PAGE_SIZE();
     KA_TRACE(20, ("enter affinity_schedule: T#? " "#registred affinities %d\n",naffin));
-    KA_TRACE(50, ("+++ aff_data[0] addr: %p length %d\n", aff_info[0].base_addr, aff_info[0].len));//TODO check length for possible overflow in 300
+    KA_TRACE(50, ("+++ aff_data[0] addr: %p length %d, page_size %d\n", aff_info[0].base_addr, aff_info[0].len, page_size));//TODO check length for possible overflow in 300
     KA_TRACE(50,("+++ data 0 domain %d\n",task_aff_addr_map.find(aff_info[0].base_addr & ~(page_size-1))->second))
     kmp_task_team_t *task_team = thread->th.th_task_team;
     kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
@@ -2024,7 +2024,12 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     memset(page_loc, -1, sizeof(page_loc));
     void * page_boundary_pointer [naffin][n];
     int skipLen[naffin];
-    int skip;
+    int skip=0, j=0;
+
+    //TODO map lock
+    //__kmp_acquire_bootstrap_lock(&lock_addr_map);
+    //task_aff_addr_map[page_start_address] = current_data_domain;
+    //__kmp_release_bootstrap_lock(&lock_addr_map);
 
     //first digit is for weighted strategy and last 2 digits for selection strategy
     if (task_aff_schedule_type%100 == 1){
@@ -2039,9 +2044,10 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
                 //e.g. for arrays with 1 element or high n
                 //insted check every page contained in len
                 skipLen[i] = page_size;
-                n2=(aff_info[i].len/page_size)+1;
+                n2 = (aff_info[i].len/page_size)+1;
+                KA_TRACE(50,("+++++ strat s1 & < pagesize, skip %d, n2 %d\n", skipLen[i], n2));
             }
-            for (int j=0;j<n2;j++){
+            for (int j=0; j < n2; j++){
                 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
                     tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
@@ -2062,7 +2068,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         //check every N-page
         std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
         int j;
-        for (int i=0;i<naffin;i++){
+        for (int i=0; i < naffin; i++){
             //skipLen[i] = page_size*n;
             skip = 0;
             j = 0;
@@ -2087,7 +2093,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         //first and last page (last only if first != last)
         std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
         int j;
-        for (int i=0;i<naffin;i++){
+        for (int i=0; i < naffin; i++){
             skipLen[i] = aff_info[i].len;
             if (aff_info[i].len < page_size){
                 //only check last page, if not same
@@ -2095,6 +2101,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
             }
             skip = 0;
             j=0;
+            KA_TRACE(50,("+++++ strat s3, len %d, skipLen %d\n",aff_info[i].len, skipLen[i]));
             while (skip <= aff_info[i].len){
                 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
@@ -2115,10 +2122,10 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     else if (task_aff_schedule_type%100 == 0){
         //first addr
         std::_Rb_tree_iterator<std::pair<const size_t, int>> tmp;
-        for (int i=0;i<naffin;i++){
+        for (int i=0; i < naffin; i++){
             #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                page_boundary_pointer[i][0] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
-                tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+                page_boundary_pointer[i][0] = (void *) ((aff_info[i].base_addr) & ~(page_size-1));//TODO
+                tmp = task_aff_addr_map.find((aff_info[i].base_addr) & ~(page_size-1));
                 found = found and (tmp != task_aff_addr_map.end());
                 page_loc[i][0] =  tmp->second;
             #else
