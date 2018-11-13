@@ -2109,8 +2109,44 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
         }
         return;
     }
+
     else if (strat == 2){
-        //balace ny affinity, every affinity as important
+        //balace by affinity, every affinity as important, if row not full use all last entries to fill up
+        int max = 0;
+        int* cur;
+        std::map<int,int> m;
+        for (int i=0; i < naffin; i++) {
+            for (int j=0; j < n; j++){
+                cur = &page_loc[i][j];
+                if (*cur == -1 && j > 0){
+                    //fill row up with last entries
+                    for (int k=1; k<=j;k++){
+                        cur = &page_loc[i][k-1];
+                        int fill1 = (n-j)/j;
+                        int fill2 = 0;
+                        if (k <= ((n-j)-(fill1*j))){fill2=1;}
+                        m[*cur]+=fill1+fill2;
+                        if (m[*cur] > max) {
+                            max = m[*cur];
+                            *x=i;
+                            *y=j;
+                        }
+                    }
+                    break;
+                }
+                m[*cur]++;
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
+            }
+        }
+        return;
+    }
+
+    else if (strat == 21){
+        //balace ny affinity, every affinity as important, if row not full use last entry to fill up
         int max = 0;
         int* cur;
         std::map<int,int> m;
@@ -2120,7 +2156,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                 if (*cur == -1 && j > 0){
                     //instead make last loc as important as the rest of array and break
                     cur = &page_loc[i][j-1];
-                    m[*cur]+=naffin-j;
+                    m[*cur]+=n-j;
                     if (m[*cur] > max) {
                         max = m[*cur];
                         *x=i;
@@ -2140,7 +2176,39 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
     }
 
     else if (strat == 3){
-        //balance by size
+        //balance by size, evenly distr array weight
+        int max = 0;
+        int* cur;
+        std::map<int,int> m;
+        for (int i=0; i < naffin; i++) {
+            for (int j=0; j < n; j++){
+                cur = &page_loc[i][j];
+                if (*cur == -1 && j > 0){
+                    //-1 is a placeholder, add weight to small arrays first entries
+                    for (int k; k<j;k++){
+                        cur = &page_loc[i][k];
+                        m[*cur]+=(n-j)*((aff_info[i].len/4096)/j);
+                        if (m[*cur] > max) {
+                            max = m[*cur];
+                            *x=i;
+                            *y=j;
+                        }
+                    }
+                    break;
+                }
+                m[*cur]+=aff_info[i].len/4096;//weight by length
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
+            }
+        }
+        return;
+    }
+
+    else if (strat == 31){
+        //balance by size, skip if end reached
         int max = 0;
         int* cur;
         std::map<int,int> m;
@@ -2163,8 +2231,8 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
     }
 
 
-    else if (strat == 31){
-        //balance by size
+    else if (strat == 32){
+        //balance by size, pull weight to last
         int max = 0;
         int* cur;
         std::map<int,int> m;
@@ -2174,7 +2242,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                 if (*cur == -1 && j > 0){
                     //instead make last loc as important as the rest of array and break
                     cur = &page_loc[i][j-1];
-                    m[*cur]+=(naffin-j)*(aff_info[i].len/4096);
+                    m[*cur]+=(n-j)*(aff_info[i].len/4096);
                     if (m[*cur] > max) {
                         max = m[*cur];
                         *x=i;
@@ -2217,6 +2285,11 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     kmp_info_t * target_thread = NULL;
 
     if (task_aff_schedule_num < 1){task_aff_schedule_num = 1;}
+    //other affinities are ignored anyway by strats
+    if (task_aff_schedule_type%100 == 0){task_aff_schedule_num = 1;}
+    if (task_aff_schedule_type/100 == 3){task_aff_schedule_num = 2;}
+    else if (task_aff_schedule_type/100 == 99){task_aff_schedule_num = 1;}
+    else if (task_aff_schedule_type/100 == 0){task_aff_schedule_num = 1;}
     const int n = task_aff_schedule_num;
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
@@ -2364,7 +2437,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         }
     }
 
-    else if (task_aff_schedule_type/100 == 2){
+    else if (task_aff_schedule_type/100 == 21){
         //check every N-page until array full (restart at beginning)
         int j;
         for (int i=0; i < naffin; i++){
@@ -2393,8 +2466,8 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         }
     }
 
-    else if (task_aff_schedule_type/100 == 21){
-        //check every N-page
+    else if (task_aff_schedule_type/100 == 2){
+        //check every N-page, break at len
         int j;
         for (int i=0; i < naffin; i++){
             skipLen[i] = page_size*n;
