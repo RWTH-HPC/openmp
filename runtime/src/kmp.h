@@ -29,7 +29,7 @@
 #define NUMA_DOMAIN_MAX_NR 24
 #define MAX_THREADS_OVERALL 4096
 #define MAX_THREADS_PER_DOMAIN 128
-#define KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION 0
+#define KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION 1
 // 0: own implementation using hashlists
 // 1: default c++ map
 // 2: default c++ unordered_map
