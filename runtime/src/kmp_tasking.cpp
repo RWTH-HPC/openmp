@@ -1923,167 +1923,114 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
 
 //check for address -> found true and false
 int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
+    KA_TRACE(50,("check_page called: "));
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+            time2 = get_wall_time2();
+    #endif
 
-    // check address for numa domain
-    int current_data_domain = -1;
-    int ret_code = -1;
-    //int target_tid = -1;
-    int target_gtid = -1;
-    ////kmp_info_t * target_thread = NULL;
-
-    // get address and page from current pointer
-    //size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
+    int ret=-1, found=0;
     const int page_size = KMP_GET_PAGE_SIZE();
     size_t page_start_address = addr & ~(page_size-1);
     void * page_boundary_pointer = (void *) page_start_address;
-    // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
+    kmp_task_team_t *task_team = thread->th.th_task_team;
+    kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
 
-    // check map
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-    time2 = get_wall_time2();
-#endif
-    // try to find entry
-#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-    auto search = task_aff_addr_map.find(page_start_address);
-    bool found = search != task_aff_addr_map.end();
-#else
-    kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
-    bool found = cur_entry->val != -1;
-#endif
-#if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-    found = false;
-#endif
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-    time2 = get_wall_time2()-time2;
-    thread->th.th_sum_time_map_find += time2;
-    thread->th.th_num_map_find++;
-#endif
-
-    if(found) {
-#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-      KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, search->first, search->second));
-#else
-      KA_TRACE(5, ("__kmpc_omp_task: T#%d Found %lx ==> %d\n", gtid, cur_entry->addr, cur_entry->val));
-#endif
-      thread->th.th_count_map_found++;
-      ret_code = 0;
-      if(task_aff_map_type == kmp_task_aff_map_type_domain) {
-#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-        current_data_domain = search->second;
-#else
-        current_data_domain = cur_entry->val;
-#endif
-        //#
-        return current_data_domain;
-      } else {
-#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-        target_gtid = search->second;
-#else
-        target_gtid = cur_entry->val;
-#endif
-        // DEBUG: also save this information for statistics
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-        time2 = get_wall_time2();
-#endif
-        //int tmp_err = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-    int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-        time2 = get_wall_time2()-time2;
-        thread->th.th_sum_time_identify_physical_location += time2;
-        thread->th.th_num_identify_physical_location++;
-#endif
-    if(tmp_err == 0 && current_data_domain >= 0)
-    return current_data_domain;
-    else
-    return -1;
-     //*current_data_domain2 = current_data_domain;
-        // DEBUG
-        // set data domain to some value >= 0; not really used but necessary to not run into fallback mode
-    //current_data_domain = 0;
-
-        // current_data_domain = map_thread_to_numa_domain[target_gtid];
-        // if(current_data_domain == thread->th.th_task_aff_my_domain_nr) {
-        //   target_gtid = gtid;
-        //   target_tid = __kmp_tid_from_gtid(gtid);
-        // } else {
-    //target_tid = __kmp_tid_from_gtid(target_gtid);
-        //   //kmp_thread_data_t *target_thread_data = &(threads_data[target_tid]);
-        //   //target_thread = target_thread_data->td.td_thr;
-        // }
-      }
-    } else {
-      KA_TRACE(5, ("__kmpc_omp_task: T#%d Not Found %lx\n", gtid, page_start_address));
-      thread->th.th_count_map_not_found++;
-      // run move pages
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-      time2 = get_wall_time2();
-#endif
-      //ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
-                //move_pages(int pid    	  , unsigned long count      , void **pagesconst int *nodes, int *status, int flags);
-      ret_code = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-      time2 = get_wall_time2()-time2;
-      thread->th.th_sum_time_identify_physical_location += time2;
-      thread->th.th_num_identify_physical_location++;
-#endif
-      KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
-
-      if(ret_code == 0 && current_data_domain >= 0) {
-        return current_data_domain;
-        //#
-
-#if !KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-            time2 = get_wall_time2();
-#endif
-            if(task_aff_map_type == kmp_task_aff_map_type_domain) {
-              KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
-#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-              __kmp_acquire_bootstrap_lock(&lock_addr_map);
-              task_aff_addr_map[page_start_address] = current_data_domain;
-              __kmp_release_bootstrap_lock(&lock_addr_map);
-#else
-              cur_entry->val = current_data_domain;
-#endif
-            } else {
-              KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
-#if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-              __kmp_acquire_bootstrap_lock(&lock_addr_map);
-              task_aff_addr_map[page_start_address] = target_gtid;
-              __kmp_release_bootstrap_lock(&lock_addr_map);
-#else
-              cur_entry->val = target_gtid;
-#endif
-            }
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-            time2 = get_wall_time2()-time2;
-            thread->th.th_sum_time_map_insert += time2;
-            thread->th.th_num_map_insert++;
-#endif
-#endif
-      }
-    }
-
-    //*ret_code2 = ret_code;
-    return -1;
-
-    #if 0 //#########################
     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-        page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
-        tmp = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
-        found = found and (tmp != task_aff_addr_map.end());
-        page_loc[i][j] =  tmp->second;
+        auto search = task_aff_addr_map.find(page_start_address);
+        found = search != task_aff_addr_map.end();
     #else
         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
-        bool found = found and (cur_entry->val != -1);
-        page_loc[i][j] = cur_entry->val;
+        found = cur_entry->val != -1;
     #endif
+
+    #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+            found = false;
     #endif
+
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+            time2 = get_wall_time2()-time2;
+            thread->th.th_sum_time_map_find += time2;
+            thread->th.th_num_map_find++;
+    #endif
+
+    if (found){
+        KA_TRACE(50,("found\n"))
+        #if KMP_TASK_AFFINITY_MEASURE_TIME
+            thread->th.th_count_map_found++;
+        #endif
+
+        #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+            return search->second;
+        #else
+            return cur_entry->val;
+        #endif
+    } else {
+        KA_TRACE(50,("not found\n"));
+        #if KMP_TASK_AFFINITY_MEASURE_TIME
+            thread->th.th_count_map_not_found++;
+        #endif
+        #if KMP_TASK_AFFINITY_MEASURE_TIME
+                  time2 = get_wall_time2();
+        #endif
+
+        int current_data_domain; int target_tid=-1; int target_gtid=-1;
+        int ret_code = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
+
+        #if KMP_TASK_AFFINITY_MEASURE_TIME
+                  time2 = get_wall_time2()-time2;
+                  thread->th.th_sum_time_identify_physical_location += time2;
+                  thread->th.th_num_identify_physical_location++;
+        #endif
+        KA_TRACE(5, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
+        if (ret_code == 0){
+            if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_private
+                && current_data_domain == thread->th.th_task_aff_my_domain_nr
+                && task_aff_map_type == kmp_task_aff_map_type_domain) {target_gtid = gtid;target_tid = __kmp_tid_from_gtid(gtid);}
+
+            KA_TRACE(50,("calling init thread: domain %d, team %d, threads %d, tid %d, gtid %d, idx %d",current_data_domain, task_team, threads_data, threads_data->td.td_idx_in_numa_map));
+            kmp_info_t * target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
+            //target_gtid=1;
+            //target_tid=__kmp_tid_from_gtid(target_gtid);
+            if(target_tid != -1) {
+                #if KMP_TASK_AFFINITY_MEASURE_TIME
+                    time2 = get_wall_time2();
+                #endif
+                if(task_aff_map_type == kmp_task_aff_map_type_domain) {
+                    KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
+                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                        __kmp_acquire_bootstrap_lock(&lock_addr_map);
+                        task_aff_addr_map[page_start_address] = current_data_domain;
+                        __kmp_release_bootstrap_lock(&lock_addr_map);
+                    #else
+                        cur_entry->val = current_data_domain;
+                    #endif
+                 } else {
+                    KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, target_gtid));
+                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                        __kmp_acquire_bootstrap_lock(&lock_addr_map);
+                        task_aff_addr_map[page_start_address] = target_gtid;
+                        __kmp_release_bootstrap_lock(&lock_addr_map);
+                    #else
+                        cur_entry->val = target_gtid;
+                    #endif
+                  }
+                  #if KMP_TASK_AFFINITY_MEASURE_TIME
+                    time2 = get_wall_time2()-time2;
+                    thread->th.th_sum_time_map_insert += time2;
+                    thread->th.th_num_map_insert++;
+                #endif
+            }
+
+            return current_data_domain;
+        }
+    }
+    return -2;
 }
 
 //searches page_loc[naffine][n] array for the dependency to use (weighted) based on the strategy to use
 void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int n, int page_loc[naffin][n], int* x, int* y, int strat){
     const int page_size = KMP_GET_PAGE_SIZE();
+    int f = page_size*n; //divide weight by factor for size strats to prevent overflow
     KA_TRACE(50,("+++ start count_weight strat w%d pageloc00 %d naffin %d n %d\n",strat,page_loc[0][0], naffin, n));
     if (strat == 1){
         //KA_TRACE(50,("page_loc[] 0 %d, 1 %d, 9 %d\n",page_loc[0][0],page_loc[0][1],page_loc[0][9]))
@@ -2094,18 +2041,19 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
         for (int i=0; i < naffin; i++) {
             for (int j=0; j < n; j++){
                 cur = &page_loc[i][j];
-                KA_TRACE(50,("count current %d %d\n",*cur,m[*cur]));
+                //KA_TRACE(50,("count current %d %d\n",*cur,m[*cur]));
                 if (*cur == -1){
                     //-1 is a placeholder and e.g. arrays of size 1 have only 1 entry (low weight)
                     break;
-                    KA_TRACE(50,("break count_weight %d\n",j));
+                    //KA_TRACE(50,("break count_weight %d\n",j));
                 }
+                else if (*cur < 0){continue;}
                 m[*cur]++;
                 if (m[*cur] > max) {
                     max = m[*cur];
                     *x=i;
                     *y=j;
-                    KA_TRACE(50,("new max i %d j %d with score %d and domain %d \n", i, j, m[*cur], *cur));
+                    //KA_TRACE(50,("new max i %d j %d with score %d and domain %d \n", i, j, m[*cur], *cur));
                 }
             }
         }
@@ -2136,6 +2084,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                     }
                     break;
                 }
+                else if (*cur < 0){continue;}
                 m[*cur]++;
                 if (m[*cur] > max) {
                     max = m[*cur];
@@ -2166,6 +2115,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                     }
                     break;
                 }
+                else if (*cur < 0){continue;}
                 m[*cur]++;
                 if (m[*cur] > max) {
                     max = m[*cur];
@@ -2189,7 +2139,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                     //-1 is a placeholder, add weight to small arrays first entries
                     for (int k; k<j;k++){
                         cur = &page_loc[i][k];
-                        m[*cur]+=(n-j)*((aff_info[i].len/4096)/j);
+                        m[*cur]+=(n-j)*((aff_info[i].len/f)/j);
                         //KA_TRACE(50,("++size %d\n",m[*cur]));
                         if (m[*cur] > max) {
                             max = m[*cur];
@@ -2199,7 +2149,8 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                     }
                     break;
                 }
-                m[*cur]+=aff_info[i].len/4096;//weight by length
+                else if (*cur < 0){continue;}
+                m[*cur]+=aff_info[i].len/f;//weight by length
                 //KA_TRACE(50,("++size %d\n",m[*cur]));
                 if (m[*cur] > max) {
                     max = m[*cur];
@@ -2224,7 +2175,8 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                     //-1 is a placeholder and e.g. arrays of size 1 have only 1 entry (low weight)
                     break;
                 }
-                m[*cur]+=aff_info[i].len/4096;//weight by length
+                else if (*cur < 0){continue;}
+                m[*cur]+=aff_info[i].len/f;//weight by length
                 if (m[*cur] > max) {
                     max = m[*cur];
                     *x=i;
@@ -2247,7 +2199,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                 if (*cur == -1 && j > 0){
                     //instead make last loc as important as the rest of array and break
                     cur = &page_loc[i][j-1];
-                    m[*cur]+=(n-j)*(aff_info[i].len/4096);
+                    m[*cur]+=(n-j)*(aff_info[i].len/f);
                     if (m[*cur] > max) {
                         max = m[*cur];
                         *x=i;
@@ -2255,7 +2207,8 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
                     }
                     break;
                 }
-                m[*cur]+=aff_info[i].len/4096;//weight by length
+                else if (*cur < 0){continue;}
+                m[*cur]+=aff_info[i].len/f;//weight by length
                 if (m[*cur] > max) {
                     max = m[*cur];
                     *x=i;
@@ -2274,9 +2227,11 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
     }
 }
 
-int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t *new_taskdata,
-    int *target_tid2, int *target_gtid2, int *ret_code2, kmp_int32 naffin, kmp_task_affinity_info *aff_info){
+int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread, kmp_int32 naffin, kmp_task_affinity_info *aff_info){
+    void *pointer = *pointer2;
     const int page_size = KMP_GET_PAGE_SIZE();
+    KA_TRACE(50,("output test: gtid %d, thread %d, naffin %d, aff_len %d, pointer %p\n",
+    gtid, thread, naffin, aff_info[0].len, pointer));
     KA_TRACE(20, ("enter affinity_schedule: T#%d #registred affinities %d\n",gtid, naffin));
     KA_TRACE(50, ("+++ aff_data[0] addr: %p length %d, page_size %d n %d\n", aff_info[0].base_addr, aff_info[0].len, page_size, task_aff_schedule_num));//TODO check length for possible overflow in w3
     KA_TRACE(50,("+++ domain of data 0 in map: %d\n",task_aff_addr_map.find(aff_info[0].base_addr & ~(page_size-1))->second))
@@ -2284,9 +2239,6 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
     size_t page_start_address;
     int current_data_domain = -1;
-    int target_tid = -1;
-    int target_gtid = -1;
-    int ret_code = -1;
     kmp_info_t * target_thread = NULL;
 
     if (task_aff_schedule_num < 1){task_aff_schedule_num = 1;}
@@ -2301,8 +2253,8 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     time2 = get_wall_time2();
 #endif
 
-    bool foundAll = true;//for all
-    int found[naffin][n];
+    //bool foundAll = true;//for all
+    //int found[naffin][n];//0 nothing here, 1 not found, 2 found, 3 error
     int page_loc[naffin][n];
     for (int i = 0; i < naffin; i++){
         for (int j = 0; j < n; j++){
@@ -2310,11 +2262,11 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         }
     }
     //KA_TRACE(50,("+page_loc end: %d\n",page_loc[naffin-1][n-1]));
-    void * page_boundary_pointer [naffin][n];
+    //void * page_boundary_pointer [naffin][n];
     int skipLen[naffin];
-    int skip=0, j=0;
-    std::_Rb_tree_iterator<std::pair<const size_t, int>> tmpF;
-    kmp_intptr_t tmpP;
+    int skip=0;
+    //std::_Rb_tree_iterator<std::pair<const size_t, int>> tmpF;
+    //kmp_intptr_t tmpP;
 
     //TODO (COPIED) HOW TO: map lock
     //__kmp_acquire_bootstrap_lock(&lock_addr_map);
@@ -2337,27 +2289,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
                 KA_TRACE(50,("+++++ strat s1 & < pagesize, skip %d, n2 %d\n", skipLen[i], n2));
             }
             for (int j=0; j < n2; j++){
-                //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
-                KA_TRACE(50,("T#%d current skip iteration %d: %d, len %d \n", gtid, j, skip, aff_info[i].len));
-                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
-                    page_loc[i][j] = 0; //to include in search
-                #else
-                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                        tmpP =  (aff_info[i].base_addr + skip) & ~(page_size-1);
-                        tmpF = task_aff_addr_map.find(tmpP);
-                        page_boundary_pointer[i][j] = (void *) tmpP;
-                        found[i][j] = (tmpF != task_aff_addr_map.end());
-                        KA_TRACE(50,("found s1 %d %d %d\n",i,j,found[i][j]));
-                        page_loc[i][j] =  tmpF->second;
-                        foundAll = (foundAll && found[i][j]);
-                    #else
-                        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
-                        found[i][j] = cur_entry->val != -1;
-                        foundAll = foundAll and found[i][j];
-                        page_loc[i][j] = cur_entry->val;
-                    #endif
-                #endif
+                page_loc[i][j] = check_page(gtid, thread, aff_info[i].base_addr + skip);
                 skip += skipLen[i];
             }
         }
@@ -2370,26 +2302,26 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
             skipLen[i] = aff_info[i].len/n;
             skip = 0;
             for (int j=0; j < n; j++){
-                //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
-                KA_TRACE(50,("T#%d current skip iteration %d: %d, len %d \n", gtid, j, skip, aff_info[i].len));
-                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
-                    page_loc[i][j] = 0; //to include in search
-                #else
-                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                        tmpP =  (aff_info[i].base_addr + skip) & ~(page_size-1);
-                        tmpF = task_aff_addr_map.find(tmpP);
-                        page_boundary_pointer[i][j] = (void *) tmpP;
-                        found[i][j] = tmpF != task_aff_addr_map.end();
-                        page_loc[i][j] =  tmpF->second;
-                        foundAll = foundAll and found[i][j];
-                    #else
-                        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
-                        found[i][j] = cur_entry->val != -1;
-                        foundAll = foundAll and found[i][j];
-                        page_loc[i][j] = cur_entry->val;
-                    #endif
-                #endif
+                page_loc[i][j] = check_page(gtid, thread, aff_info[i].base_addr + skip);
+                // KA_TRACE(50,("T#%d current skip iteration %d: %d, len %d \n", gtid, j, skip, aff_info[i].len));
+                // #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+                //     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
+                //     // page_loc[i][j] = 0; //to include in search
+                // #else
+                //     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                //         tmpP =  (aff_info[i].base_addr + skip) & ~(page_size-1);
+                //         tmpF = task_aff_addr_map.find(tmpP);
+                //         page_boundary_pointer[i][j] = (void *) tmpP;
+                //         found[i][j] = tmpF != task_aff_addr_map.end();
+                //         page_loc[i][j] =  tmpF->second;
+                //         // foundAll = foundAll and found[i][j];
+                //     #else
+                //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
+                //         found[i][j] = cur_entry->val != -1;
+                //         // foundAll = foundAll and found[i][j];
+                //         page_loc[i][j] = cur_entry->val;
+                //     #endif
+                // #endif
                 skip += skipLen[i];
             }
         }
@@ -2397,129 +2329,123 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
 
     if (task_aff_schedule_type/100 == 12){
         //divide in N equal sized parts (>= page) and get domain for ea, break loop at > len
-        int n2;
         for (int i=0;i<naffin;i++){
-            int len_i = aff_info[i].len;
-            skipLen[i] = len_i/n;
+            //int len_i = aff_info[i].len;
+            skipLen[i] = aff_info[i].len/n;
             if (skipLen[i] < page_size){
                 skipLen[i] = page_size;
             }
             skip = 0;
             for (int j=0; j < n; j++){
-                //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
                 KA_TRACE(50,("T#%d current skip iteration %d: %d, len %d \n", gtid, j, skip, aff_info[i].len));
-                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
-                    page_loc[i][j] = 0; //to include in search
-                #else
-                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                        tmpP =  (aff_info[i].base_addr + skip) & ~(page_size-1);
-                        tmpF = task_aff_addr_map.find(tmpP);
-                        page_boundary_pointer[i][j] = (void *) tmpP;
-                        found[i][j] = tmpF != task_aff_addr_map.end();
-                        page_loc[i][j] =  tmpF->second;
-                        foundAll = foundAll and found[i][j];
-                    #else
-                        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
-                        found[i][j] = cur_entry->val != -1;
-                        foundAll = foundAll and found[i][j];
-                        page_loc[i][j] = cur_entry->val;
-                    #endif
-                #endif
+                page_loc[i][j] = check_page(gtid, thread, aff_info[i].base_addr + skip);
+                // #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+                //     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
+                //     // page_loc[i][j] = 0; //to include in search
+                // #else
+                //     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                //         tmpP =  (aff_info[i].base_addr + skip) & ~(page_size-1);
+                //         tmpF = task_aff_addr_map.find(tmpP);
+                //         page_boundary_pointer[i][j] = (void *) tmpP;
+                //         found[i][j] = tmpF != task_aff_addr_map.end();
+                //         page_loc[i][j] =  tmpF->second;
+                //         // foundAll = foundAll and found[i][j];
+                //     #else
+                //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
+                //         found[i][j] = cur_entry->val != -1;
+                //         // foundAll = foundAll and found[i][j];
+                //         page_loc[i][j] = cur_entry->val;
+                //     #endif
+                // #endif
                 skip += skipLen[i];
-                if (skip > len_i){
+                if (skip > aff_info[i].len){
                     break;
                 }
             }
         }
     }
 
-    if (task_aff_schedule_type/100 == 19){
-        //divide in N equal sized parts and get domain for ea, until array full (don't skip to next page) ++ old test
-        int n2;
-        for (int i=0;i<naffin;i++){
-            skipLen[i] = aff_info[i].len/n;
-            skip = 0;
-            for (int j=0; j < n; j++){
-                //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
-                KA_TRACE(50,("T#%d current skip iteration %d: %d, len %d \n", gtid, j, skip, aff_info[i].len));
-                #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
-                    tmpF = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
-                    foundAll = foundAll and (tmpF != task_aff_addr_map.end());
-                    page_loc[i][j] =  tmpF->second;
-                #else
-                    kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
-                    foundAll = foundAll and (cur_entry->val != -1);
-                    page_loc[i][j] = cur_entry->val;
-                #endif
-                skip += skipLen[i];
-            }
-        }
-    }
+    // if (task_aff_schedule_type/100 == 19){
+    //     //divide in N equal sized parts and get domain for ea, until array full (don't skip to next page) ++ old test
+    //     int n2;
+    //     for (int i=0;i<naffin;i++){
+    //         skipLen[i] = aff_info[i].len/n;
+    //         skip = 0;
+    //         for (int j=0; j < n; j++){
+    //             //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
+    //             KA_TRACE(50,("T#%d current skip iteration %d: %d, len %d \n", gtid, j, skip, aff_info[i].len));
+    //             #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+    //                 page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));//TODO
+    //                 tmpF = task_aff_addr_map.find((aff_info[i].base_addr + skip) & ~(page_size-1));
+    //                 // foundAll = foundAll and (tmpF != task_aff_addr_map.end());
+    //                 page_loc[i][j] =  tmpF->second;
+    //             #else
+    //                 kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
+    //                 // foundAll = foundAll and (cur_entry->val != -1);
+    //                 page_loc[i][j] = cur_entry->val;
+    //             #endif
+    //             skip += skipLen[i];
+    //         }
+    //     }
+    // }
 
     else if (task_aff_schedule_type/100 == 21){
         //check every N-page until array full (restart at beginning)
-        int j;
         for (int i=0; i < naffin; i++){
             skipLen[i] = page_size*n;
             skip = 0;
-            j = 0;
             KA_TRACE(50,("+++++ strat s2, skip %d\n", skipLen[i]));
-            for (int j; i < n; j++){
-                //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
-                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
-                    page_loc[i][j] = 0; //to include in search
-                #else
-                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                        tmpP = (aff_info[i].base_addr + skip) & ~(page_size-1);
-                        tmpF = task_aff_addr_map.find(tmpP);
-                        page_boundary_pointer[i][j] = (void *) tmpP;
-                        found[i][j] = tmpF != task_aff_addr_map.end();
-                        page_loc[i][j] =  tmpF->second;
-                        foundAll = foundAll and found[i][j];
-                    #else
-                        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
-                        found[i][j] = cur_entry->val != -1;
-                        foundAll = foundAll and found[i][j];
-                        page_loc[i][j] = cur_entry->val;
-                    #endif
-                #endif
-                skip = (skip + skipLen[i])%aff_info[i].len;
-                j++;
+            for (int j=0; j < n; j++){
+                page_loc[i][j] = check_page(gtid, thread, aff_info[i].base_addr + skip);
+                // #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+                //     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
+                //     // page_loc[i][j] = 0; //to include in search
+                // #else
+                //     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                //         tmpP = (aff_info[i].base_addr + skip) & ~(page_size-1);
+                //         tmpF = task_aff_addr_map.find(tmpP);
+                //         page_boundary_pointer[i][j] = (void *) tmpP;
+                //         found[i][j] = tmpF != task_aff_addr_map.end();
+                //         page_loc[i][j] =  tmpF->second;
+                //         // foundAll = foundAll and found[i][j];
+                //     #else
+                //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
+                //         found[i][j] = cur_entry->val != -1;
+                //         // foundAll = foundAll and found[i][j];
+                //         page_loc[i][j] = cur_entry->val;
+                //     #endif
+                // #endif
+                skip = ((skip + skipLen[i]) % aff_info[i].len);
             }
         }
     }
 
     else if (task_aff_schedule_type/100 == 2){
         //check every N-page, break at len
-        int j;
         for (int i=0; i < naffin; i++){
             skipLen[i] = page_size*n;
             skip = 0;
-            j = 0;
             KA_TRACE(50,("+++++ strat s21, skip %d\n", skipLen[i]));
-            for (int j; j < n; j++){
-                //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
-                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                    page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
-                    page_loc[i][j] = 0; //to include in search
-                #else
-                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                        tmpP = (aff_info[i].base_addr + skip) & ~(page_size-1);
-                        tmpF = task_aff_addr_map.find(tmpP);
-                        page_boundary_pointer[i][j] = (void *) tmpP;
-                        found[i][j] = tmpF != task_aff_addr_map.end();
-                        page_loc[i][j] =  tmpF->second;
-                        foundAll = foundAll and found[i][j];
-                    #else
-                        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
-                        found[i][j] = cur_entry->val != -1;
-                        foundAll = foundAll and found[i][j];
-                        page_loc[i][j] = cur_entry->val;
-                    #endif
-                #endif
+            for (int j=0; j < n; j++){
+                page_loc[i][j] = check_page(gtid, thread, aff_info[i].base_addr + skip);
+                // #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+                //     page_boundary_pointer[i][j] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
+                //     // page_loc[i][j] = 0; //to include in search
+                // #else
+                //     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                //         tmpP = (aff_info[i].base_addr + skip) & ~(page_size-1);
+                //         tmpF = task_aff_addr_map.find(tmpP);
+                //         page_boundary_pointer[i][j] = (void *) tmpP;
+                //         found[i][j] = tmpF != task_aff_addr_map.end();
+                //         page_loc[i][j] =  tmpF->second;
+                //         // foundAll = foundAll and found[i][j];
+                //     #else
+                //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skip) & ~(page_size-1));
+                //         found[i][j] = cur_entry->val != -1;
+                //         // foundAll = foundAll and found[i][j];
+                //         page_loc[i][j] = cur_entry->val;
+                //     #endif
+                // #endif
                 skip += skipLen[i];
                 if (skip > aff_info[i].len) break;
             }
@@ -2531,45 +2457,46 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         for (int i=0; i < naffin; i++){
             skipLen[i] = aff_info[i].len;
             KA_TRACE(50,("+++++ strat s3, len %d, skipLen %d\n",aff_info[i].len, skipLen[i]));
-            //check_page(gtid, thread, aff_info[i].base_addr + skip, &ret_code[i][j], &page_loc[i][j]);
-            #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                page_boundary_pointer[i][0] = (void *) ((aff_info[i].base_addr) & ~(page_size-1));
-                page_loc[i][0] = 0; //to include in search
-            #else
-                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                    tmpP = (aff_info[i].base_addr) & ~(page_size-1);
-                    tmpF = task_aff_addr_map.find(tmpP);
-                    page_boundary_pointer[i][0] = (void *) (tmpP);
-                    found[i][0] = tmpF != task_aff_addr_map.end();
-                    page_loc[i][0] =  tmpF->second;
-                    foundAll = foundAll and found[i][0];
-                #else
-                    kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr) & ~(page_size-1));
-                    found[i][0] = cur_entry->val != -1;
-                    foundAll = foundAll and found[i][0];
-                    page_loc[i][0] = cur_entry->val;
-                #endif
-            #endif
+            page_loc[i][0] = check_page(gtid, thread, aff_info[i].base_addr);
+            // #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+            //     page_boundary_pointer[i][0] = (void *) ((aff_info[i].base_addr) & ~(page_size-1));
+            //     // page_loc[i][0] = 0; //to include in search
+            // #else
+            //     #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+            //         tmpP = (aff_info[i].base_addr) & ~(page_size-1);
+            //         tmpF = task_aff_addr_map.find(tmpP);
+            //         page_boundary_pointer[i][0] = (void *) (tmpP);
+            //         found[i][0] = tmpF != task_aff_addr_map.end();
+            //         page_loc[i][0] =  tmpF->second;
+            //         // foundAll = foundAll and found[i][0];
+            //     #else
+            //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr) & ~(page_size-1));
+            //         found[i][0] = cur_entry->val != -1;
+            //         // foundAll = foundAll and found[i][0];
+            //         page_loc[i][0] = cur_entry->val;
+            //     #endif
+            // #endif
             if (skipLen[i] >= page_size){
                 //only check last page, if not same
-                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                    page_boundary_pointer[i][1] = (void *) ((aff_info[i].base_addr + skipLen[i]) & ~(page_size-1));
-                    page_loc[i][1] = 0; //to include in search
-                #else
-                    #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                        tmpP = (aff_info[i].base_addr + skipLen[i]) & ~(page_size-1);
-                        tmpF = task_aff_addr_map.find(tmpP);
-                        page_boundary_pointer[i][1] = (void *) tmpP;
-                        found[i][1] = tmpF != task_aff_addr_map.end();
-                        page_loc[i][1] =  tmpF->second;
-                        foundAll = foundAll and found[i][1];
-                    #else
-                        kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skipLen[i]) & ~(page_size-1));
-                        found[i][1] = cur_entry->val != -1;
-                        foundAll = foundAll and found[i][1];
-                        page_loc[i][1] = cur_entry->val;
-                    #endif
-                #endif
+                page_loc[i][1] = check_page(gtid, thread, aff_info[i].base_addr + skipLen[i]);
+                // #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+                //     page_boundary_pointer[i][1] = (void *) ((aff_info[i].base_addr + skipLen[i]) & ~(page_size-1));
+                //     // page_loc[i][1] = 0; //to include in search
+                // #else
+                //     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+                //         tmpP = (aff_info[i].base_addr + skipLen[i]) & ~(page_size-1);
+                //         tmpF = task_aff_addr_map.find(tmpP);
+                //         page_boundary_pointer[i][1] = (void *) tmpP;
+                //         found[i][1] = tmpF != task_aff_addr_map.end();
+                //         page_loc[i][1] =  tmpF->second;
+                //         // foundAll = foundAll and found[i][1];
+                //     #else
+                //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr + skipLen[i]) & ~(page_size-1));
+                //         found[i][1] = cur_entry->val != -1;
+                //         // foundAll = foundAll and found[i][1];
+                //         page_loc[i][1] = cur_entry->val;
+                //     #endif
+                // #endif
             }
         }
     }
@@ -2579,6 +2506,7 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         //bin search for seperator cut
         KA_TRACE(50,("+++++ strat s4\n"));
         for (int i=0; i < naffin; i++){
+            skipLen[i] = aff_info[i].len/n;//for page_boundary_addr
             int top=-1, bot=-1, m=-1;
             int half = aff_info[i].len/2;
             top = check_page(gtid, thread, aff_info[i].base_addr + aff_info[i].len);
@@ -2606,55 +2534,95 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     else if (task_aff_schedule_type/100 == 99){
         //first addr for first affinity
         KA_TRACE(50,("+++++ strat s99\n"));
-            //check_page(gtid, thread, aff_info[i].base_addr, &ret_code[i][j], &page_loc[i][j]);
-        #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-            page_boundary_pointer[0][0] = (void *) ((aff_info[0].base_addr) & ~(page_size-1));
-            page_loc[0][0] = 0; //to include in search
-        #else
-            #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                tmpP = (aff_info[0].base_addr) & ~(page_size-1);
-                tmpF = task_aff_addr_map.find(tmpP);
-                page_boundary_pointer[0][0] = (void *) (tmpP);
-                found[0][0] = tmpF != task_aff_addr_map.end();
-                page_loc[0][0] =  tmpF->second;
-                foundAll = foundAll and found[0][0];
-            #else
-                kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr) & ~(page_size-1));
-                found[0][0] = cur_entry->val != -1;
-                bool foundAll = foundAll and found[0][0];
-                page_loc[0][0] = cur_entry->val;
-            #endif
-        #endif
+        page_loc[0][0] = check_page(gtid, thread, aff_info[0].base_addr);
+        // #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+        //     page_boundary_pointer[0][0] = (void *) ((aff_info[0].base_addr) & ~(page_size-1));
+        //     // page_loc[0][0] = 0; //to include in search
+        // #else
+        //     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+        //         tmpP = (aff_info[0].base_addr) & ~(page_size-1);
+        //         tmpF = task_aff_addr_map.find(tmpP);
+        //         page_boundary_pointer[0][0] = (void *) (tmpP);
+        //         found[0][0] = tmpF != task_aff_addr_map.end();
+        //         page_loc[0][0] =  tmpF->second;
+        //         // foundAll = foundAll and found[0][0];
+        //     #else
+        //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr) & ~(page_size-1));
+        //         found[0][0] = cur_entry->val != -1;
+        //         // bool foundAll = foundAll and found[0][0];
+        //         page_loc[0][0] = cur_entry->val;
+        //     #endif
+        // #endif
     }
 
     else if (task_aff_schedule_type/100 == 0){
         //first addr for ea affinity
         KA_TRACE(50,("+++++ strat s0\n"));
         for (int i=0; i < naffin; i++){
-            //check_page(gtid, thread, aff_info[i].base_addr, &ret_code[i][j], &page_loc[i][j]);
-            #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-                page_boundary_pointer[i][0] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
-                page_loc[i][0] = 0; //to include in search
-            #else
-                #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
-                    tmpP = (aff_info[i].base_addr) & ~(page_size-1);
-                    tmpF = task_aff_addr_map.find(tmpP);
-                    page_boundary_pointer[i][0] = (void *) (tmpP);
-                    found[i][0] = tmpF != task_aff_addr_map.end();
-                    page_loc[i][0] =  tmpF->second;
-                    foundAll = foundAll and found[i][0];
-                #else
-                    kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr) & ~(page_size-1));
-                    found[i][0] = cur_entry->val != -1;
-                    bool foundAll = foundAll and found[i][0];
-                    page_loc[i][0] = cur_entry->val;
-                #endif
-            #endif
+            page_loc[i][0] = check_page(gtid, thread, aff_info[i].base_addr);
+            // #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+            //     page_boundary_pointer[i][0] = (void *) ((aff_info[i].base_addr + skip) & ~(page_size-1));
+            //     // page_loc[i][0] = 0; //to include in search
+            // #else
+            //     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+            //         tmpP = (aff_info[i].base_addr) & ~(page_size-1);
+            //         tmpF = task_aff_addr_map.find(tmpP);
+            //         page_boundary_pointer[i][0] = (void *) (tmpP);
+            //         found[i][0] = tmpF != task_aff_addr_map.end();
+            //         page_loc[i][0] =  tmpF->second;
+            //         // foundAll = foundAll and found[i][0];
+            //     #else
+            //         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) (aff_info[i].base_addr) & ~(page_size-1));
+            //         found[i][0] = cur_entry->val != -1;
+            //         // bool foundAll = foundAll and found[i][0];
+            //         page_loc[i][0] = cur_entry->val;
+            //     #endif
+            // #endif
         }
     }
 
     int x=-1;
     int y=-1;
+    //count most common loc in page_loc, while -1 is ignoring this and further entries in the row, bc it shoudl only contain more unfilled entreis init with -1
+    map_count_weighted(aff_info, naffin, n, page_loc, &x,&y, task_aff_schedule_type%100);
+    pointer = (void *) ((aff_info[x].base_addr + ((y*skipLen[y]) %aff_info[x].len) ) & ~(page_size-1));
+    return page_loc[x][y];
+}
+
+    #if 0
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+        time2 = get_wall_time2()-time2;
+        thread->th.th_sum_time_map_find += time2;
+        thread->th.th_num_map_find++;
+    #endif
+    int ret;
+    for (int i=0;i<naffin;i++){
+        for (int j=0;j<n;j++){
+            if (found[i][j]==1){ //not found
+                #if KMP_TASK_AFFINITY_MEASURE_TIME
+                    time2 = get_wall_time2();
+                #endif
+
+                found[i][j] = 2 + move_pages(0, 1, &page_boundary_pointer[i][j], NULL, &page_loc[i][j], 0);
+                KA_TRACE(50,("return value move_pages %d\n",ret));
+
+                #if KMP_TASK_AFFINITY_MEASURE_TIME
+                    thread->th.th_sum_time_identify_physical_location += time2;
+                    thread->th.th_num_identify_physical_location++;
+                #endif
+
+                #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+                //add to map
+
+                #endif
+            }
+            #if KMP_TASK_AFFINITY_MEASURE_TIME
+            else
+            thread->th.th_count_map_found++;
+            #endif
+        }
+    }
+    #endif
 
 
     #if 0//#############
@@ -2687,18 +2655,17 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
     return current_data_domain;
     #endif //##########
 
-#if 1//############################################################
+#if 0//############################################################
 #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
         KA_TRACE(50,("always physical location"));
-        foundAll = false;
+        // foundAll = false;
 #endif
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time2 = get_wall_time2()-time2;
         thread->th.th_sum_time_map_find += time2;
         thread->th.th_num_map_find++;
 #endif
-    KA_TRACE(50, ("+++++ found %d T#%d\n", foundAll, gtid));
-    if (foundAll) {
+    if (false) {
         thread->th.th_count_map_found++;
         ret_code = 0;
         int x=-1;
@@ -2774,9 +2741,9 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
             current_data_domain = page_loc[x][y];
             KA_TRACE(1, ("+++++ best pos %d %d (not found)\n", x, y));
             if (current_data_domain < 0){
-                *target_tid2 = target_tid;
-                *target_gtid2 = target_gtid;
-                *ret_code2 = ret_code;
+                // *target_tid2 = target_tid;
+                // *target_gtid2 = target_gtid;
+                // *ret_code2 = ret_code;
                 KA_TRACE(20, ("+++++ affinity_schedule exit: current_data_domain %d, page_start_addr %p\n",current_data_domain, page_start_address));
                 return current_data_domain;
             }
@@ -2793,13 +2760,13 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
           } else {
             // thread mode
             KA_TRACE(50,("thread mode??\n"));//domain mode
-            KA_TRACE(50,("domain %d team %d data %d tid %d gtid %d\n",current_data_domain, task_team, threads_data, target_tid, target_gtid));
+            KA_TRACE(50,("s+domain %d team %d data %d tid %d gtid %d\n",current_data_domain, task_team, threads_data, target_tid, target_gtid));
             target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);//TODO segmentation fault here!! current_data_domain 0 page_start_addr0x7f303bbf0bc0,
             //not here? affinity exits norminally
             //__kmp_alloc_task_deque: T#264 allocating deque[256] for thread_data 0x7f82c010d300
             ///usr/local_rwth/bin/no_numa_balancing: line 11: 59212 Segmentation fault      (core dumped) LD_PRELOAD=$LIBRARY $@
-            /KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATIONKMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
-            KA_TRACE(50,("domain %d team %d data %d tid %d gtid %d\n",current_data_domain, task_team, threads_data, target_tid, target_gtid));
+            //KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATIONKMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
+            KA_TRACE(50,("e+domain %d team %d data %d tid %d gtid %d\n",current_data_domain, task_team, threads_data, target_tid, target_gtid));
           }
           #if !KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
         if(target_tid != -1) {
@@ -2835,13 +2802,13 @@ int inline  affinity_schedule(kmp_int32 gtid, kmp_info_t *thread, kmp_taskdata_t
         }
     }
 
-    *target_tid2 = target_tid;
-    *target_gtid2 = target_gtid;
-    *ret_code2 = ret_code;
+    // *target_tid2 = target_tid;
+    // *target_gtid2 = target_gtid;
+    // *ret_code2 = ret_code;
     KA_TRACE(20, ("+++++ affinity_schedule exit: current_data_domain %d, page_start_addr %p target_tid %d, target_gtid %d\n",current_data_domain, page_start_address, target_tid, target_gtid));
     return current_data_domain;
     #endif //######################################################################################################################################
-}
+
 
 // __kmpc_omp_task: Wrapper around __kmp_omp_task to schedule a
 // non-thread-switchable task from the parent thread only!
@@ -2958,19 +2925,72 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
         // KA_TRACE(5, ("TASK AFFINITY: __kmpc_omp_task: T#%d task_affinity_data address is %p.\n", gtid, thread->th.th_task_affinity_data));
         // check address for numa domain
-        //int current_data_domain = -1;
+        int current_data_domain = -1;
         int ret_code = -1;
         int target_tid = -1;
         int target_gtid = -1;
         kmp_info_t * target_thread = NULL;
-        int current_data_domain = affinity_schedule(gtid, thread, new_taskdata, &target_tid, &target_gtid, &ret_code, thread->th.naffin, thread->th.th_task_affinity_data);
+        void *page_boundary_pointer;
+        #if 1
+        KA_TRACE(50,("input test: gtid %d, thread %d, naffin %d, aff_len %d, pointer %p\n",
+         gtid, thread, thread->th.naffin, thread->th.th_task_affinity_data[0].len, page_boundary_pointer));
 
-#if FALSE//0
+        int loc = affinity_schedule(&page_boundary_pointer, gtid, thread, thread->th.naffin, thread->th.th_task_affinity_data);
+
+        if (loc > 0){
+            current_data_domain = loc;
+            if (task_aff_map_type == kmp_task_aff_map_type_domain){
+                current_data_domain = loc;
+                if(task_aff_init_thread_type == kmp_task_aff_init_thread_type_private
+                    && current_data_domain == thread->th.th_task_aff_my_domain_nr) {
+                        // push to local queue if same domain to keep current thread busy
+                    target_gtid = gtid;
+                    target_tid = __kmp_tid_from_gtid(target_gtid);
+              } else {
+                KA_TRACE(50,("calling init thread: c2 domain %d, team %d, threads %d, tid %d, gtid %d, idx",current_data_domain, task_team, threads_data, threads_data->td.td_idx_in_numa_map));
+                target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
+                //target_gtid = 1;
+                //target_tid= __kmp_tid_from_gtid(target_gtid);
+            }
+            new_taskdata->td_task_affinity_data_domain = current_data_domain;
+        } else {
+            target_gtid = loc;
+
+            // DEBUG: also save this information for statistics
+            #if KMP_TASK_AFFINITY_MEASURE_TIME
+                time2 = get_wall_time2();
+            #endif
+            //int tmp_err = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+            int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
+            #if KMP_TASK_AFFINITY_MEASURE_TIME
+                time2 = get_wall_time2()-time2;
+                thread->th.th_sum_time_identify_physical_location += time2;
+                thread->th.th_num_identify_physical_location++;
+            #endif
+            if(tmp_err == 0 && current_data_domain >= 0)
+                new_taskdata->td_task_affinity_data_domain = current_data_domain;
+            // DEBUG
+            // set data domain to some value >= 0; not really used but necessary to not run into fallback mode
+            current_data_domain = 0;
+
+            // current_data_domain = map_thread_to_numa_domain[target_gtid];
+            // if(current_data_domain == thread->th.th_task_aff_my_domain_nr) {
+            //   target_gtid = gtid;
+            //   target_tid = __kmp_tid_from_gtid(gtid);
+            // } else {
+            target_tid = __kmp_tid_from_gtid(target_gtid);
+            //   //kmp_thread_data_t *target_thread_data = &(threads_data[target_tid]);
+            //   //target_thread = target_thread_data->td.td_thr;
+            // }
+            }
+        }
+        #endif
+#if false//0
         // get address and page from current pointer
         size_t tmp_address = (size_t)thread->th.th_task_affinity_data;
         const int page_size = KMP_GET_PAGE_SIZE();
         size_t page_start_address = tmp_address & ~(page_size-1);
-        void * page_boundary_pointer = (void *) page_start_address;
+        page_boundary_pointer = (void *) page_start_address;
         // KA_TRACE(5, ("TASK AFFINITY: T#%d Compare pointer address orig:%p value of variable:%lx page address:%lx\n", gtid, thread->th.th_task_affinity_data, tmp_address, page_start_address));
 
         // check map
@@ -3141,7 +3161,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
         time1 = get_wall_time2();
 #endif
 
-        if(ret_code == 0 && current_data_domain >= 0) {
+        if(current_data_domain >= 0) {
           if(target_tid == -1)
           {
             // fall back mode if not possible to find any matching thread
@@ -3165,7 +3185,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
           }
         } else {
           // fall back mode if not possible to find any matching thread or not a correct numa domain for poninter
-          KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode, ret_code: %d, current_data_domain %d\n", gtid, ret_code, current_data_domain));
+          KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode, current_data_domain %d\n", gtid, current_data_domain));
           thread->th.th_count_task_pushed_in_fallback_mode2++;
           res = __kmp_omp_task(gtid, new_task, true);
         } // if
