@@ -2648,6 +2648,11 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_overhead_numa_task_stealing;
   int     th_num_overhead_numa_task_stealing;
 
+  int     th_num_strategy_execution;
+  double  th_sum_time_strategy_1;
+  double  th_sum_time_strategy_2;
+  double  th_sum_time_check_page;
+
   double  th_sum_time_task_execution;
   int     th_num_task_execution;
   double  th_sum_time_task_execution_correct_domain;

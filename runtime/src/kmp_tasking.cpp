@@ -1923,7 +1923,7 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
 
 //check for address -> found true and false
 int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
-    KA_TRACE(50,("check_page called: "));
+    KA_TRACE(50,("check_page T#%d: addr %p\n", gtid, addr));
     #if KMP_TASK_AFFINITY_MEASURE_TIME
             time3 = get_wall_time2();
     #endif
@@ -1957,7 +1957,8 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
         KA_TRACE(50,("found\n"))
         #if KMP_TASK_AFFINITY_MEASURE_TIME
             thread->th.th_count_map_found++;
-            //TODO save time 3
+            time3 =  get_wall_time2() - time3;
+            thread->th.th_sum_time_check_page+=time3;
         #endif
 
         #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
@@ -1994,7 +1995,7 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
             //target_tid=__kmp_tid_from_gtid(target_gtid);
             if(target_tid != -1) {
                 #if KMP_TASK_AFFINITY_MEASURE_TIME
-                    time2 = get_wall_time2();
+                    time4 = get_wall_time2();
                 #endif
                 if(task_aff_map_type == kmp_task_aff_map_type_domain) {
                     KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
@@ -2016,16 +2017,24 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
                     #endif
                   }
                   #if KMP_TASK_AFFINITY_MEASURE_TIME
-                    time2 = get_wall_time2()-time2;
-                    thread->th.th_sum_time_map_insert += time2;
+                    time4 = get_wall_time2()-time4;
+                    thread->th.th_sum_time_map_insert += time4;
                     thread->th.th_num_map_insert++;
                 #endif
             }
+            #if KMP_TASK_AFFINITY_MEASURE_TIME
+                time3 = get_wall_time2() - time3;
+                thread->th.th_sum_time_check_page += time3;
+            #endif
             //TODO: save time 3 and stats
             return current_data_domain;
         }
     }
     //TODO save time 3 and stats
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+        time3 = get_wall_time2() - time3;
+        thread->th.th_sum_time_check_page += time3;
+    #endif
     return -2;
 }
 
@@ -2231,6 +2240,10 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
 }
 
 int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread, kmp_int32 naffin, kmp_task_affinity_info *aff_info){
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+        thread->th.th_num_strategy_execution++;
+        time2 = get_wall_time2();
+    #endif
     void *pointer = *pointer2;
     const int page_size = KMP_GET_PAGE_SIZE();
     KA_TRACE(50,("output test: gtid %d, thread %d, naffin %d, aff_len %d, pointer %p\n",
@@ -2253,9 +2266,6 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     else if (task_aff_schedule_type/100 == 0){task_aff_schedule_num = 1;}//s:first
     const int n = task_aff_schedule_num;
 
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-    time2 = get_wall_time2();
-#endif
 
     //bool foundAll = true;//for all
     //int found[naffin][n];//0 nothing here, 1 not found, 2 found, 3 error
@@ -2584,15 +2594,21 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
             // #endif
         }
     }
-    //TODO save time 2
-    //TODO start time 2 again
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+        time2 = get_wall_time2() - time2;
+        thread->th.th_sum_time_strategy_1 += time3;
+        time2 = get_wall_time2();
+    #endif
     int x=0;
     int y=0;
     //count most common loc in page_loc, while -1 is ignoring this and further entries in the row, bc it shoudl only contain more unfilled entreis init with -1
     map_count_weighted(aff_info, naffin, n, page_loc, &x,&y, task_aff_schedule_type%100);
     pointer = (void *) ((aff_info[x].base_addr + ((y*skipLen[y]) %aff_info[x].len) ) & ~(page_size-1));
     KA_TRACE(20, ("+++++ affinity_schedule exit: loc %d (%d %d), pointer %p\n", page_loc[x][y],x,y,pointer));
-    //TODO save time 2
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+        time2 = get_wall_time2() - time2;
+        thread->th.th_sum_time_strategy_2 += time2;
+    #endif
     return page_loc[x][y];
 }
 
@@ -4491,9 +4507,9 @@ static inline int __kmp_execute_tasks_template(
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED
           int tmp_victim_tid = -1;
           int tmp_victim_gtid = -1;
-          double time1, time2;
-          time1 = 0;
-          time2 = 0;
+          double time1=0, time2=0, time3=0, time4=0;
+          //time1 = 0;
+          //time2 = 0;
 
           task = NULL;
           // also check if task team holds tasks with affinity.. otherwise do not use numa aware stealing
