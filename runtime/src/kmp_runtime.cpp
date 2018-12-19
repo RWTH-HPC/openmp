@@ -1389,7 +1389,7 @@ void __kmp_serialized_parallel(ident_t *loc, kmp_int32 global_tid) {
 
     ompt_lw_taskteam_t lw_taskteam;
 
-    __ompt_lw_taskteam_init(&lw_taskteam, this_thr, global_tid, 
+    __ompt_lw_taskteam_init(&lw_taskteam, this_thr, global_tid,
                             &ompt_parallel_data, codeptr);
     // exit_runtime_p =
     //     &(lw_taskteam.ompt_task_info.frame.exit_runtime_frame);
@@ -5817,10 +5817,10 @@ void __kmp_internal_end_atexit(void) {
 
 #if KMP_USE_TASK_AFFINITY
 static void __kmp_reap_thread_print_stats(int gtid, const char* name, double sum_time, int num) {
-  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread:\tT#%d\t%s\t%d\t%f\tmean:\t%f\tms\n", 
+  fprintf(stderr, "TASK AFFINITY: __kmp_reap_thread:\tT#%d\t%s\t%d\t%f\tmean:\t%f\tms\n",
     gtid,
-    name, 
-    num, sum_time, 
+    name,
+    num, sum_time,
     sum_time / num);
 }
 #endif
@@ -5944,7 +5944,10 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_thread_print_stats(gtid, "time_identify_physical_location", thread->th.th_sum_time_identify_physical_location, thread->th.th_num_identify_physical_location);
   __kmp_reap_thread_print_stats(gtid, "time_pushing", thread->th.th_sum_time_pushing, thread->th.th_num_pushing);
   __kmp_reap_thread_print_stats(gtid, "time_pushing_inaff", thread->th.th_sum_time_pushing_inaff, thread->th.th_num_pushing_inaff);
+  __kmp_reap_thread_print_stats(gtid, "time_strategy1", thread->th.th_sum_time_strategy1, thread->th.th_num_strategy1);
+  __kmp_reap_thread_print_stats(gtid, "time_strategy2", thread->th.th_sum_time_strategy2, thread->th.th_num_strategy2);
 
+  __kmp_reap_thread_print_stats(gtid, "count_max_data_affinity_len", 0, thread->th.th_count_max_aff_data_len);
   __kmp_reap_thread_print_stats(gtid, "count_overall_tasks_generated", 0, thread->th.th_count_overall_tasks_generated);
   __kmp_reap_thread_print_stats(gtid, "count_task_with_affinity_generated", 0, thread->th.th_count_task_with_affinity_generated);
   __kmp_reap_thread_print_stats(gtid, "count_task_with_affinity_started", 0, thread->th.th_count_task_with_affinity_started);
@@ -5952,7 +5955,7 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
   __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_threads_domain", 0, thread->th.th_count_task_started_at_correct_threads_domain);
   __kmp_reap_thread_print_stats(gtid, "count_task_started_at_correct_data_domain", 0, thread->th.th_count_task_started_at_correct_data_domain);
 
-  __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode1", 0, thread->th.th_count_task_pushed_in_fallback_mode1);  
+  __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode1", 0, thread->th.th_count_task_pushed_in_fallback_mode1);
   __kmp_reap_thread_print_stats(gtid, "count_task_pushed_in_fallback_mode2", 0, thread->th.th_count_task_pushed_in_fallback_mode2);
 
   __kmp_reap_thread_print_stats(gtid, "count_map_found", 0, thread->th.th_count_map_found);

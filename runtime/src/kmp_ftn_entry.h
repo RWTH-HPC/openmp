@@ -309,12 +309,12 @@ int FTN_STDCALL FTN_GET_AFFINITY_MASK_PROC(int KMP_DEREF proc, void **mask) {
 }
 
 #if KMP_USE_TASK_AFFINITY
-void FTN_STDCALL FTN_SET_TASK_AFFINITY(void * data_start, void * data_end)
+void FTN_STDCALL FTN_SET_TASK_AFFINITY( void * data , int len)
 {
     #ifdef KMP_STUB
         // Nothing.
     #else
-        __kmpc_set_task_affinity(data_start, data_end);
+        __kmpc_set_task_affinity( data, len);
     #endif
 }
 void FTN_STDCALL FTN_TASK_AFFINITY_INIT( kmp_task_aff_init_thread_type_t init_thread_type , kmp_task_aff_map_type_t map_type, int affinity_schedule, int affinity_num)
@@ -322,7 +322,7 @@ void FTN_STDCALL FTN_TASK_AFFINITY_INIT( kmp_task_aff_init_thread_type_t init_th
     #ifdef KMP_STUB
         // Nothing.
     #else
-        __kmpc_task_affinity_init( init_thread_type, map_type, affinity_schedule, affinity_num );
+        __kmpc_task_affinity_init( init_thread_type, map_type, affinity_schedule, affinity_num);
     #endif
 }
 void FTN_STDCALL FTN_TASK_AFFINITY_SET_MSG(char* msg)

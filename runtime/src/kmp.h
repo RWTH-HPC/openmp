@@ -773,7 +773,7 @@ extern char const *__kmp_cpuinfo_file;
 
 #if KMP_USE_TASK_AFFINITY
 // experimental task affinity
-extern void __kmpc_set_task_affinity(void * data_start, void * data_end);
+extern void __kmpc_set_task_affinity(void * data_start, int len);
 #  ifndef __OMP_H
 typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_first = 0,
@@ -2648,10 +2648,12 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_overhead_numa_task_stealing;
   int     th_num_overhead_numa_task_stealing;
 
-  int     th_num_strategy_execution;
-  double  th_sum_time_strategy_1;
-  double  th_sum_time_strategy_2;
-  double  th_sum_time_check_page;
+  int     th_count_max_aff_data_len;//max affinity data len
+  double  th_sum_time_strategy1;
+  int     th_num_strategy1;
+  double  th_sum_time_strategy2;
+  int     th_num_strategy2;
+
 
   double  th_sum_time_task_execution;
   int     th_num_task_execution;

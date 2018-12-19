@@ -65,7 +65,7 @@
     extern int    __KAI_KMPC_CONVENTION  omp_get_max_task_priority   (void);
 
     /* task affinity features under evaluation */
-	extern void   __KAI_KMPC_CONVENTION  kmpc_set_task_affinity(void *, void *);
+	extern void   __KAI_KMPC_CONVENTION  kmpc_set_task_affinity(void *, int);
     typedef enum kmp_task_aff_init_thread_type_t {
         kmp_task_aff_init_thread_type_first = 0,
         kmp_task_aff_init_thread_type_random = 1,

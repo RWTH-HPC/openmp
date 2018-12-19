@@ -367,10 +367,10 @@
 !         *** kmp_* entry points
 !         ***
 
-          subroutine kmpc_set_task_affinity(ptr_start, ptr_end) bind(c)
+          subroutine kmpc_set_task_affinity(ptr, len) bind(c)
             import
-            integer (kind=kmp_pointer_kind), value :: ptr_start
-            integer (kind=kmp_pointer_kind), value :: ptr_end
+            integer (kind=kmp_pointer_kind), value :: ptr
+            integer (kind=omp_integer_kind), value :: len
           end subroutine kmpc_set_task_affinity
 
           subroutine kmpc_task_affinity_init(strategy_type, mode_type, affinity_schedule, affinity_num) bind(c)
