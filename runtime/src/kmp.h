@@ -773,7 +773,7 @@ extern char const *__kmp_cpuinfo_file;
 
 #if KMP_USE_TASK_AFFINITY
 // experimental task affinity
-extern void __kmpc_set_task_affinity(void * data);
+extern void __kmpc_set_task_affinity(void * data_start, int len);
 #  ifndef __OMP_H
 typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_first = 0,
@@ -788,7 +788,7 @@ typedef enum kmp_task_aff_map_type_t {
   kmp_task_aff_map_type_domain = 1
 } kmp_task_aff_map_type_t;
 #  endif // __OMP_H
-extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type);
+extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type, int affinity_schedule, int affinity_num);
 extern void  __kmpc_task_affinity_set_msg(char * msg);
 extern void  __kmpc_task_affinity_taskexectimes_set_enabled(int enabled);
 #endif
@@ -2238,6 +2238,21 @@ typedef struct kmp_maphash {
   kmp_uint32 nconflicts;
 #endif
 } kmp_maphash_t;
+
+typedef struct kmp_task_affinity_info {
+kmp_intptr_t base_addr;
+size_t len;
+union {
+struct {
+bool flag1 : 1;
+bool flag2 : 1;
+} s;
+kmp_int32 pad_flags;
+} flags;
+} kmp_task_affinity_info_t;
+//extern kmp_task_affinity_info_t kmp_task_affinity_info
+
+kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task, kmp_int32 naffins, kmp_task_affinity_info_t *affin_list);
 #endif
 
 #endif
@@ -2337,8 +2352,11 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 #endif
 #if KMP_USE_TASK_AFFINITY
   //bool td_use_task_affinity_search = false;
-  void * td_task_affinity_data_pointer = NULL;
-  size_t td_task_affinity_data_address = 0;
+  //void * td_task_affinity_data_pointer = NULL;
+  //size_t td_task_affinity_data_address = 0;
+
+  kmp_task_affinity_info_t *affinity_info;
+  kmp_int32 naffin = 0;
 
   // remember where task has been executed and domain where data is located
   bool td_task_affinity_scheduled_thread_set = false;
@@ -2347,7 +2365,7 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 
   double td_ts_task_execution = 0.0;
   double td_ts_task_execution_current_sum = 0.0;
-#endif  
+#endif
 }; // struct kmp_taskdata
 
 // Make sure padding above worked
@@ -2596,7 +2614,8 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   kmp_stats_list *th_stats;
 #endif
 #if KMP_USE_TASK_AFFINITY
-  void * th_task_affinity_data;
+  kmp_task_affinity_info *th_task_affinity_data;
+  kmp_int32 naffin;
   int th_task_aff_my_domain_nr;
   int *th_numa_domain_rr_counter;
 
@@ -2616,7 +2635,7 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   int     th_num_map_overall;
 
   double  th_sum_time_kmpc_omp_task;
-  
+
   double  th_sum_time_identify_physical_location;
   int     th_num_identify_physical_location;
 
@@ -2629,11 +2648,18 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
   double  th_sum_time_overhead_numa_task_stealing;
   int     th_num_overhead_numa_task_stealing;
 
+  int     th_count_max_aff_data_len;//max affinity data len
+  double  th_sum_time_strategy1;
+  int     th_num_strategy1;
+  double  th_sum_time_strategy2;
+  int     th_num_strategy2;
+
+
   double  th_sum_time_task_execution;
   int     th_num_task_execution;
   double  th_sum_time_task_execution_correct_domain;
   int     th_num_task_execution_correct_domain;
-  
+
   int     th_count_overall_tasks_generated;
   int     th_count_task_with_affinity_generated;
   int     th_count_task_with_affinity_started;
@@ -3999,6 +4025,8 @@ extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 extern kmp_task_aff_init_thread_type_t task_aff_init_thread_type;
 extern kmp_task_aff_map_type_t task_aff_map_type;
+extern int task_aff_schedule_type;
+extern int task_aff_schedule_num;
 
 static void start_task_execution_measurement(kmp_taskdata_t* taskdata) {
   if(taskdata->td_ts_task_execution == -1) {

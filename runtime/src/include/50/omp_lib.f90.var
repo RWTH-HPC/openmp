@@ -376,15 +376,18 @@
 !         ***
 !         *** kmp_* entry points
 !         ***
-          subroutine kmpc_set_task_affinity(ptr) bind(c)
+          subroutine kmpc_set_task_affinity(ptr, len) bind(c)
             import
             integer (kind=kmp_pointer_kind), value :: ptr
+            integer (kind=omp_integer_kind), value :: len
           end subroutine kmpc_set_task_affinity
 
-          subroutine kmpc_task_affinity_init(strategy_type, mode_type) bind(c)
+          subroutine kmpc_task_affinity_init(strategy_type, mode_type, affinity_schedule, affinity_num) bind(c)
             import
             integer (kind=omp_integer_kind), value :: strategy_type
             integer (kind=omp_integer_kind), value :: mode_type
+            integer (kind=omp_integer_kind), value :: affinity_schedule
+            integer (kind=omp_integer_kind), value :: affinity_num
           end subroutine kmpc_task_affinity_init
 
           subroutine kmp_set_stacksize(size) bind(c)
