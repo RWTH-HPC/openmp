@@ -2286,7 +2286,7 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     //count most common loc in page_loc with weight
     map_count_weighted(aff_info, naffin, row, page_loc, array_size, &x,&y, task_aff_schedule_type%100);
     pointer = (void *) ((aff_info[x].base_addr + ((y*skipLen[y]) %aff_info[x].len) ) & ~(page_size-1));
-    KA_TRACE(30, (" affinity_schedule (exit): loc %d (%d %d), pointer %p\n", page_loc[x][y],x,y,pointer));
+    KA_TRACE(1, (" affinity_schedule (exit): loc %d (%d %d), pointer %p\n", page_loc[x][y],x,y,pointer));
     #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2() - time1;
         thread->th.th_sum_time_strategy2 += time1;
