@@ -784,7 +784,19 @@ typedef enum kmp_task_aff_init_thread_type_t {
 } kmp_task_aff_init_thread_type_t;
 
 //Struct contains weight and page select strategy
-typedef struct kmp_config_affinity_schedule kmp_config_affinity_schedule_t;
+typedef enum strategy /* : int*/ {
+  FIRST_PAGE_OF_FIRST_AFFINITY_ONLY = 0,
+  DIVIDE_IN_N_PAGES = 1,
+  EVERY_NTH_PAGE = 2,
+  FIRST_AND_LAST_PAGE = 3,
+  CONTINUOUS_BINARY_SEARCH = 4,
+  FIRST_PAGE = 5,
+} strategy_t;
+
+typedef struct kmp_config_affinity_schedule {
+  int weight;
+  strategy_t strategy;
+} kmp_config_affinity_schedule_t;
 
 typedef enum kmp_task_aff_map_type_t {
   kmp_task_aff_map_type_thread = 0,
@@ -2258,19 +2270,7 @@ typedef struct kmp_task_affinity_info {
 
 kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task, kmp_int32 naffins, kmp_task_affinity_info_t *affin_list);
 
-typedef enum strategy /* : int*/ {
-  FIRST_PAGE_OF_FIRST_AFFINITY_ONLY = 0,
-  DIVIDE_IN_N_PAGES = 1,
-  EVERY_NTH_PAGE = 2,
-  FIRST_AND_LAST_PAGE = 3,
-  CONTINUOUS_BINARY_SEARCH = 4,
-  FIRST_PAGE = 5,
-} strategy_t;
 
-typedef struct kmp_config_affinity_schedule {
-  int weight;
-  strategy_t strategy;
-} kmp_config_affinity_schedule_t;
 
 #endif
 
