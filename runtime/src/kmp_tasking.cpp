@@ -2113,42 +2113,66 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
     size_t page_start_address;
     int current_data_domain = -1;
-    kmp_info_t * target_thread = NULL;
+    kmp_info_t * target_thread = nullptr;
 
     if (task_aff_schedule_num < 1){task_aff_schedule_num = 1;}
     const int n = task_aff_schedule_num;//for strat
 
     int max_len = n;//for loc array
-    //other affinities are ignored anyway - by sel/weight : strat
-    if (task_aff_schedule_type%100 == 0){max_len = 1;}//w:first
 
-    else if (task_aff_schedule_type/100 == 5){max_len = 1;}//s:first
-    else if (task_aff_schedule_type/100 == 0){max_len = 1;}//s:first1
-    else if (task_aff_schedule_type/100 == 1){max_len = n;}//s:divN
-    else if (task_aff_schedule_type/100 == 3){max_len = 2;}//s:FaL
-    else if (task_aff_schedule_type/100 == 4){max_len = n;}//s:bin
+    /*----------------------------------------------------------------*/
+    /*determine the max page length dependent of the chosen strategy*/
+    /*----------------------------------------------------------------*/
 
-    else if (task_aff_schedule_type/100 == 2){//s:step
-        max_len = 1;
-        for (int i=0; i < naffin; i++){
+    if(task_aff_schedule_type.weight == 0) {
+      max_len = 1;
+    } else {
+      switch (strategy)
+      {
+        case FIRST_PAGE_OF_FIRST_AFFINITY_ONLY:
+          max_len = 1;
+          break;
+        case DIVIDE_IN_N_PAGES:
+          max_len = n;
+          break;
+        case EVERY_NTH_PAGE:
+          max_len = 1;
+          for (int i=0; i < naffin; i++){
             if (aff_info[i].len > max_len){
                 max_len = aff_info[i].len;
             }
-        }
-        max_len = ((max_len/page_size)/n)+1;
+          }
+          max_len = ((max_len/page_size)/n)+1;
+          break;
+        case FIRST_AND_LAST_PAGE:
+          max_len = 2;
+          break;
+        case CONTINUOUS_BINARY_SEARCH:
+          max_len = n;
+          break;
+        case FIRST_PAGE:
+          max_len = 1;
+          break;
+      }
     }
 
     const int row = max_len;
 
-
     int page_loc[naffin][row];
-
     int array_size[naffin];//filled page loc array size
     int skipLen[naffin];
     int skip=0;
 
-    if (task_aff_schedule_type/100 == 1){
-        //divide in N equal sized parts (>= page) and get domain for ea
+    switch (task_aff_schedule_type.strategy)
+    {
+      case FIRST_PAGE_OF_FIRST_AFFINITY_ONLY:
+
+        page_loc[0][0] = check_page(gtid, thread, aff_info[0].base_addr);
+        array_size[0] = 1;
+
+        break;
+      case DIVIDE_IN_N_PAGES:
+
         for (int i=0;i<naffin;i++){
             skipLen[i] = aff_info[i].len/n;
             array_size[i] = row;
@@ -2164,35 +2188,10 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
                 skip += skipLen[i];
             }
         }
-    }
 
+        break;
+      case EVERY_NTH_PAGE:
 
-
-    else if (task_aff_schedule_type/100 == 12){
-        //divide in N equal sized parts (>= page) and get domain for ea, break loop at > len
-        //alt to 1 strat, not much difference recorded
-        for (int i=0;i<naffin;i++){
-            skipLen[i] = aff_info[i].len/n;
-            array_size[i] = row;
-            if (skipLen[i] < page_size){
-                skipLen[i] = page_size;
-            }
-            skip = 0;
-            array_size[i]=row;
-            for (int j=0; j < row; j++){
-                page_loc[i][j] = check_page(gtid, thread, aff_info[i].base_addr + skip);
-
-                skip += skipLen[i];
-                if (skip >= aff_info[i].len){
-                    array_size[i]=j+1;
-                    break;
-                }
-            }
-        }
-    }
-
-    else if (task_aff_schedule_type/100 == 2){
-        //check every N-page, break at len
         for (int i=0; i < naffin; i++){
             skipLen[i] = page_size*n;
             skip = 0;
@@ -2208,28 +2207,26 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
                 }
             }
         }
-    }
 
-    else if (task_aff_schedule_type/100 == 3){
-        //first and last page (last only if first != last)
-        for (int i=0; i < naffin; i++){
+        break;
+      case FIRST_AND_LAST_PAGE:
+        
+        for (int i=0; i < naffin; i++) {
             array_size[i]=1;
             skipLen[i] = aff_info[i].len-1;
             //KA_TRACE(50,("strat s3, len %d, skipLen %d\n",aff_info[i].len, skipLen[i]));
             page_loc[i][0] = check_page(gtid, thread, aff_info[i].base_addr);
 
-            if (skipLen[i] >= page_size){
+            if (skipLen[i] >= page_size) {
                 //only check last page, if not on same page
                 array_size[i]=2;
                 page_loc[i][1] = check_page(gtid, thread, aff_info[i].base_addr + skipLen[i]);
-
             }
         }
-    }
 
-    else if (task_aff_schedule_type/100 == 4){
-        //assumption linear saved array on max 2 domains
-        //bin search for seperator cut
+        break;
+      case CONTINUOUS_BINARY_SEARCH:
+
         KA_TRACE(50,("strat s4\n"));
         for (int i=0; i < naffin; i++){
             array_size[i] = n;
@@ -2256,24 +2253,35 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
                 page_loc[i][j]=top;
             }
         }
-    }
 
-    else if (task_aff_schedule_type/100 == 0){
-        //first addr for first affinity
-        //KA_TRACE(50,("strat s0\n"));
-        page_loc[0][0] = check_page(gtid, thread, aff_info[0].base_addr);
-        array_size[0] = 1;
-    }
-
-    else {//if (task_aff_schedule_type/100 == 5){
-        //first addr for ea affinity
-        //KA_TRACE(50,("strat s5\n"));
+        break;
+      case FIRST_PAGE:
         for (int i=0; i < naffin; i++){
             page_loc[i][0] = check_page(gtid, thread, aff_info[i].base_addr);
             array_size[i] = 1;
         }
-    }
+        break;
+      case 12:
+        for (int i=0;i<naffin;i++){
+            skipLen[i] = aff_info[i].len/n;
+            array_size[i] = row;
+            if (skipLen[i] < page_size){
+                skipLen[i] = page_size;
+            }
+            skip = 0;
+            array_size[i]=row;
+            for (int j=0; j < row; j++){
+                page_loc[i][j] = check_page(gtid, thread, aff_info[i].base_addr + skip);
 
+                skip += skipLen[i];
+                if (skip >= aff_info[i].len){
+                    array_size[i]=j+1;
+                    break;
+                }
+            }
+        }
+        break;
+    }
 
     #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2() - time1;
@@ -2284,7 +2292,7 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     int x=0;
     int y=0;
     //count most common loc in page_loc with weight
-    map_count_weighted(aff_info, naffin, row, page_loc, array_size, &x,&y, task_aff_schedule_type%100);
+    map_count_weighted(aff_info, naffin, row, page_loc, array_size, &x,&y, task_aff_schedule_type.weight);
     pointer = (void *) ((aff_info[x].base_addr + ((y*skipLen[y]) %aff_info[x].len) ) & ~(page_size-1));
     KA_TRACE(1, (" affinity_schedule (exit): loc %d (%d %d), pointer %p\n", page_loc[x][y],x,y,pointer));
     #if KMP_TASK_AFFINITY_MEASURE_TIME
@@ -2540,8 +2548,8 @@ void __kmpc_set_task_affinity(void * data_start, int len)
         if (len > thread->th.th_count_max_aff_data_len)
         thread->th.th_count_max_aff_data_len = len;
     #endif
-    KA_TRACE(50, ("__kmpc_set_task_affinity: T#%d size %d, affinities %d, INIT type %d and num %d len %d\n",
-                gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, task_aff_schedule_type, task_aff_schedule_num, task_affinity_info.len));
+    KA_TRACE(50, ("__kmpc_set_task_affinity: T#%d size %d, affinities %d, INIT type (weight) %d (strategy) %d and num %d len %d\n",
+                gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, task_aff_schedule_type.weight,task_aff_schedule_type.strategy , task_aff_schedule_num, task_affinity_info.len));
 
     //malloc for 4, realloc ea time > 4.
     if (thread->th.naffin>=4){
@@ -2559,7 +2567,7 @@ void __kmpc_task_affinity_taskexectimes_set_enabled( int enabled )
 
 //aff_schedule is composed number of schedule to use
 //aff_num is parameter for schedule (e.g. divide in n parts)
-void __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type, int affinity_schedule, int affinity_num)
+void __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type, kmp_config_affinity_schedule_t affinity_schedule, int affinity_num)
 {
   // fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting initial thread type to %d\n", __kmp_entry_gtid(), init_thread_type);
   // fprintf(stderr, "__kmpc_task_affinity_init: T#%d setting map type to %d\n", __kmp_entry_gtid(), map_type);
