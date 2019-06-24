@@ -95,7 +95,7 @@ kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 kmp_task_aff_init_thread_type_t task_aff_init_thread_type = kmp_task_aff_init_thread_type_random;
 kmp_task_aff_map_type_t task_aff_map_type = kmp_task_aff_map_type_thread;
-kmp_config_affinity_schedule_t task_aff_schedule_type = {.weight = 1, .strategy = 0};
+kmp_config_affinity_schedule_t task_aff_schedule_type = {.weight = 1, .strategy = FIRST_PAGE_OF_FIRST_AFFINITY_ONLY};
 int task_aff_schedule_num = 1;
 #endif // KMP_USE_TASK_AFFINITY
 

@@ -2127,7 +2127,7 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     if(task_aff_schedule_type.weight == 0) {
       max_len = 1;
     } else {
-      switch (strategy)
+      switch (task_aff_schedule_type.strategy)
       {
         case FIRST_PAGE_OF_FIRST_AFFINITY_ONLY:
           max_len = 1;
