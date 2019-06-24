@@ -782,6 +782,7 @@ typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_round_robin = 3,
   kmp_task_aff_init_thread_type_private = 4
 } kmp_task_aff_init_thread_type_t;
+#  endif // __OMP_H
 
 //Struct contains weight and page select strategy
 typedef enum strategy /* : int*/ {
@@ -802,7 +803,7 @@ typedef enum kmp_task_aff_map_type_t {
   kmp_task_aff_map_type_thread = 0,
   kmp_task_aff_map_type_domain = 1
 } kmp_task_aff_map_type_t;
-#  endif // __OMP_H
+
 extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type, kmp_config_affinity_schedule_t affinity_schedule, int affinity_num);
 extern void  __kmpc_task_affinity_set_msg(char * msg);
 extern void  __kmpc_task_affinity_taskexectimes_set_enabled(int enabled);
