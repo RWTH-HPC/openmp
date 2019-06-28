@@ -2107,7 +2107,7 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     void *pointer = *pointer2;
     const int page_size = KMP_GET_PAGE_SIZE();
     KA_TRACE(20, ("affinity_schedule (enter): T#%d #registred affinities %d\n",gtid, naffin));
-    KA_TRACE(50, ("+++ aff_data[0,len] addr: %p %p length %d, page_size %d n %d\n", aff_info[0].base_addr, aff_info[0].base_addr+aff_info[0].len, aff_info[0].len, page_size, page_selection_strategy));
+    KA_TRACE(50, ("+++ aff_data[0,len] addr: %p %p length %d, page_size %d n %d\n", aff_info[0].base_addr, aff_info[0].base_addr+aff_info[0].len, aff_info[0].len, page_size, kmp_number_of_affinities));
     KA_TRACE(50,("+++ domain of data 0 in map: %d\n",task_aff_addr_map.find(aff_info[0].base_addr & ~(page_size-1))->second))
     kmp_task_team_t *task_team = thread->th.th_task_team;
     kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
@@ -2115,8 +2115,8 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     int current_data_domain = -1;
     kmp_info_t * target_thread = nullptr;
 
-    if (page_weighting_strategy < 1){page_weighting_strategy = kmp_affinity_page_weight_mode_majority;}
-    const int n = page_selection_strategy;//for strat
+    if (kmp_number_of_affinities < 1){kmp_number_of_affinities = 1;}
+    const int n = kmp_number_of_affinities;//for strat
 
     int max_len = n;//for loc array
 
@@ -2528,8 +2528,8 @@ void __kmpc_set_task_affinity(void * data_start, int len)
         if (len > thread->th.th_count_max_aff_data_len)
         thread->th.th_count_max_aff_data_len = len;
     #endif
-    KA_TRACE(50, ("__kmpc_set_task_affinity: T#%d size %d, affinities %d, INIT type (weight) %d (strategy) %d and strat %d, weigth %d len %d\n",
-                gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, page_weighting_strategy, page_selection_strategy , page_selection_strategy, page_weighting_strategy, task_affinity_info.len));
+    KA_TRACE(50, ("__kmpc_set_task_affinity: T#%d size %d, affinities %d, INIT type (weight) %d (strategy) %d and num %d, len %d\n",
+                gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, page_weighting_strategy, page_selection_strategy , kmp_number_of_affinities, task_affinity_info.len));
 
     //malloc for 4, realloc ea time > 4.
     if (thread->th.naffin>=4){
@@ -2553,6 +2553,7 @@ void __kmpc_task_affinity_init(kmp_affinity_settings_t affinity_settings)
   affinity_map_mode = affinity_settings.affinity_map_mode;
   page_selection_strategy = affinity_settings.page_selection_strategy;
   page_weighting_strategy = affinity_settings.page_weighting_strategy;
+  kmp_number_of_affinities = affinity_settings.kmp_number_of_affinities;
   enable_numa_aware_stealing = true;
 }
 
