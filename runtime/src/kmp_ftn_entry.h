@@ -322,7 +322,7 @@ void FTN_STDCALL FTN_TASK_AFFINITY_INIT(kmp_affinity_settings_t affinity_setting
     #ifdef KMP_STUB
         // Nothing.
     #else
-        __kmpc_task_affinity_init(kmp_affinity_settings_t affinity_settings);
+        __kmpc_task_affinity_init(affinity_settings);
     #endif
 }
 void FTN_STDCALL FTN_TASK_AFFINITY_SET_MSG(char* msg)
