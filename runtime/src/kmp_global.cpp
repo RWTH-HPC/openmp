@@ -93,10 +93,10 @@ kmp_maphash_t * task_aff_addr_map2;
 
 kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
-kmp_task_aff_init_thread_type_t task_aff_init_thread_type = kmp_task_aff_init_thread_type_random;
-kmp_task_aff_map_type_t task_aff_map_type = kmp_task_aff_map_type_thread;
-kmp_config_affinity_schedule_t task_aff_schedule_type = {.weight = 1, .strategy = FIRST_PAGE_OF_FIRST_AFFINITY_ONLY};
-int task_aff_schedule_num = 1;
+kmp_affinity_thread_selection_mode_t thread_selection_strategy = kmp_affinity_thread_selection_mode_random;
+kmp_affinity_mode_t affinity_mode = kmp_affinity_map_type_thread;
+kmp_affinity_page_selection_strategy_t page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only;
+kmp_affinity_page_weighting_strategy_t page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
 #endif // KMP_USE_TASK_AFFINITY
 
 size_t __kmp_stksize = KMP_DEFAULT_STKSIZE;

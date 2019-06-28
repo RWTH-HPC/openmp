@@ -775,6 +775,7 @@ extern char const *__kmp_cpuinfo_file;
 // experimental task affinity
 extern void __kmpc_set_task_affinity(void * data_start, int len);
 #  ifndef __OMP_H
+/*
 typedef enum kmp_task_aff_init_thread_type_t {
   kmp_task_aff_init_thread_type_first = 0,
   kmp_task_aff_init_thread_type_random = 1,
@@ -787,24 +788,46 @@ typedef enum kmp_task_aff_map_type_t {
   kmp_task_aff_map_type_thread = 0,
   kmp_task_aff_map_type_domain = 1
 } kmp_task_aff_map_type_t;
+*/
+typedef enum kmp_affinity_thread_selection_mode_t {
+      kmp_affinity_thread_selection_mode_first = 0,
+      kmp_affinity_thread_selection_mode_random = 1,
+      kmp_affinity_thread_selection_mode_lowest_wl = 2,
+      kmp_affinity_thread_selection_mode_round_robin = 3,
+      kmp_affinity_thread_selection_mode_private = 4,
+  } kmp_affinity_thread_selection_mode_t;
+
+  typedef enum kmp_affinity_map_mode_t {
+      kmp_affinity_map_type_thread = 0,
+      kmp_affinity_map_type_domain = 1,
+  } kmp_affinity_map_mode_t;
+
+  typedef enum kmp_affinity_page_selection_strategy_t {
+      kmp_affinity_page_mode_first_page_of_first_affinity_only = 0,
+      kmp_affinity_page_mode_divide_in_n_pages = 1,
+      kmp_affinity_page_mode_every_nth_page = 2,
+      kmp_affinity_page_mode_first_and_last_page = 3,
+      kmp_affinity_page_mode_continuous_binary_search = 4,
+      kmp_affinity_page_mode_first_page = 5,
+  } kmp_affinity_page_selection_strategy_t;
+
+  typedef enum kmp_affinity_page_weighting_strategy_t {
+      kmp_affinity_page_weight_mode_first_page_only = 0,
+      kmp_affinity_page_weight_mode_majority = 1,
+      kmp_affinity_page_weight_mode_by_affinity = 2,
+      kmp_affinity_page_weight_mode_by_size = 3,
+  } kmp_affinity_page_weighting_strategy_t;
+
+  typedef struct kmp_affinity_settings_t {
+      kmp_affinity_thread_selection_mode_t thread_selection_strategy;
+      kmp_affinity_mode_t affinity_mode;
+      kmp_affinity_page_selection_strategy_t page_selection_strategy;
+      kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
+  } kmp_affinity_settings_t;
+
 #  endif // __OMP_H
 
-//Struct contains weight and page select strategy
-typedef enum strategy /* : int*/ {
-  FIRST_PAGE_OF_FIRST_AFFINITY_ONLY = 0,
-  DIVIDE_IN_N_PAGES = 1,
-  EVERY_NTH_PAGE = 2,
-  FIRST_AND_LAST_PAGE = 3,
-  CONTINUOUS_BINARY_SEARCH = 4,
-  FIRST_PAGE = 5,
-} strategy_t;
-
-typedef struct kmp_config_affinity_schedule {
-  int weight;
-  strategy_t strategy;
-} kmp_config_affinity_schedule_t;
-
-extern void  __kmpc_task_affinity_init(kmp_task_aff_init_thread_type_t init_thread_type, kmp_task_aff_map_type_t map_type, kmp_config_affinity_schedule_t affinity_schedule, int affinity_num);
+extern void  __kmpc_task_affinity_init(kmp_affinity_settings_t affinity_settings);
 extern void  __kmpc_task_affinity_set_msg(char * msg);
 extern void  __kmpc_task_affinity_taskexectimes_set_enabled(int enabled);
 #endif
@@ -4043,10 +4066,10 @@ extern kmp_maphash_t * task_aff_addr_map2;
 
 extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
-extern kmp_task_aff_init_thread_type_t task_aff_init_thread_type;
-extern kmp_task_aff_map_type_t task_aff_map_type;
-extern kmp_config_affinity_schedule_t task_aff_schedule_type;
-extern int task_aff_schedule_num;
+extern kmp_affinity_thread_selection_mode_t thread_selection_strategy;
+extern kmp_affinity_map_mode_t affinity_mode;
+extern kmp_affinity_page_selection_strategy_t page_selection_strategy;
+extern kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
 
 static void start_task_execution_measurement(kmp_taskdata_t* taskdata) {
   if(taskdata->td_ts_task_execution == -1) {
