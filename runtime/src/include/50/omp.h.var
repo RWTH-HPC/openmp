@@ -98,7 +98,7 @@
 
     typedef struct kmp_affinity_settings_t {
         kmp_affinity_thread_selection_mode_t thread_selection_strategy;
-        kmp_affinity_mode_t affinity_mode;
+        kmp_affinity_map_mode_t affinity_map_mode;
         kmp_affinity_page_selection_strategy_t page_selection_strategy;
         kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
     } kmp_affinity_settings_t;

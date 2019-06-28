@@ -820,7 +820,7 @@ typedef enum kmp_affinity_thread_selection_mode_t {
 
   typedef struct kmp_affinity_settings_t {
       kmp_affinity_thread_selection_mode_t thread_selection_strategy;
-      kmp_affinity_mode_t affinity_mode;
+      kmp_affinity_map_mode_t affinity_map_mode;
       kmp_affinity_page_selection_strategy_t page_selection_strategy;
       kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
   } kmp_affinity_settings_t;
@@ -4067,7 +4067,7 @@ extern kmp_maphash_t * task_aff_addr_map2;
 extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 extern kmp_affinity_thread_selection_mode_t thread_selection_strategy;
-extern kmp_affinity_map_mode_t affinity_mode;
+extern kmp_affinity_map_mode_t affinity_map_mode;
 extern kmp_affinity_page_selection_strategy_t page_selection_strategy;
 extern kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
 

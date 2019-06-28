@@ -654,7 +654,7 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
   }
 
   if(taskdata->naffin != 0) {
-    if(affinity_mode == kmp_affinity_map_type_thread) {
+    if(affinity_map_mode == kmp_affinity_map_type_thread) {
       // set gtid in last used location for page address
       KA_TRACE(5, ("__kmp_task_start: T#%d Setting last used mapping to %lx ==> %d\n", gtid, taskdata->affinity_info[0].base_addr, gtid));
 #if KMP_TASK_AFFINITY_MEASURE_TIME
@@ -1983,7 +1983,7 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
         if (ret_code == 0 && current_data_domain >= 0){
             if(thread_selection_strategy == kmp_affinity_thread_selection_mode_private
                 && current_data_domain == thread->th.th_task_aff_my_domain_nr
-                && affinity_mode == kmp_affinity_map_type_domain) {target_gtid = gtid;target_tid = __kmp_tid_from_gtid(gtid);}
+                && affinity_map_mode == kmp_affinity_map_type_domain) {target_gtid = gtid;target_tid = __kmp_tid_from_gtid(gtid);}
 
             KA_TRACE(50,("calling init thread: domain %d, team %d, threads %d, tid %d, gtid %d, idx %d\n",current_data_domain, task_team, threads_data, target_tid, target_gtid, threads_data->td.td_idx_in_numa_map));
             kmp_info_t * target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
@@ -1991,7 +1991,7 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
                 #if KMP_TASK_AFFINITY_MEASURE_TIME
                     double time4 = get_wall_time2();
                 #endif
-                if(affinity_mode == kmp_affinity_map_type_domain) {
+                if(affinity_map_mode == kmp_affinity_map_type_domain) {
                     KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
                     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                         __kmp_acquire_bootstrap_lock(&lock_addr_map);
@@ -2391,7 +2391,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
         if (loc >= 0){
             current_data_domain = loc;
-            if (affinity_mode == kmp_task_aff_map_type_domain){
+            if (affinity_map_mode == kmp_task_aff_map_type_domain){
                 current_data_domain = loc;
                 if(thread_selection_strategy == kmp_affinity_thread_selection_mode_private
                     && current_data_domain == thread->th.th_task_aff_my_domain_nr) {
@@ -2550,7 +2550,7 @@ void __kmpc_task_affinity_taskexectimes_set_enabled( int enabled )
 void __kmpc_task_affinity_init(kmp_affinity_settings_t affinity_settings)
 {
   thread_selection_strategy = affinity_settings.thread_selection_strategy;
-  affinity_mode = affinity_settings.affinity_mode;
+  affinity_map_mode = affinity_settings.affinity_map_mode;
   page_selection_strategy = affinity_settings.page_selection_strategy;
   page_weighting_strategy = affinity_settings.page_weighting_strategy;
   enable_numa_aware_stealing = true;
