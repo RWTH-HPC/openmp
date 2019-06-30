@@ -823,7 +823,7 @@ typedef enum kmp_affinity_thread_selection_mode_t {
       kmp_affinity_map_mode_t affinity_map_mode;
       kmp_affinity_page_selection_strategy_t page_selection_strategy;
       kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
-      int kmp_number_of_affinities;
+      int number_of_affinities;
   } kmp_affinity_settings_t;
 
 #  endif // __OMP_H
@@ -4071,7 +4071,7 @@ extern kmp_affinity_thread_selection_mode_t thread_selection_strategy;
 extern kmp_affinity_map_mode_t affinity_map_mode;
 extern kmp_affinity_page_selection_strategy_t page_selection_strategy;
 extern kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
-extern int kmp_number_of_affinities;
+extern int number_of_affinities;
 
 static void start_task_execution_measurement(kmp_taskdata_t* taskdata) {
   if(taskdata->td_ts_task_execution == -1) {
