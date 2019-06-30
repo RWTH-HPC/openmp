@@ -2101,7 +2101,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
     }
 }
 */
-inline int[][] map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin], kmp_affinity_page_weighting_strategy_t page_weighting_strategy) 
+inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin], kmp_affinity_page_weighting_strategy_t page_weighting_strategy) 
 {
   const page_size = KMP_GET_PAGE_SIZE();
   int x = 0, y = 0;
