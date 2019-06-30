@@ -2105,6 +2105,9 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
 {
   const int page_size = KMP_GET_PAGE_SIZE();
   int x = 0, y = 0;
+    int max = 0;
+    int* cur;
+    std::map<int,int> m;
 
   switch (page_weighting_strategy)
   {
@@ -2112,11 +2115,9 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
     return page_loc[0][0];
     break;
   case kmp_affinity_page_weight_mode_majority:
-    int max = 0;
-    int* cur;
     x = 0;
     y = 0;
-    std::map<int,int> m;
+    max = 0;
     for (int i=0; i < naffin; i++) {
         for (int j=0; j < array_size[i]; j++){
             cur = &page_loc[i][j];
@@ -2133,11 +2134,7 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
     }
     break;
   case kmp_affinity_page_weight_mode_by_affinity:
-    int max = 0;
-    int* cur;
-    x = 0;
-    y = 0;
-    std::map<int,double> m;
+    max = 0;
     for (int i=0; i < naffin; i++) {
         double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
         KA_TRACE(50,("++weight %f row %d size %d\n",weight, row, array_size[i]));
@@ -2156,9 +2153,7 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
     }
     break;
   case kmp_affinity_page_weight_mode_by_size:
-    int max = 0;
-    int* cur;
-    std::map<int,double> m;
+    max = 0;
     int f = page_size*row; //divide weight by factor, to prevent overflow
     for (int i=0; i < naffin; i++) {
         double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
