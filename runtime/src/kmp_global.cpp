@@ -97,6 +97,16 @@ kmp_affinity_thread_selection_mode_t thread_selection_strategy = kmp_affinity_th
 kmp_affinity_map_mode_t affinity_map_mode = kmp_affinity_map_type_thread;
 kmp_affinity_page_selection_strategy_t page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only;
 kmp_affinity_page_weighting_strategy_t page_weighting_strategy = kmp_affinity_page_weight_mode_majority;
+int number_of_affinities = 1;
+
+kmp_affinity_settings_t affinity_settings = {
+    .thread_selection_strategy = thread_selection_strategy;
+    .affinity_map_mode = affinity_map_mode;
+    .page_selection_strategy = page_selection_strategy;
+    .page_weighting_strategy = page_weighting_strategy;
+    .number_of_affinities = number_of_affinities;
+}
+
 #endif // KMP_USE_TASK_AFFINITY
 
 size_t __kmp_stksize = KMP_DEFAULT_STKSIZE;
