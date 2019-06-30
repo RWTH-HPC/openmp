@@ -2146,8 +2146,8 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
             m[*cur]+=weight;
             if (m[*cur] > max) {
                 max = m[*cur];
-                *x=i;
-                *y=j;
+                x=i;
+                y=j;
             }
         }
     }
@@ -2165,8 +2165,8 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
             m[*cur]+=weight*f;
             if (m[*cur] > max) {
                 max = m[*cur];
-                *x=i;
-                *y=j;
+                x=i;
+                y=j;
             }
         }
     }
