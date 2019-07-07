@@ -88,7 +88,7 @@
         kmp_affinity_map_type_domain = 1,
     } kmp_affinity_map_mode_t;
 
-    const *kmp_affinity_thread_selection_mode_c[5] = {
+    const char *kmp_affinity_thread_selection_mode_c[5] = {
         "map_type_thread",
         "map_type_domain",
     };
