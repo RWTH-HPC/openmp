@@ -101,7 +101,7 @@ kmp_affinity_page_weighting_strategy_t page_weighting_strategy = kmp_affinity_pa
 int number_of_affinities = 1;
 */
 
-kmp_affinity_settings_t affinity_settings = {
+kmp_affinity_settings_t kmp_affinity_settings = {
     .thread_selection_strategy = kmp_affinity_thread_selection_mode_random,
     .affinity_map_mode = kmp_affinity_map_type_thread,
     .page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only,
