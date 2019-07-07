@@ -107,7 +107,7 @@ kmp_affinity_settings_t affinity_settings = {
     .page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only,
     .page_weighting_strategy = kmp_affinity_page_weight_mode_majority,
     .number_of_affinities = 1
-}
+};
 
 #endif // KMP_USE_TASK_AFFINITY
 
