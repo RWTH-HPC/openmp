@@ -810,7 +810,7 @@ typedef enum kmp_task_aff_map_type_t {
       kmp_affinity_map_type_domain = 1,
   } kmp_affinity_map_mode_t;
 
-  const char *kmp_affinity_thread_selection_mode_c[5] = {
+  const char *kmp_affinity_map_mode_c[2] = {
       "map_type_thread",
       "map_type_domain",
   };
