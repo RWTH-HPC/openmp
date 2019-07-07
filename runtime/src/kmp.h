@@ -789,7 +789,7 @@ typedef enum kmp_task_aff_map_type_t {
   kmp_task_aff_map_type_domain = 1
 } kmp_task_aff_map_type_t;
 */
-typedef enum kmp_affinity_thread_selection_mode_t {
+  typedef enum kmp_affinity_thread_selection_mode_t {
       kmp_affinity_thread_selection_mode_first = 0,
       kmp_affinity_thread_selection_mode_random = 1,
       kmp_affinity_thread_selection_mode_lowest_wl = 2,
@@ -797,10 +797,23 @@ typedef enum kmp_affinity_thread_selection_mode_t {
       kmp_affinity_thread_selection_mode_private = 4,
   } kmp_affinity_thread_selection_mode_t;
 
+  const char[][] kmp_affinity_thread_selection_mode_c = {
+      "thread_selection_mode_first",
+      "thread_selection_mode_random",
+      "thread_selection_mode_lowest_wl",
+      "thread_selection_mode_round_robin",
+      "thread_selection_mode_private",
+  };
+
   typedef enum kmp_affinity_map_mode_t {
       kmp_affinity_map_type_thread = 0,
       kmp_affinity_map_type_domain = 1,
   } kmp_affinity_map_mode_t;
+
+  const char[][] kmp_affinity_map_mode_c = {
+      "map_type_thread",
+      "map_type_domain",
+  };
 
   typedef enum kmp_affinity_page_selection_strategy_t {
       kmp_affinity_page_mode_first_page_of_first_affinity_only = 0,
@@ -811,12 +824,28 @@ typedef enum kmp_affinity_thread_selection_mode_t {
       kmp_affinity_page_mode_first_page = 5,
   } kmp_affinity_page_selection_strategy_t;
 
+  const char[][] kmp_affinity_page_selection_strategy_c = {
+      "page_mode_first_page_of_first_affinity_only",
+      "page_mode_divide_in_n_pages",
+      "page_mode_every_nth_page",
+      "page_mode_first_and_last_page",
+      "page_mode_continuous_binary_search",
+      "page_mode_first_page",
+  };
+
   typedef enum kmp_affinity_page_weighting_strategy_t {
       kmp_affinity_page_weight_mode_first_page_only = 0,
       kmp_affinity_page_weight_mode_majority = 1,
       kmp_affinity_page_weight_mode_by_affinity = 2,
       kmp_affinity_page_weight_mode_by_size = 3,
   } kmp_affinity_page_weighting_strategy_t;
+
+  const char[][] kmp_affinity_page_weighting_strategy_c = {
+      "page_weight_mode_first_page_only",
+      "page_weight_mode_majority",
+      "page_weight_mode_by_affinity",
+      "page_weight_mode_by_size"
+  };
 
   typedef struct kmp_affinity_settings_t {
       kmp_affinity_thread_selection_mode_t thread_selection_strategy;
@@ -4068,14 +4097,6 @@ extern kmp_maphash_t * task_aff_addr_map2;
 extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
 extern kmp_affinity_settings_t kmp_affinity_settings;
-
-/*
-extern kmp_affinity_thread_selection_mode_t thread_selection_strategy;
-extern kmp_affinity_map_mode_t affinity_map_mode;
-extern kmp_affinity_page_selection_strategy_t page_selection_strategy;
-extern kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
-extern int number_of_affinities;
-*/
 
 static void start_task_execution_measurement(kmp_taskdata_t* taskdata) {
   if(taskdata->td_ts_task_execution == -1) {
