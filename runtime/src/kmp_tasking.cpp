@@ -654,7 +654,7 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
   }
 
   if(taskdata->naffin != 0) {
-    if(affinity_map_mode == kmp_affinity_map_type_thread) {
+    if(kmp_affinity_settings.affinity_map_mode == kmp_affinity_map_type_thread) {
       // set gtid in last used location for page address
       KA_TRACE(5, ("__kmp_task_start: T#%d Setting last used mapping to %lx ==> %d\n", gtid, taskdata->affinity_info[0].base_addr, gtid));
 #if KMP_TASK_AFFINITY_MEASURE_TIME
@@ -1981,9 +1981,9 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
         #endif
         KA_TRACE(60, ("__kmpc_omp_task: T#%d Memory at %p is at numa node\t%d\t(retcode %d)\n", gtid, page_start_address, current_data_domain, ret_code));
         if (ret_code == 0 && current_data_domain >= 0){
-            if(thread_selection_strategy == kmp_affinity_thread_selection_mode_private
+            if(kmp_affinity_settings.thread_selection_strategy == kmp_affinity_thread_selection_mode_private
                 && current_data_domain == thread->th.th_task_aff_my_domain_nr
-                && affinity_map_mode == kmp_affinity_map_type_domain) {target_gtid = gtid;target_tid = __kmp_tid_from_gtid(gtid);}
+                && kmp_affinity_settings.affinity_map_mode == kmp_affinity_map_type_domain) {target_gtid = gtid;target_tid = __kmp_tid_from_gtid(gtid);}
 
             KA_TRACE(50,("calling init thread: domain %d, team %d, threads %d, tid %d, gtid %d, idx %d\n",current_data_domain, task_team, threads_data, target_tid, target_gtid, threads_data->td.td_idx_in_numa_map));
             kmp_info_t * target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
@@ -1991,7 +1991,7 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
                 #if KMP_TASK_AFFINITY_MEASURE_TIME
                     double time4 = get_wall_time2();
                 #endif
-                if(affinity_map_mode == kmp_affinity_map_type_domain) {
+                if(kmp_affinity_settings.affinity_map_mode == kmp_affinity_map_type_domain) {
                     KA_TRACE(5, ("__kmpc_omp_task: T#%d Setting initial mapping %lx ==> %d\n", gtid, page_start_address, current_data_domain));
                     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
                         __kmp_acquire_bootstrap_lock(&lock_addr_map);
@@ -2101,7 +2101,7 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
     }
 }
 */
-inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin], kmp_affinity_page_weighting_strategy_t page_weighting_strategy) 
+inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin]) 
 {
   const int page_size = KMP_GET_PAGE_SIZE();
   int x = 0, y = 0;
@@ -2109,7 +2109,7 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
     int* cur;
     std::map<int,int> m;
 
-  switch (page_weighting_strategy)
+  switch (kmp_affinity_settings.page_weighting_strategy)
   {
   case kmp_affinity_page_weight_mode_first_page_only:
     return page_loc[0][0];
@@ -2183,7 +2183,7 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     void *pointer = *pointer2;
     const int page_size = KMP_GET_PAGE_SIZE();
     KA_TRACE(20, ("affinity_schedule (enter): T#%d #registred affinities %d\n",gtid, naffin));
-    KA_TRACE(50, ("+++ aff_data[0,len] addr: %p %p length %d, page_size %d n %d\n", aff_info[0].base_addr, aff_info[0].base_addr+aff_info[0].len, aff_info[0].len, page_size, number_of_affinities));
+    KA_TRACE(50, ("+++ aff_data[0,len] addr: %p %p length %d, page_size %d n %d\n", aff_info[0].base_addr, aff_info[0].base_addr+aff_info[0].len, aff_info[0].len, page_size, kmp_affinity_settings.number_of_affinities));
     KA_TRACE(50,("+++ domain of data 0 in map: %d\n",task_aff_addr_map.find(aff_info[0].base_addr & ~(page_size-1))->second))
     kmp_task_team_t *task_team = thread->th.th_task_team;
     kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
@@ -2191,8 +2191,8 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     int current_data_domain = -1;
     kmp_info_t * target_thread = nullptr;
 
-    if (number_of_affinities < 1){number_of_affinities = 1;}
-    const int n = number_of_affinities;//for strat
+    if (kmp_affinity_settings.number_of_affinities < 1){kmp_affinity_settings.number_of_affinities = 1;}
+    const int n = kmp_affinity_settings.number_of_affinities;//for strat
 
     int max_len = n;//for loc array
 
@@ -2200,10 +2200,10 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     /*determine the max page length dependent of the chosen strategy*/
     /*----------------------------------------------------------------*/
 
-    if(page_weighting_strategy == 0) {
+    if(kmp_affinity_settings.page_weighting_strategy == 0) {
       max_len = 1;
     } else {
-      switch (page_selection_strategy)
+      switch (kmp_affinity_settings.page_selection_strategy)
       {
         case kmp_affinity_page_mode_first_page_of_first_affinity_only:
           max_len = 1;
@@ -2239,7 +2239,7 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     int skipLen[naffin];
     int skip=0;
 
-    switch (page_selection_strategy)
+    switch (kmp_affinity_settings.page_selection_strategy)
     {
       case kmp_affinity_page_mode_first_page_of_first_affinity_only:
 
@@ -2360,7 +2360,7 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
         thread->th.th_num_strategy2++;
     #endif
 
-    return map_count_weighted(aff_info, naffin, row, page_loc, array_size, page_weighting_strategy);
+    return map_count_weighted(aff_info, naffin, row, page_loc, array_size);
 }
 
 kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
@@ -2471,9 +2471,9 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 
         if (loc >= 0){
             current_data_domain = loc;
-            if (affinity_map_mode == kmp_affinity_map_type_domain){
+            if (kmp_affinity_settings.affinity_map_mode == kmp_affinity_map_type_domain){
                 current_data_domain = loc;
-                if(thread_selection_strategy == kmp_affinity_thread_selection_mode_private
+                if(kmp_affinity_settings.thread_selection_strategy == kmp_affinity_thread_selection_mode_private
                     && current_data_domain == thread->th.th_task_aff_my_domain_nr) {
                         // push to local queue if same domain to keep current thread busy
                     target_gtid = gtid;
@@ -2609,7 +2609,7 @@ void __kmpc_set_task_affinity(void * data_start, int len)
         thread->th.th_count_max_aff_data_len = len;
     #endif
     KA_TRACE(50, ("__kmpc_set_task_affinity: T#%d size %d, affinities %d, INIT type (weight) %d (strategy) %d and num %d, len %d\n",
-                gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, page_weighting_strategy, page_selection_strategy , number_of_affinities, task_affinity_info.len));
+                gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, kmp_affinity_settings.page_weighting_strategy, kmp_affinity_settings.page_selection_strategy , kmp_affinity_settings.number_of_affinities, task_affinity_info.len));
 
     //malloc for 4, realloc ea time > 4.
     if (thread->th.naffin>=4){
@@ -2629,11 +2629,8 @@ void __kmpc_task_affinity_taskexectimes_set_enabled( int enabled )
 //aff_num is parameter for schedule (e.g. divide in n parts)
 void __kmpc_task_affinity_init(kmp_affinity_settings_t affinity_settings)
 {
-  thread_selection_strategy = affinity_settings.thread_selection_strategy;
-  affinity_map_mode = affinity_settings.affinity_map_mode;
-  page_selection_strategy = affinity_settings.page_selection_strategy;
-  page_weighting_strategy = affinity_settings.page_weighting_strategy;
-  number_of_affinities = affinity_settings.number_of_affinities;
+  kmp_affinity_settings = affinity_settings;
+
   enable_numa_aware_stealing = true;
 }
 
@@ -2799,9 +2796,9 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
   if(task_team->tt.tt_numa_domain_size[current_data_domain] == 0)
     return NULL;
 
-  if(thread_selection_strategy == kmp_affinity_thread_selection_mode_first) {
+  if(kmp_affinity_settings.thread_selection_strategy == kmp_affinity_thread_selection_mode_first) {
     *target_gtid = task_team->tt.tt_map_threads_in_domain[current_data_domain][0];
-  } else if(thread_selection_strategy == kmp_affinity_thread_selection_mode_lowest_wl || thread_selection_strategy == kmp_affinity_thread_selection_mode_private) {
+  } else if(kmp_affinity_settings.thread_selection_strategy == kmp_affinity_thread_selection_mode_lowest_wl || kmp_affinity_settings.thread_selection_strategy == kmp_affinity_thread_selection_mode_private) {
     int min_work = INT_MAX;
     int tmp_size = task_team->tt.tt_numa_domain_size[current_data_domain];
     int cur_id = -1;
@@ -2840,7 +2837,7 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain (
     double cur_time = -1;
 #endif
     KA_TRACE(10, ("__kmp_task_aff_get_initial_thread_in_numa_domain:\tT#%d\t%f\ttarget thread with lowest number of tasks:\tT#%d\twith min work=\t%d\tdomain\t%d.\n", __kmp_entry_gtid(), cur_time, *target_gtid, min_work, current_data_domain));
-  } else if(thread_selection_strategy == kmp_affinity_thread_selection_mode_round_robin) {
+  } else if(kmp_affinity_settings.thread_selection_strategy == kmp_affinity_thread_selection_mode_round_robin) {
 
     int cur_gtid = __kmp_entry_gtid();
     int cur_tid = __kmp_tid_from_gtid(cur_gtid);

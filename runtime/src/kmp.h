@@ -4067,11 +4067,15 @@ extern kmp_maphash_t * task_aff_addr_map2;
 
 extern kmp_bootstrap_lock_t lock_domain_init_thread_region;
 
+extern kmp_affinity_settings_t kmp_affinity_settings;
+
+/*
 extern kmp_affinity_thread_selection_mode_t thread_selection_strategy;
 extern kmp_affinity_map_mode_t affinity_map_mode;
 extern kmp_affinity_page_selection_strategy_t page_selection_strategy;
 extern kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
 extern int number_of_affinities;
+*/
 
 static void start_task_execution_measurement(kmp_taskdata_t* taskdata) {
   if(taskdata->td_ts_task_execution == -1) {
