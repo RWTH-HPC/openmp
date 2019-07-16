@@ -104,10 +104,6 @@
         int number_of_affinities;
     } kmp_affinity_settings_t;
 
-#ifdef MYTEST
-#error "TEST"
-#endif
-
     extern const char *kmp_affinity_thread_selection_mode_c[];
     extern const char *kmp_affinity_map_mode_c[];
     extern const char *kmp_affinity_page_selection_strategy_c[];

@@ -60,6 +60,7 @@ inline kmp_info_t * __kmp_task_aff_get_initial_thread_in_numa_domain(
 
 kmp_int32 __kmp_omp_task_aff(kmp_int32 gtid, kmp_int32 target_gtid, kmp_task_t *new_task,
                          bool serialize_immediate);
+kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task);
 #endif
 
 #ifdef OMP_45_ENABLED
@@ -2400,6 +2401,30 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #endif
 
 #if KMP_USE_TASK_AFFINITY
+  res = __kmpc_omp_task_affinity(loc_ref, gtid, new_task);
+#else
+  res = __kmp_omp_task(gtid, new_task, true);
+#endif
+
+  KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning "
+                "TASK_CURRENT_NOT_QUEUED: loc=%p task=%p\n",
+                gtid, loc_ref, new_taskdata));
+#if OMPT_SUPPORT
+  if (__builtin_expect(ompt_enabled.enabled && parent != NULL,0)) {
+    parent->ompt_task_info.frame.reenter_runtime_frame = NULL;
+  }
+#endif
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+  t_overall = get_wall_time2() - t_overall;
+  tmpthread->th.th_sum_time_kmpc_omp_task += t_overall;
+#endif
+  return res;
+}
+
+#if KMP_USE_TASK_AFFINITY
+kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task)
+{
+  kmp_int32 res;
   kmp_info_t *thread = __kmp_threads[gtid];
   thread->th.th_count_overall_tasks_generated++;
 
@@ -2565,32 +2590,20 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
       }
     }
   }
-#else
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-  time1 = get_wall_time2();
-#endif
-  res = __kmp_omp_task(gtid, new_task, true);
-#if KMP_TASK_AFFINITY_MEASURE_TIME
-  time1 = get_wall_time2()-time1;
-  tmpthread->th.th_sum_time_pushing += time1;
-  tmpthread->th.th_num_pushing++;
-#endif
-#endif
 
-  KA_TRACE(10, ("__kmpc_omp_task(exit): T#%d returning "
-                "TASK_CURRENT_NOT_QUEUED: loc=%p task=%p\n",
-                gtid, loc_ref, new_taskdata));
-#if OMPT_SUPPORT
-  if (__builtin_expect(ompt_enabled.enabled && parent != NULL,0)) {
-    parent->ompt_task_info.frame.reenter_runtime_frame = NULL;
-  }
-#endif
 #if KMP_TASK_AFFINITY_MEASURE_TIME
   t_overall = get_wall_time2() - t_overall;
   tmpthread->th.th_sum_time_kmpc_omp_task += t_overall;
 #endif
+
+
+#if KMP_TASK_AFFINITY_MEASURE_TIME
+  time1 = get_wall_time2();
+#endif
+
   return res;
 }
+#endif
 
 #if KMP_USE_TASK_AFFINITY
 void __kmpc_set_task_affinity(void * data_start, int len)
