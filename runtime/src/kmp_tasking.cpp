@@ -2426,7 +2426,6 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
 {
   kmp_int32 res;
   
-  kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
   kmp_info_t *thread = __kmp_threads[gtid];
   kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
   thread->th.th_count_overall_tasks_generated++;
