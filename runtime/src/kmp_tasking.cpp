@@ -2023,7 +2023,7 @@ int inline check_page(kmp_int32 gtid, kmp_info_t *thread, kmp_intptr_t addr){
     return -2;
 }
 
-/* 
+
 //searches page_loc[naffine][row] array for the dependency to use (weighted), based on the strategy to use
 void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin], int* x, int* y, int strat){
     const int page_size = KMP_GET_PAGE_SIZE();
@@ -2101,79 +2101,76 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
         return;
     }
 }
-*/
+
 inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin]) 
 {
   const int page_size = KMP_GET_PAGE_SIZE();
-  int x = 0, y = 0;
-    int max = 0;
-    int* cur;
-    std::map<int,int> m;
+  int x = 0;
+  int y = 0;
+  int max = 0;
+  int* cur = nullptr;
+  std::map<int,int> m;
 
   switch (kmp_affinity_settings.page_weighting_strategy)
   {
-  case kmp_affinity_page_weight_mode_first_page_only:
-    return page_loc[0][0];
-    break;
-  case kmp_affinity_page_weight_mode_majority:
-    x = 0;
-    y = 0;
-    max = 0;
-    for (int i=0; i < naffin; i++) {
-        for (int j=0; j < array_size[i]; j++){
-            cur = &page_loc[i][j];
-            if (*cur < 0) {
-              continue;
-            }
-            m[*cur]++;
-            if (m[*cur] > max) {
-                max = m[*cur];
-                x=i;
-                y=j;
-            }
-        }
-    }
-    break;
-  case kmp_affinity_page_weight_mode_by_affinity:
-    max = 0;
-    for (int i=0; i < naffin; i++) {
-        double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
-        KA_TRACE(50,("++weight %f row %d size %d\n",weight, row, array_size[i]));
-        for (int j=0; j < array_size[i]; j++){
-            cur = &page_loc[i][j];
-            if (*cur < 0){
-              continue;
-            }
-            m[*cur]+=weight;
-            if (m[*cur] > max) {
-                max = m[*cur];
-                x=i;
-                y=j;
-            }
-        }
-    }
-    break;
-  case kmp_affinity_page_weight_mode_by_size:
-    max = 0;
-    int f = page_size*row; //divide weight by factor, to prevent overflow
-    for (int i=0; i < naffin; i++) {
-        double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
-        for (int j=0; j < array_size[i]; j++){
-            cur = &page_loc[i][j];
-            if (*cur < 0) {
-              continue;
-            }
-            m[*cur]+=weight*f;
-            if (m[*cur] > max) {
-                max = m[*cur];
-                x=i;
-                y=j;
-            }
-        }
-    }
-    break;
+    case kmp_affinity_page_weight_mode_first_page_only:
+      return page_loc[0][0];
+      break;
+    case kmp_affinity_page_weight_mode_majority:
+      for (int i=0; i < naffin; i++) {
+          for (int j=0; j < array_size[i]; j++){
+              cur = &page_loc[i][j];
+              if (*cur < 0) {
+                continue;
+              }
+              m[*cur]++;
+              if (m[*cur] > max) {
+                  KA_TRACE(2, ("_map_weight_counted: *cur=%d.\n", *cur));
+                  max = m[*cur];
+                  x=i;
+                  y=j;
+              }
+          }
+      }
+      break;
+    case kmp_affinity_page_weight_mode_by_affinity:
+      for (int i=0; i < naffin; i++) {
+          double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
+          KA_TRACE(50,("++weight %f row %d size %d\n",weight, row, array_size[i]));
+          for (int j=0; j < array_size[i]; j++){
+              cur = &page_loc[i][j];
+              if (*cur < 0){
+                continue;
+              }
+              m[*cur]+=weight;
+              if (m[*cur] > max) {
+                  max = m[*cur];
+                  x=i;
+                  y=j;
+              }
+          }
+      }
+      break;
+    case kmp_affinity_page_weight_mode_by_size:
+      int f = page_size*row; //divide weight by factor, to prevent overflow
+      for (int i=0; i < naffin; i++) {
+          double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
+          for (int j=0; j < array_size[i]; j++){
+              cur = &page_loc[i][j];
+              if (*cur < 0) {
+                continue;
+              }
+              m[*cur]+=weight*f;
+              if (m[*cur] > max) {
+                  max = m[*cur];
+                  x=i;
+                  y=j;
+              }
+          }
+      }
+      break;
   }
-  
+  KA_TRACE(2, ("_map_weight_counted: x = %d, y = %d.\n", x, y));
   return page_loc[x][y];
 }
 
@@ -2346,22 +2343,23 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
         thread->th.th_num_strategy1++;
         time1 = get_wall_time2();
     #endif
-    /* 
+     
     int x=0;
     int y=0;
     //count most common loc in page_loc with weight
-    map_count_weighted(aff_info, naffin, row, page_loc, array_size, &x,&y, page_weighting_strategy);
+    map_count_weighted(aff_info, naffin, row, page_loc, array_size, &x,&y, kmp_affinity_settings.page_weighting_strategy);
     pointer = (void *) ((aff_info[x].base_addr + ((y*skipLen[y]) %aff_info[x].len) ) & ~(page_size-1));
     KA_TRACE(1, (" affinity_schedule (exit): loc %d (%d %d), pointer %p\n", page_loc[x][y],x,y,pointer));
     
-    return page_loc[x][y];*/
+    return page_loc[x][y];
+    /* 
     #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2() - time1;
         thread->th.th_sum_time_strategy2 += time1;
         thread->th.th_num_strategy2++;
     #endif
-
-    return map_count_weighted(aff_info, naffin, row, page_loc, array_size);
+    //return page_loc[0][0];
+    return map_count_weighted(aff_info, naffin, row, page_loc, array_size);*/
 }
 
 kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
