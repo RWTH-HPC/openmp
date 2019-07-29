@@ -2105,9 +2105,9 @@ void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffi
 inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin]) 
 {
   const int page_size = KMP_GET_PAGE_SIZE();
-  int x = 0, y = 0;
+    int x = 0, y = 0;
     int max = 0;
-    int* cur;
+    int cur;
     std::map<int,int> m;
 
   switch (kmp_affinity_settings.page_weighting_strategy)
@@ -2121,13 +2121,14 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
     max = 0;
     for (int i=0; i < naffin; i++) {
         for (int j=0; j < array_size[i]; j++){
-            cur = &page_loc[i][j];
-            if (*cur < 0) {
+            cur = page_loc[i][j];
+            //
+            if (cur < 0) {
               continue;
             }
-            m[*cur]++;
-            if (m[*cur] > max) {
-                max = m[*cur];
+            m[cur]++;
+            if (m[cur] > max) {
+                max = m[cur];
                 x=i;
                 y=j;
             }
@@ -2140,13 +2141,13 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
         double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
         KA_TRACE(50,("++weight %f row %d size %d\n",weight, row, array_size[i]));
         for (int j=0; j < array_size[i]; j++){
-            cur = &page_loc[i][j];
-            if (*cur < 0){
+            cur = page_loc[i][j];
+            if (cur < 0){
               continue;
             }
-            m[*cur]+=weight;
-            if (m[*cur] > max) {
-                max = m[*cur];
+            m[cur]+=weight;
+            if (m[cur] > max) {
+                max = m[cur];
                 x=i;
                 y=j;
             }
@@ -2159,13 +2160,13 @@ inline int map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin
     for (int i=0; i < naffin; i++) {
         double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
         for (int j=0; j < array_size[i]; j++){
-            cur = &page_loc[i][j];
-            if (*cur < 0) {
+            cur = page_loc[i][j];
+            if (cur < 0) {
               continue;
             }
-            m[*cur]+=weight*f;
-            if (m[*cur] > max) {
-                max = m[*cur];
+            m[cur]+=weight*f;
+            if (m[cur] > max) {
+                max = m[cur];
                 x=i;
                 y=j;
             }
@@ -2238,6 +2239,15 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
     int page_loc[naffin][row];
     int array_size[naffin];//filled page loc array size
     int skipLen[naffin];
+
+    for (int i = 0; i < naffin; i++) {
+      array_size[i] = 0;
+      skipLen[i] = 0;
+      for (int j = 0; j < row; j++) {
+        page_loc[i][j] = -1;
+      }
+    }
+
     int skip=0;
 
     switch (kmp_affinity_settings.page_selection_strategy)
@@ -2280,7 +2290,6 @@ int inline affinity_schedule(void **pointer2, kmp_int32 gtid, kmp_info_t *thread
                 skip += skipLen[i];
                 if (skip >= aff_info[i].len) {
                     array_size[i]=j+1;
-                    break;
                 }
             }
         }
