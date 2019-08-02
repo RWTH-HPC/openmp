@@ -589,7 +589,11 @@ kmp_int32 __kmpc_omp_task_with_deps(ident_t *loc_ref, kmp_int32 gtid,
                 "loc=%p task=%p, transferring to __kmpc_omp_task\n",
                 gtid, loc_ref, new_taskdata));
 
+#if KMP_USE_TASK_AFFINITY
+  return __kmpc_omp_task_affinity(loc_ref, gtid, new_task);
+#else
   return __kmp_omp_task(gtid, new_task, true);
+#endif
 }
 
 /*!

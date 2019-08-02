@@ -13,4 +13,4 @@
 f0abac6740b57bbb62c4668866c23f7b src/test-execstack/.success
 f84991c2b9838888e67b5ad1b2846324 src/test-instr/.success
 d4f66c957706331a152330cc060083d7 src/test-relo/.success
-852ac6dfa893cf73d6a4e3a02c66f221 src/test-touch-rt/.success
+f081a5356f71e5b22c2c79ddf2be445f src/test-touch-rt/.success
