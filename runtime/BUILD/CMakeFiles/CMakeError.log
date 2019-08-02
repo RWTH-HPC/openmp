@@ -1,0 +1,395 @@
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_UNUSED_LOCAL_TYPEDEF_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_5125f/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_5125f.dir/build.make CMakeFiles/cmTC_5125f.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_5125f.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_UNUSED_LOCAL_TYPEDEF_FLAG   -Wunused-local-typedef -o CMakeFiles/cmTC_5125f.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wunused-local-typedef' not supported
+Linking C executable cmTC_5125f
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5125f.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_UNUSED_LOCAL_TYPEDEF_FLAG    -rdynamic CMakeFiles/cmTC_5125f.dir/src.c.o  -o cmTC_5125f 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_UNUSED_VALUE_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_890e7/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_890e7.dir/build.make CMakeFiles/cmTC_890e7.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_890e7.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_UNUSED_VALUE_FLAG   -Wunused-value -o CMakeFiles/cmTC_890e7.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wunused-value' not supported
+Linking C executable cmTC_890e7
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_890e7.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_UNUSED_VALUE_FLAG    -rdynamic CMakeFiles/cmTC_890e7.dir/src.c.o  -o cmTC_890e7 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_COVERED_SWITCH_DEFAULT_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_f833c/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_f833c.dir/build.make CMakeFiles/cmTC_f833c.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f833c.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_COVERED_SWITCH_DEFAULT_FLAG   -Wcovered-switch-default -o CMakeFiles/cmTC_f833c.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wcovered-switch-default' not supported
+Linking C executable cmTC_f833c
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f833c.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_COVERED_SWITCH_DEFAULT_FLAG    -rdynamic CMakeFiles/cmTC_f833c.dir/src.c.o  -o cmTC_f833c 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_DEPRECATED_REGISTER_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_2b313/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_2b313.dir/build.make CMakeFiles/cmTC_2b313.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2b313.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_DEPRECATED_REGISTER_FLAG   -Wdeprecated-register -o CMakeFiles/cmTC_2b313.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wdeprecated-register' not supported
+Linking C executable cmTC_2b313
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2b313.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_DEPRECATED_REGISTER_FLAG    -rdynamic CMakeFiles/cmTC_2b313.dir/src.c.o  -o cmTC_2b313 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_GNU_ANONYMOUS_STRUCT_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_f6332/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_f6332.dir/build.make CMakeFiles/cmTC_f6332.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f6332.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_GNU_ANONYMOUS_STRUCT_FLAG   -Wgnu-anonymous-struct -o CMakeFiles/cmTC_f6332.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wgnu-anonymous-struct' not supported
+Linking C executable cmTC_f6332
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f6332.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_GNU_ANONYMOUS_STRUCT_FLAG    -rdynamic CMakeFiles/cmTC_f6332.dir/src.c.o  -o cmTC_f6332 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_SELF_ASSIGN_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_f7b71/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_f7b71.dir/build.make CMakeFiles/cmTC_f7b71.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_f7b71.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_SELF_ASSIGN_FLAG   -Wself-assign -o CMakeFiles/cmTC_f7b71.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wself-assign' not supported
+Linking C executable cmTC_f7b71
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f7b71.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_SELF_ASSIGN_FLAG    -rdynamic CMakeFiles/cmTC_f7b71.dir/src.c.o  -o cmTC_f7b71 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_VLA_EXTENSION_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_676d7/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_676d7.dir/build.make CMakeFiles/cmTC_676d7.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_676d7.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_VLA_EXTENSION_FLAG   -Wvla-extension -o CMakeFiles/cmTC_676d7.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wvla-extension' not supported
+Linking C executable cmTC_676d7
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_676d7.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_VLA_EXTENSION_FLAG    -rdynamic CMakeFiles/cmTC_676d7.dir/src.c.o  -o cmTC_676d7 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_WNO_FORMAT_PEDANTIC_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_e83a3/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_e83a3.dir/build.make CMakeFiles/cmTC_e83a3.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_e83a3.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_WNO_FORMAT_PEDANTIC_FLAG   -Wformat-pedantic -o CMakeFiles/cmTC_e83a3.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line warning #10148: option '-Wformat-pedantic' not supported
+Linking C executable cmTC_e83a3
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e83a3.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_WNO_FORMAT_PEDANTIC_FLAG    -rdynamic CMakeFiles/cmTC_e83a3.dir/src.c.o  -o cmTC_e83a3 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C SOURCE FILE Test LIBOMP_HAVE_MMIC_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_cae4d/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_cae4d.dir/build.make CMakeFiles/cmTC_cae4d.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_cae4d.dir/src.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DLIBOMP_HAVE_MMIC_FLAG -mmic   -mmic -o CMakeFiles/cmTC_cae4d.dir/src.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.c
+icc: command line remark #10148: option '-mmic' not supported
+icc: command line remark #10148: option '-mmic' not supported
+Linking C executable cmTC_cae4d
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cae4d.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DLIBOMP_HAVE_MMIC_FLAG -mmic    -rdynamic CMakeFiles/cmTC_cae4d.dir/src.c.o  -o cmTC_cae4d 
+icc: command line remark #10148: option '-mmic' not supported
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main(void) { return 0; }
+Performing C++ SOURCE FILE Test LIBOMP_HAVE_LONG_DOUBLE_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_0b4a4/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_0b4a4.dir/build.make CMakeFiles/cmTC_0b4a4.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_0b4a4.dir/src.cxx.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc    -DLIBOMP_HAVE_LONG_DOUBLE_FLAG   /Qlong_double -o CMakeFiles/cmTC_0b4a4.dir/src.cxx.o -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.cxx
+icpc: error #10236: File not found:  '/Qlong_double'
+gmake[2]: *** [CMakeFiles/cmTC_0b4a4.dir/src.cxx.o] Error 1
+gmake[2]: *** Deleting file `CMakeFiles/cmTC_0b4a4.dir/src.cxx.o'
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_0b4a4/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test LIBOMP_HAVE_DIAG_DISABLE_177_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_c2ee6/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_c2ee6.dir/build.make CMakeFiles/cmTC_c2ee6.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_c2ee6.dir/src.cxx.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc    -DLIBOMP_HAVE_DIAG_DISABLE_177_FLAG   /Qdiag-disable:177 -o CMakeFiles/cmTC_c2ee6.dir/src.cxx.o -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.cxx
+icpc: error #10236: File not found:  '/Qdiag-disable:177'
+gmake[2]: *** [CMakeFiles/cmTC_c2ee6.dir/src.cxx.o] Error 1
+gmake[2]: *** Deleting file `CMakeFiles/cmTC_c2ee6.dir/src.cxx.o'
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_c2ee6/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test LIBOMP_HAVE_INLINE_MIN_SIZE_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_d8759/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_d8759.dir/build.make CMakeFiles/cmTC_d8759.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_d8759.dir/src.cxx.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc    -DLIBOMP_HAVE_INLINE_MIN_SIZE_FLAG   /Qinline-min-size=1 -o CMakeFiles/cmTC_d8759.dir/src.cxx.o -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.cxx
+icpc: error #10236: File not found:  '/Qinline-min-size=1'
+gmake[2]: *** [CMakeFiles/cmTC_d8759.dir/src.cxx.o] Error 1
+gmake[2]: *** Deleting file `CMakeFiles/cmTC_d8759.dir/src.cxx.o'
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_d8759/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test LIBOMP_HAVE_FALIGN_STACK_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_b0b70/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_b0b70.dir/build.make CMakeFiles/cmTC_b0b70.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_b0b70.dir/src.cxx.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc    -DLIBOMP_HAVE_FALIGN_STACK_FLAG   -falign-stack=maintain-16-byte -o CMakeFiles/cmTC_b0b70.dir/src.cxx.o -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.cxx
+icpc: command line warning #10148: option '-falign-stack=maintain-16-byte' not supported
+Linking CXX executable cmTC_b0b70
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b0b70.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc   -DLIBOMP_HAVE_FALIGN_STACK_FLAG    -rdynamic CMakeFiles/cmTC_b0b70.dir/src.cxx.o  -o cmTC_b0b70 
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test LIBOMP_HAVE_OPT_STREAMING_STORES_FLAG failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_6c16a/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_6c16a.dir/build.make CMakeFiles/cmTC_6c16a.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_6c16a.dir/src.cxx.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc    -DLIBOMP_HAVE_OPT_STREAMING_STORES_FLAG   -opt-streaming-stores never -o CMakeFiles/cmTC_6c16a.dir/src.cxx.o -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/src.cxx
+icpc: command line error: option '-opt-streaming-stores never' is not supported. Please use the replacement option '-qopt-streaming-stores never'
+gmake[2]: *** [CMakeFiles/cmTC_6c16a.dir/src.cxx.o] Error 1
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_6c16a/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source file was:
+int main() { return 0; }
+Determining if the function _intel_fast_memcpy exists in the irc_pic failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_933af/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_933af.dir/build.make CMakeFiles/cmTC_933af.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_933af.dir/CheckFunctionExists.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DCHECK_FUNCTION_EXISTS=_intel_fast_memcpy   -o CMakeFiles/cmTC_933af.dir/CheckFunctionExists.c.o   -c /usr/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_933af
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_933af.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DCHECK_FUNCTION_EXISTS=_intel_fast_memcpy    -rdynamic CMakeFiles/cmTC_933af.dir/CheckFunctionExists.c.o  -o cmTC_933af -lirc_pic 
+ld: cannot find -lirc_pic
+gmake[2]: *** [cmTC_933af] Error 1
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_933af/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_ed671/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_ed671.dir/build.make CMakeFiles/cmTC_ed671.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_ed671.dir/CheckSymbolExists.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc    -o CMakeFiles/cmTC_ed671.dir/CheckSymbolExists.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_ed671
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ed671.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc      -rdynamic CMakeFiles/cmTC_ed671.dir/CheckSymbolExists.c.o  -o cmTC_ed671 
+CMakeFiles/cmTC_ed671.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x23): undefined reference to `pthread_create'
+gmake[2]: *** [cmTC_ed671] Error 1
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_ed671/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+File /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_c4e05/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_c4e05.dir/build.make CMakeFiles/cmTC_c4e05.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_c4e05.dir/CheckFunctionExists.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_c4e05.dir/CheckFunctionExists.c.o   -c /usr/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_c4e05
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c4e05.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_c4e05.dir/CheckFunctionExists.c.o  -o cmTC_c4e05 -lpthreads 
+ld: cannot find -lpthreads
+gmake[2]: *** [cmTC_c4e05] Error 1
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_c4e05/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+
+Determining if files windows.h;psapi.h exist failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_2faac/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_2faac.dir/build.make CMakeFiles/cmTC_2faac.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_2faac.dir/CheckIncludeFiles.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc    -o CMakeFiles/cmTC_2faac.dir/CheckIncludeFiles.c.o   -c /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/CheckIncludeFiles.c
+/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/CheckIncludeFiles.c(2): catastrophic error: cannot open source file "windows.h"
+  #include <windows.h>
+                      ^
+
+compilation aborted for /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp/CheckIncludeFiles.c (code 4)
+gmake[2]: *** [CMakeFiles/cmTC_2faac.dir/CheckIncludeFiles.c.o] Error 4
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_2faac/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+Source:
+/* */
+#include <windows.h>
+#include <psapi.h>
+
+
+int main(void){return 0;}
+
+Determining if the function EnumProcessModules exists in the psapi failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_29794/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_29794.dir/build.make CMakeFiles/cmTC_29794.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_29794.dir/CheckFunctionExists.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DCHECK_FUNCTION_EXISTS=EnumProcessModules   -o CMakeFiles/cmTC_29794.dir/CheckFunctionExists.c.o   -c /usr/share/cmake/Modules/CheckFunctionExists.c
+Linking C executable cmTC_29794
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_29794.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DCHECK_FUNCTION_EXISTS=EnumProcessModules    -rdynamic CMakeFiles/cmTC_29794.dir/CheckFunctionExists.c.o  -o cmTC_29794 -lpsapi 
+ld: cannot find -lpsapi
+gmake[2]: *** [cmTC_29794] Error 1
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_29794/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+
+Determining if the function __atomic_load_1 exists failed with the following output:
+Change Dir: /home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/local_rwth/bin/gmake" "cmTC_88822/fast"
+gmake[1]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+/usr/local_rwth/bin/gmake -f CMakeFiles/cmTC_88822.dir/build.make CMakeFiles/cmTC_88822.dir/build
+gmake[2]: Entering directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_88822.dir/CheckFunctionExists.c.o
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc   -DCHECK_FUNCTION_EXISTS=__atomic_load_1   -o CMakeFiles/cmTC_88822.dir/CheckFunctionExists.c.o   -c /usr/share/cmake/Modules/CheckFunctionExists.c
+/usr/share/cmake/Modules/CheckFunctionExists.c(7): warning #2171: declaration hides built-in function "__atomic_load_1"
+    CHECK_FUNCTION_EXISTS(void);
+    ^
+
+Linking C executable cmTC_88822
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_88822.dir/link.txt --verbose=1
+/opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icc  -DCHECK_FUNCTION_EXISTS=__atomic_load_1    -rdynamic CMakeFiles/cmTC_88822.dir/CheckFunctionExists.c.o  -o cmTC_88822 
+CMakeFiles/cmTC_88822.dir/CheckFunctionExists.c.o: In function `main':
+CheckFunctionExists.c:(.text+0x30): undefined reference to `__atomic_load_1'
+gmake[2]: *** [cmTC_88822] Error 1
+gmake[2]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+gmake[1]: *** [cmTC_88822/fast] Error 2
+gmake[1]: Leaving directory `/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/CMakeTmp'
+
+

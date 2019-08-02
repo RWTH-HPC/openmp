@@ -1,0 +1,6 @@
+/home/lc432959/install/llvm-openmp/task_aff.rel/lib/libomp.so
+/home/lc432959/install/llvm-openmp/task_aff.rel/include/omp.h
+/home/lc432959/install/llvm-openmp/task_aff.rel/include/ompt.h
+/home/lc432959/install/llvm-openmp/task_aff.rel/include/omp_lib.h
+/home/lc432959/install/llvm-openmp/task_aff.rel/include/omp_lib.mod
+/home/lc432959/install/llvm-openmp/task_aff.rel/include/omp_lib_kinds.mod
