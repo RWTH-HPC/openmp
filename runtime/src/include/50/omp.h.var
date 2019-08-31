@@ -102,6 +102,7 @@
         kmp_affinity_page_selection_strategy_t page_selection_strategy;
         kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
         int number_of_affinities;
+        int use_combined_map;
     } kmp_affinity_settings_t;
 
     extern const char *kmp_affinity_thread_selection_mode_c[];

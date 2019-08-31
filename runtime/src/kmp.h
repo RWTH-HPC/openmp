@@ -824,6 +824,7 @@ typedef enum kmp_task_aff_map_type_t {
       kmp_affinity_page_selection_strategy_t page_selection_strategy;
       kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
       int number_of_affinities;
+      int use_combined_map;
   } kmp_affinity_settings_t;
 
   extern const char *kmp_affinity_thread_selection_mode_c[];
@@ -2258,6 +2259,23 @@ typedef struct kmp_dephash {
 } kmp_dephash_t;
 
 
+#ifdef KMP_USE_TASK_AFFINITY_COMBINED_MAP
+  typedef struct task_aff_physical_data_location_t {
+    int data_domain;
+    int gtid;
+    bool operator==(const task_aff_physical_data_location_t& rhs)
+    {
+      return data_domain == rhs.data_domain && gtid == rhs.gtid;
+    };
+    bool operator!=(const task_aff_physical_data_location_t& rhs)
+    {
+      return data_domain != rhs.data_domain || gtid != rhs.gtid;
+    };
+  }task_aff_physical_data_location_t;
+#else 
+  typedef kmp_int32 task_aff_physical_data_location_t;
+#endif
+
 #if KMP_USE_TASK_AFFINITY
 // hash functionality that is used for map
 
@@ -2267,9 +2285,10 @@ enum { KMP_MAPHASH_OTHER_SIZE = 97, KMP_MAPHASH_MASTER_SIZE = 997 };
 // typedef struct kmp_mapnode_list kmp_mapnode_list_t;
 typedef struct kmp_maphash_entry kmp_maphash_entry_t;
 
+
 struct kmp_maphash_entry {
   kmp_intptr_t addr;
-  kmp_int32 val;
+  task_aff_physical_data_location_t val;
   // kmp_mapnode_t *last_out;
   // kmp_mapnode_list_t *last_ins;
   kmp_maphash_entry_t *next_in_bucket;
@@ -4060,9 +4079,9 @@ extern int __kmp_task_affinity_get_node_for_address(void * data);
 extern void __kmp_build_numa_map(int gtid);
 extern kmp_bootstrap_lock_t lock_addr_map;
 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP == 1
-extern std::map<size_t, int> task_aff_addr_map;
+extern std::map<size_t, task_aff_physical_data_location_t> task_aff_addr_map;
 #else
-extern std::unordered_map<size_t, int> task_aff_addr_map;
+extern std::unordered_map<size_t, task_aff_physical_data_location_t> task_aff_addr_map;
 #endif
 
 // forward declaration of map functions

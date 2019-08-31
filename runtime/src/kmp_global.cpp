@@ -84,9 +84,9 @@ int taskexectimes_enabled = 1;
 
 kmp_bootstrap_lock_t lock_addr_map;
 #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP == 1
-std::map<size_t ,int> task_aff_addr_map;
+std::map<size_t ,task_aff_physical_data_location_t> task_aff_addr_map;
 #else
-std::unordered_map<size_t ,int> task_aff_addr_map;
+std::unordered_map<size_t ,task_aff_physical_data_location_t> task_aff_addr_map;
 #endif
 
 kmp_maphash_t * task_aff_addr_map2;
@@ -106,7 +106,8 @@ kmp_affinity_settings_t kmp_affinity_settings = {
     .affinity_map_mode = kmp_affinity_map_type_thread,
     .page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only,
     .page_weighting_strategy = kmp_affinity_page_weight_mode_majority,
-    .number_of_affinities = 1
+    .number_of_affinities = 1,
+    .use_combined_map = 0,
 };
 
 const char *kmp_affinity_thread_selection_mode_c[] = {
@@ -120,6 +121,9 @@ const char *kmp_affinity_thread_selection_mode_c[] = {
 const char *kmp_affinity_map_mode_c[] = {
     "map_type_thread",
     "map_type_domain",
+    #ifdef KMP_USE_TASK_AFFINITY_COMBINED_MAP
+        "map_type_combined",
+    #endif
 };
 
 const char *kmp_affinity_page_selection_strategy_c[] = {
