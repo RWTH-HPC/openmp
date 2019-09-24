@@ -107,7 +107,7 @@ kmp_affinity_settings_t kmp_affinity_settings = {
     .page_selection_strategy = kmp_affinity_page_mode_first_page_of_first_affinity_only,
     .page_weighting_strategy = kmp_affinity_page_weight_mode_majority,
     .number_of_affinities = 1,
-    .use_combined_map = 0,
+    .threshold_for_thread_selection = 0.3,
 };
 
 const char *kmp_affinity_thread_selection_mode_c[] = {
@@ -121,9 +121,7 @@ const char *kmp_affinity_thread_selection_mode_c[] = {
 const char *kmp_affinity_map_mode_c[] = {
     "map_type_thread",
     "map_type_domain",
-    #ifdef KMP_USE_TASK_AFFINITY_COMBINED_MAP
-        "map_type_combined",
-    #endif
+    "map_type_combined",
 };
 
 const char *kmp_affinity_page_selection_strategy_c[] = {

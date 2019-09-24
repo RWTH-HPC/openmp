@@ -36,7 +36,7 @@
 #define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 1
 #define KMP_TASK_AFFINITY_MEASURE_TIME 0
 #define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 0
-#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 0
+#define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
 #define KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES 2
 #define KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED 1
 #define KMP_TASK_AFFINITY_PRINT_TASK_SIZE_EVOLUTION 0
@@ -800,6 +800,7 @@ typedef enum kmp_task_aff_map_type_t {
   typedef enum kmp_affinity_map_mode_t {
       kmp_affinity_map_type_thread = 0,
       kmp_affinity_map_type_domain = 1,
+      kmp_affinity_map_type_combined = 2,
   } kmp_affinity_map_mode_t;
 
   typedef enum kmp_affinity_page_selection_strategy_t {
@@ -824,7 +825,7 @@ typedef enum kmp_task_aff_map_type_t {
       kmp_affinity_page_selection_strategy_t page_selection_strategy;
       kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
       int number_of_affinities;
-      int use_combined_map;
+      double threshold_for_thread_selection;
   } kmp_affinity_settings_t;
 
   extern const char *kmp_affinity_thread_selection_mode_c[];
@@ -2259,7 +2260,6 @@ typedef struct kmp_dephash {
 } kmp_dephash_t;
 
 
-#ifdef KMP_USE_TASK_AFFINITY_COMBINED_MAP
   typedef struct task_aff_physical_data_location_t {
     int data_domain;
     int gtid;
@@ -2272,9 +2272,6 @@ typedef struct kmp_dephash {
       return data_domain != rhs.data_domain || gtid != rhs.gtid;
     };
   }task_aff_physical_data_location_t;
-#else 
-  typedef kmp_int32 task_aff_physical_data_location_t;
-#endif
 
 #if KMP_USE_TASK_AFFINITY
 // hash functionality that is used for map
@@ -2737,6 +2734,12 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 
   int     th_count_task_pushed_in_fallback_mode1;
   int     th_count_task_pushed_in_fallback_mode2;
+
+  int     th_combined_strat_pushed_to_thread;
+  int     th_combined_strat_scheduled_overall;
+  int     th_combined_strat_pushed_under_treshold;
+  int     th_combined_strat_found_other_thread_under_threshold;
+  int     th_combined_strat_found_other_empty_thread;
 
   char * th_task_affinity_msg;
 #endif // KMP_USE_TASK_AFFINITY

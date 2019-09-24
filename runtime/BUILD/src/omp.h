@@ -78,6 +78,7 @@
     typedef enum kmp_affinity_map_mode_t {
         kmp_affinity_map_type_thread = 0,
         kmp_affinity_map_type_domain = 1,
+        kmp_affinity_map_type_combined = 2,
     } kmp_affinity_map_mode_t;
 
     typedef enum kmp_affinity_page_selection_strategy_t {
@@ -102,7 +103,7 @@
         kmp_affinity_page_selection_strategy_t page_selection_strategy;
         kmp_affinity_page_weighting_strategy_t page_weighting_strategy;
         int number_of_affinities;
-        int use_combined_map;
+        double threshold_for_thread_selection;
     } kmp_affinity_settings_t;
 
     extern const char *kmp_affinity_thread_selection_mode_c[];

@@ -5960,6 +5960,14 @@ static void __kmp_reap_thread(kmp_info_t *thread, int is_root) {
 
   __kmp_reap_thread_print_stats(gtid, "count_map_found", 0, thread->th.th_count_map_found);
   __kmp_reap_thread_print_stats(gtid, "count_map_not_found", 0, thread->th.th_count_map_not_found);
+
+  
+  __kmp_reap_thread_print_stats(gtid, "combined_map_strat_pushed_to_thread", 0, thread->th.th_combined_strat_pushed_to_thread);
+  __kmp_reap_thread_print_stats(gtid, "combined_map_strat_scheduled_overall", 0, thread->th.th_combined_strat_scheduled_overall);
+  __kmp_reap_thread_print_stats(gtid, "combined_map_strat_pushed_to_thread_under_threshold", 0, thread->th.th_combined_strat_pushed_under_treshold);
+  __kmp_reap_thread_print_stats(gtid, "combined_map_strat_pushed_to_other_thread_under_threshold", 0, thread->th.th_combined_strat_found_other_thread_under_threshold);
+  
+  __kmp_reap_thread_print_stats(gtid, "combined_map_strat_pushed_to_other_empty_thread", 0, thread->th.th_combined_strat_found_other_empty_thread);
 #endif
   __kmp_free(thread);
 
