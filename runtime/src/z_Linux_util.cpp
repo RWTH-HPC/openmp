@@ -829,7 +829,7 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 
   th->th.th_combined_strat_pushed_to_thread = 0;
   th->th.th_combined_strat_scheduled_overall = 0;
-  th->th.th_combined_strat_pushed_under_treshold = 0;
+  th->th.th_combined_strat_pushed_over_treshold = 0;
   th->th.th_combined_strat_found_other_thread_under_threshold = 0;
   th->th.th_combined_strat_found_other_empty_thread = 0;
 #endif

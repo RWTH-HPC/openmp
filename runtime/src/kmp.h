@@ -34,8 +34,8 @@
 // 1: default c++ map
 // 2: default c++ unordered_map
 #define KMP_TASK_AFFINITY_USE_DEFAULT_MAP 1
-#define KMP_TASK_AFFINITY_MEASURE_TIME 0
-#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 0
+#define KMP_TASK_AFFINITY_MEASURE_TIME 1
+#define KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES 1
 #define KMP_TASK_AFFINITY_PRINT_END_STATISTICS 1
 #define KMP_TASK_AFFINITY_MAX_NUM_STEAL_TRIES 2
 #define KMP_TASK_AFFINITY_NUMA_STEALING_ENABLED 1
@@ -2737,7 +2737,7 @@ typedef struct KMP_ALIGN_CACHE kmp_base_info {
 
   int     th_combined_strat_pushed_to_thread;
   int     th_combined_strat_scheduled_overall;
-  int     th_combined_strat_pushed_under_treshold;
+  int     th_combined_strat_pushed_over_treshold;
   int     th_combined_strat_found_other_thread_under_threshold;
   int     th_combined_strat_found_other_empty_thread;
 
