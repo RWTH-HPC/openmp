@@ -2120,6 +2120,9 @@ inline int get_cur(task_aff_physical_data_location_t page_loc)
     case kmp_affinity_map_type_domain:
       return page_loc.data_domain;
       break;
+    case kmp_affinity_map_type_combined:
+      return page_loc.data_domain;
+      break;
     case kmp_affinity_map_type_thread:
       return page_loc.gtid;
       break;
@@ -2541,7 +2544,8 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
         task_aff_physical_data_location_t loc = affinity_schedule(&page_boundary_pointer, gtid, thread, thread->th.naffin, thread->th.th_task_affinity_data);
         
         current_data_domain = loc.data_domain;
-        new_taskdata->td_task_affinity_data_domain = current_data_domain;
+        if (current_data_domain >= 0)
+          new_taskdata->td_task_affinity_data_domain = current_data_domain;
         target_gtid = loc.gtid;
 
         switch (kmp_affinity_settings.affinity_map_mode) {
@@ -2667,6 +2671,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
                   if(found)
                   {
                     target_tid = __kmp_tid_from_gtid(target_gtid);
+                    new_taskdata->td_task_affinity_data_domain = current_data_domain;
                     break;
                   }
                 }
@@ -2684,6 +2689,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
                 KA_TRACE(50,("calling init thread: c2 domain %d, team %d, threads %d, tid %d, gtid %d, idx %d\n",current_data_domain, task_team, threads_data, tid, gtid, threads_data->td.td_idx_in_numa_map));
                 target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
             }
+            new_taskdata->td_task_affinity_data_domain = current_data_domain;
             break;
           case kmp_affinity_map_type_thread:
             current_data_domain = -1;
