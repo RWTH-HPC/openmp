@@ -2430,6 +2430,8 @@ struct kmp_taskdata { /* aligned during dynamic allocation       */
 
   double td_ts_task_execution = 0.0;
   double td_ts_task_execution_current_sum = 0.0;
+
+  double td_ts_strat_execution = 0.0;
 #endif
 }; // struct kmp_taskdata
 
@@ -4114,6 +4116,7 @@ static void stop_task_execution_measurement(kmp_taskdata_t* taskdata) {
 
 static void finish_task_execution_measurement(kmp_taskdata_t* taskdata, kmp_info_t *thread) {
   double ts = taskdata->td_ts_task_execution_current_sum;
+  double ts_strat = taskdata->td_ts_strat_execution;
   //fprintf(stderr, "__kmp_task_finish: TASK_EXECUTION_TIME of task\t%p\tof thread T#%d is\t%f\n", taskdata, gtid, ts);
   if(taskdata->td_task_affinity_scheduled_thread_set)
   {
@@ -4125,7 +4128,7 @@ static void finish_task_execution_measurement(kmp_taskdata_t* taskdata, kmp_info
       thread->th.th_num_task_execution_correct_domain++;
 #if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
       if(taskexectimes_enabled)
-        fprintf(stderr, "finish_task_execution_measurement: corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+        fprintf(stderr, "finish_task_execution_measurement: corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\t and strat took\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts, ts_strat);
 #endif
     } else {
       //if(tmp_domain != -1 || !enable_numa_aware_stealing) {
@@ -4133,7 +4136,7 @@ static void finish_task_execution_measurement(kmp_taskdata_t* taskdata, kmp_info
       thread->th.th_num_task_execution++;
 #if KMP_TASK_AFFINITY_PRINT_EXECUTION_TIMES
       if(taskexectimes_enabled)
-        fprintf(stderr, "finish_task_execution_measurement: in_corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts);
+        fprintf(stderr, "finish_task_execution_measurement: in_corr_domain\tT#%d\tTASK_EXECUTION_TIME of task %p (data domain = %d) is\t%f\t and strat took\t%f\n", __kmp_gtid, taskdata, tmp_domain, ts, ts_strat);
 #endif
       //}
     }
