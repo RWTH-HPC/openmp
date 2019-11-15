@@ -776,7 +776,8 @@ void __kmp_create_worker(int gtid, kmp_info_t *th, size_t stack_size) {
 
 #if KMP_USE_TASK_AFFINITY
   // init counters and time variable  
-  th->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
+  //th->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
+  th->th.th_task_affinity_data = NULL;
   th->th.naffin = 0;
   th->th.th_task_aff_my_domain_nr = -1;
   th->th.th_numa_domain_rr_counter = NULL;
