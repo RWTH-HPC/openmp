@@ -2700,7 +2700,11 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
         //__kmpc_omp_reg_task_with_affinity(loc_ref, gtid, new_task, thread->th.naffin, thread->th.th_task_affinity_data);
         new_taskdata->affinity_info = thread->th.th_task_affinity_data;
         new_taskdata->naffin = thread->th.naffin;
+#if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+        free(thread->th.th_task_affinity_data);
+#else
         thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
+#endif
         thread->th.naffin = 0;
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
@@ -2786,6 +2790,11 @@ void __kmpc_set_task_affinity(void * data_start, int len)
                 gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, kmp_affinity_settings.page_weighting_strategy, kmp_affinity_settings.page_selection_strategy , kmp_affinity_settings.number_of_affinities, task_affinity_info.len));
 
     //malloc for 4, realloc ea time > 4.
+  #if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+    if (thread->th.naffin == 0) {
+        thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
+    } else
+  #endif
     if (thread->th.naffin>=4){
         thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) realloc(thread->th.th_task_affinity_data, (thread->th.naffin + 1) * sizeof(kmp_task_affinity_info_t));
     }
