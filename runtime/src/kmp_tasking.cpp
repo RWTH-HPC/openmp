@@ -1020,6 +1020,10 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
   stop_task_execution_measurement(taskdata);
   finish_task_execution_measurement(taskdata, thread);
+#if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+  if (taskdata->naffin > 0)
+    free(taskdata->affinity_info);
+#endif /* KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC */
 #endif
 
 // Pop task from stack if tied
@@ -2700,12 +2704,13 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
         //__kmpc_omp_reg_task_with_affinity(loc_ref, gtid, new_task, thread->th.naffin, thread->th.th_task_affinity_data);
         new_taskdata->affinity_info = thread->th.th_task_affinity_data;
         new_taskdata->naffin = thread->th.naffin;
+        thread->th.naffin = 0;
 #if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
-        free(thread->th.th_task_affinity_data);
+        //free(thread->th.th_task_affinity_data);
+        thread->th.th_task_affinity_data = nullptr;
 #else
         thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
 #endif
-        thread->th.naffin = 0;
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2()-time1;
@@ -4683,6 +4688,16 @@ void __kmp_free_task_team(kmp_info_t *thread, kmp_task_team_t *task_team) {
 
   // Put task team back on free list
   __kmp_acquire_bootstrap_lock(&__kmp_task_team_lock);
+
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+  int i;
+  for (i = 0; i < task_team->tt.tt_num_numa_domains; i++){
+    free(task_team->tt.tt_map_threads_in_domain[i]);
+  }
+  free(task_team->tt.tt_numa_domain_size);
+  free(task_team->tt.tt_numa_domain_rr_counter);
+  free(task_team->tt.tt_map_threads_in_domain);
+#endif
 
   KMP_DEBUG_ASSERT(task_team->tt.tt_next == NULL);
   task_team->tt.tt_next = __kmp_free_task_teams;
