@@ -2316,7 +2316,7 @@ typedef struct kmp_task_affinity_info {
 //extern kmp_task_affinity_info_t kmp_task_affinity_info
 
 kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task, kmp_int32 naffins, kmp_task_affinity_info_t *affin_list);
-
+kmp_int32 __kmpc_omp_reg_thread_with_affinity(kmp_int32 gtid, kmp_task_t *new_task);
 
 
 #endif

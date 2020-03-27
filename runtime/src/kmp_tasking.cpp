@@ -1017,13 +1017,15 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
 
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
 
+#if KMP_USE_TASK_AFFINITY 
+  if (taskdata->naffin > 0)
+    free(taskdata->affinity_info);
+#endif
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
   stop_task_execution_measurement(taskdata);
   finish_task_execution_measurement(taskdata, thread);
-#if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
-  if (taskdata->naffin > 0)
-    free(taskdata->affinity_info);
-#endif /* KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC */
+//#if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+//#endif /* KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC */
 #endif
 
 // Pop task from stack if tied
@@ -1126,6 +1128,7 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
 #endif
     {
       // verify resumed task passed in points to parent
+      //suche hier
       KMP_DEBUG_ASSERT(resumed_task == taskdata->td_parent);
     }
   } else {
@@ -1600,7 +1603,11 @@ kmp_task_t *__kmpc_omp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
                             sizeof_shareds, task_entry);
 
   KA_TRACE(20, ("__kmpc_omp_task_alloc(exit): T#%d retval %p\n", gtid, retval));
+  
+  //suche
 
+  kmp_info_t *thread = __kmp_threads[gtid];
+  __kmpc_omp_reg_task_with_affinity(loc_ref, gtid, retval, thread->th.naffin, thread->th.th_task_affinity_data);
   return retval;
 }
 
@@ -2532,7 +2539,10 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
       kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
       KMP_DEBUG_ASSERT(__kmp_tasking_mode != 0);
 
-      if(thread->th.naffin == 0 || nthreads_in_team <= 1)
+      //__kmpc_omp_reg_thread_with_affinity(gtid, new_task);
+
+      //if(thread->th.naffin == 0 || nthreads_in_team <= 1)
+      if(new_taskdata->naffin == 0 || nthreads_in_team <= 1)
       {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2();
@@ -2561,8 +2571,9 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
         kmp_info_t * target_thread = NULL;
         void *page_boundary_pointer;
 
-        task_aff_physical_data_location_t loc = affinity_schedule(&page_boundary_pointer, gtid, thread, thread->th.naffin, thread->th.th_task_affinity_data);
-        
+        //task_aff_physical_data_location_t loc = affinity_schedule(&page_boundary_pointer, gtid, thread, thread->th.naffin, thread->th.th_task_affinity_data);
+        task_aff_physical_data_location_t loc = affinity_schedule(&page_boundary_pointer, gtid, thread, new_taskdata->naffin, new_taskdata->affinity_info);
+
         current_data_domain = loc.data_domain;
         target_gtid = loc.gtid;
 
@@ -2702,15 +2713,19 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
 
         // reset pointer & save temporary
         //__kmpc_omp_reg_task_with_affinity(loc_ref, gtid, new_task, thread->th.naffin, thread->th.th_task_affinity_data);
-        new_taskdata->affinity_info = thread->th.th_task_affinity_data;
-        new_taskdata->naffin = thread->th.naffin;
-        thread->th.naffin = 0;
-#if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
-        //free(thread->th.th_task_affinity_data);
-        thread->th.th_task_affinity_data = nullptr;
-#else
-        thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
-#endif
+
+
+        //new_taskdata->affinity_info = thread->th.th_task_affinity_data;
+        //new_taskdata->naffin = thread->th.naffin;
+        if (thread->th.naffin > 0){
+          thread->th.naffin = 0;
+  #if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+          free(thread->th.th_task_affinity_data);
+          //thread->th.th_task_affinity_data = nullptr;
+  #else
+          thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
+  #endif         
+        }
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2()-time1;
@@ -3114,8 +3129,43 @@ structure kmp_taskdata_t.
 */
 kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task, kmp_int32 naffins, kmp_task_affinity_info_t *affin_list){
     kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
-    new_taskdata->affinity_info = affin_list;
+    //suche
+    int num = 4;
+    if (naffins >= 4)
+      num = naffins + 1;
+    
+    new_taskdata->affinity_info = (kmp_task_affinity_info_t*) malloc(num * sizeof(kmp_task_affinity_info_t));
+
+    for (int i = 0; i < naffins; i++)
+    {
+      new_taskdata->affinity_info[i] = affin_list[i];
+    }
     new_taskdata->naffin = naffins;
+    return 1;
+}
+
+kmp_int32 __kmpc_omp_reg_thread_with_affinity(kmp_int32 gtid, kmp_task_t *new_task)
+{
+    kmp_info_t *thread = __kmp_threads[gtid];
+    kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
+    
+    int naffins = new_taskdata->naffin;
+    int num = 4;
+    if (naffins >= 4)
+      num = naffins + 1;
+
+    if (thread->th.naffin == 0 && naffins > 0)
+    {
+      thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(num * sizeof(kmp_task_affinity_info_t));
+
+      for (int i = 0; i < naffins; i++)
+      {
+        thread->th.th_task_affinity_data[i] = new_taskdata->affinity_info[i];
+      }
+
+      thread->th.naffin = naffins;
+    }
+
     return 1;
 }
 
