@@ -672,14 +672,12 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
       double time1;
       time1 = get_wall_time2();
 #endif
-  if(!startet_at_correct_thread) // && (kmp_affinity_map_type_domain != kmp_affinity_settings.affinity_map_mode)
+  if(!startet_at_correct_thread)
   {
   #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
     __kmp_acquire_bootstrap_lock(&lock_addr_map);
     int j = 0;
-    int end = taskdata->naffin;
-    //int end = 1;
-    for (j = 0; j < end; j++)
+    for (j = 0; j < taskdata->naffin; j++)
     {
       task_aff_addr_map[taskdata->affinity_info[j].base_addr].gtid = gtid;
     }
@@ -1019,9 +1017,15 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
 
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
 
+#if KMP_USE_TASK_AFFINITY 
+  if (taskdata->naffin > 0)
+    free(taskdata->affinity_info);
+#endif
 #if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_MEASURE_TIME
   stop_task_execution_measurement(taskdata);
   finish_task_execution_measurement(taskdata, thread);
+//#if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+//#endif /* KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC */
 #endif
 
 // Pop task from stack if tied
@@ -1124,6 +1128,7 @@ static void __kmp_task_finish(kmp_int32 gtid, kmp_task_t *task,
 #endif
     {
       // verify resumed task passed in points to parent
+      //suche hier
       KMP_DEBUG_ASSERT(resumed_task == taskdata->td_parent);
     }
   } else {
@@ -1403,6 +1408,35 @@ kmp_task_t *__kmp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
 
 // Avoid double allocation here by combining shareds with taskdata
 #if USE_FAST_MEMORY
+// #if KMP_USE_TASK_AFFINITY
+// if(enable_numa_aware_stealing)
+// {
+// 	if(thread->th.th_task_affinity_data != NULL)
+// 	{
+// 		int current_data_domain = -1;
+// 		int ret_code = move_pages(0 /*self memory */, 1, &thread->th.th_task_affinity_data, NULL, &current_data_domain, 0);
+// 		if(ret_code == 0 && current_data_domain >= 0 && current_data_domain != thread->th.th_task_aff_my_domain_nr)
+// 		{
+// 			// get buffer from different thread that is pinned to NUMA domain
+// 			srand(time(NULL));
+// 			int idx_rand = rand() % numa_domain_size[current_data_domain];
+// 			int tmp_gtid = map_threads_in_numa_domain[current_data_domain][idx_rand];
+
+// 			kmp_info_t *tmp_thread = __kmp_threads[tmp_gtid];
+// 			// fprintf(stderr, "__kmp_task_alloc: T#%d allocating taskdata on NUMA node %d using thread T#%d\n", gtid, current_data_domain, tmp_gtid);
+
+// 			// taskdata = (kmp_taskdata_t *)numa_alloc_onnode(shareds_offset + sizeof_shareds, current_data_domain);
+// 			taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(tmp_thread, shareds_offset + sizeof_shareds);
+// 		} else {
+// 			taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds);
+// 		}
+// 	} else {
+// 		taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds);
+// 	}
+// } else {
+// 	taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds);
+// }
+// #else
   taskdata = (kmp_taskdata_t *)__kmp_fast_allocate(thread, shareds_offset + sizeof_shareds);
 // #endif
 #else /* ! USE_FAST_MEMORY */
@@ -1569,7 +1603,11 @@ kmp_task_t *__kmpc_omp_task_alloc(ident_t *loc_ref, kmp_int32 gtid,
                             sizeof_shareds, task_entry);
 
   KA_TRACE(20, ("__kmpc_omp_task_alloc(exit): T#%d retval %p\n", gtid, retval));
+  
+  //suche
 
+  kmp_info_t *thread = __kmp_threads[gtid];
+  __kmpc_omp_reg_task_with_affinity(loc_ref, gtid, retval, thread->th.naffin, thread->th.th_task_affinity_data);
   return retval;
 }
 
@@ -1893,7 +1931,6 @@ kmp_int32 __kmp_omp_task(kmp_int32 gtid, kmp_task_t *new_task,
 /* Should we execute the new task or queue it? For now, let's just always try to
    queue it.  If the queue fills up, then we'll execute it.  */
 
-
 #if OMP_45_ENABLED
   if (new_taskdata->td_flags.proxy == TASK_PROXY ||
       __kmp_push_task(gtid, new_task) == TASK_NOT_PUSHED) // if cannot defer
@@ -2023,7 +2060,85 @@ task_aff_physical_data_location_t inline check_page(kmp_int32 gtid, kmp_info_t *
       return tmp_result;
 }
 
+/* 
+//searches page_loc[naffine][row] array for the dependency to use (weighted), based on the strategy to use
+void inline map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, int page_loc[naffin][row], int array_size[naffin], int* x, int* y, int strat){
+    const int page_size = KMP_GET_PAGE_SIZE();
+    KA_TRACE(50,("+++ start count_weight strat w%d pageloc[0][0} %d naffin %d row %d array_size[0] %d\n",strat,page_loc[0][0], naffin, row, array_size[0]));
 
+    if (strat == 1){
+        //overall, no further balancing
+        int max = 0;
+        int* cur;
+        std::map<int,int> m;
+        for (int i=0; i < naffin; i++) {
+            for (int j=0; j < array_size[i]; j++){
+                cur = &page_loc[i][j];
+                if (*cur < 0){continue;}
+                m[*cur]++;
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
+            }
+        }
+        return;
+    }
+
+    else if (strat == 2){
+        //balace by affinity, every affinity as important, if row not full weight ea entry a bit more
+        int max = 0;
+        int* cur;
+        std::map<int,double> m;
+        for (int i=0; i < naffin; i++) {
+            double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
+            KA_TRACE(50,("++weight %f row %d size %d\n",weight, row, array_size[i]));
+            for (int j=0; j < array_size[i]; j++){
+                cur = &page_loc[i][j];
+                if (*cur < 0){continue;}
+                m[*cur]+=weight;
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
+            }
+        }
+        return;
+    }
+
+    else if (strat == 3){
+        //balance by size, evenly distr array weight
+        int max = 0;
+        int* cur;
+        std::map<int,double> m;
+        int f = page_size*row; //divide weight by factor, to prevent overflow
+        for (int i=0; i < naffin; i++) {
+            double weight = 1 + ( (row-array_size[i]) / (double) array_size[i]);//weight each entry as if every row is full
+            for (int j=0; j < array_size[i]; j++){
+                cur = &page_loc[i][j];
+                if (*cur < 0){continue;}
+                m[*cur]+=weight*f;
+                if (m[*cur] > max) {
+                    max = m[*cur];
+                    *x=i;
+                    *y=j;
+                }
+            }
+        }
+        KA_TRACE(50,("++size max %d",max));
+        return;
+    }
+
+    else{ //if strat == 0
+        //choose first affinity, first entry
+        *x=0;
+        *y=0;
+        return;
+    }
+}
+*/
 inline int get_cur(task_aff_physical_data_location_t page_loc)
 {
   switch (kmp_affinity_settings.affinity_map_mode)
@@ -2047,6 +2162,7 @@ inline task_aff_physical_data_location_t map_count_weighted(kmp_task_affinity_in
     int max = 0;
     int cur;
     std::map<int,int> m;
+    
 
   switch (kmp_affinity_settings.page_weighting_strategy)
   {
@@ -2146,35 +2262,37 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
     /*determine the max page length dependent of the chosen strategy*/
     /*----------------------------------------------------------------*/
 
-    switch (kmp_affinity_settings.page_selection_strategy)
-    {
-      case kmp_affinity_page_mode_first_page_of_first_affinity_only:
-        max_len = 1;
-        //thread->th.naffin = 1;
-        break;
-      case kmp_affinity_page_mode_divide_in_n_pages:
-        max_len = n;
-        break;
-      case kmp_affinity_page_mode_every_nth_page:
-        max_len = 1;
-        for (int i=0; i < naffin; i++){
-          if (aff_info[i].len > max_len){
-              max_len = aff_info[i].len;
+    if(kmp_affinity_settings.page_weighting_strategy == 0) {
+      max_len = 1;
+    } else {
+      switch (kmp_affinity_settings.page_selection_strategy)
+      {
+        case kmp_affinity_page_mode_first_page_of_first_affinity_only:
+          max_len = 1;
+          break;
+        case kmp_affinity_page_mode_divide_in_n_pages:
+          max_len = n;
+          break;
+        case kmp_affinity_page_mode_every_nth_page:
+          max_len = 1;
+          for (int i=0; i < naffin; i++){
+            if (aff_info[i].len > max_len){
+                max_len = aff_info[i].len;
+            }
           }
-        }
-        max_len = ((max_len/page_size)/n)+1;
-        break;
-      case kmp_affinity_page_mode_first_and_last_page:
-        max_len = 2;
-        break;
-      case kmp_affinity_page_mode_continuous_binary_search:
-        max_len = n;
-        break;
-      case kmp_affinity_page_mode_first_page:
-        max_len = 1;
-        break;
+          max_len = ((max_len/page_size)/n)+1;
+          break;
+        case kmp_affinity_page_mode_first_and_last_page:
+          max_len = 2;
+          break;
+        case kmp_affinity_page_mode_continuous_binary_search:
+          max_len = n;
+          break;
+        case kmp_affinity_page_mode_first_page:
+          max_len = 1;
+          break;
+      }
     }
-    
 
     const int row = max_len;
 
@@ -2199,7 +2317,6 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
 
         page_loc[0][0] = check_page(gtid, thread, aff_info[0].base_addr);
         array_size[0] = 1;
-
         break;
       case kmp_affinity_page_mode_divide_in_n_pages:
 
@@ -2239,7 +2356,7 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
 
         break;
       case kmp_affinity_page_mode_first_and_last_page:
-        
+
         for (int i=0; i < naffin; i++) {
             array_size[i]=1;
             skipLen[i] = aff_info[i].len-1;
@@ -2312,7 +2429,6 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
         thread->th.th_sum_time_strategy2 += time1;
         thread->th.th_num_strategy2++;
     #endif
-
     return map_count_weighted(aff_info, naffin, row, page_loc, array_size);
 }
 
@@ -2422,7 +2538,10 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
       kmp_thread_data_t *threads_data = (kmp_thread_data_t *)TCR_PTR(task_team->tt.tt_threads_data);
       KMP_DEBUG_ASSERT(__kmp_tasking_mode != 0);
 
-      if(thread->th.naffin == 0 || nthreads_in_team <= 1)
+      //__kmpc_omp_reg_thread_with_affinity(gtid, new_task);
+
+      //if(thread->th.naffin == 0 || nthreads_in_team <= 1)
+      if(new_taskdata->naffin == 0 || nthreads_in_team <= 1)
       {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2();
@@ -2451,14 +2570,11 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
         kmp_info_t * target_thread = NULL;
         void *page_boundary_pointer;
 
-        
+        //task_aff_physical_data_location_t loc = affinity_schedule(&page_boundary_pointer, gtid, thread, thread->th.naffin, thread->th.th_task_affinity_data);
+        task_aff_physical_data_location_t loc = affinity_schedule(&page_boundary_pointer, gtid, thread, new_taskdata->naffin, new_taskdata->affinity_info);
 
-        task_aff_physical_data_location_t loc = affinity_schedule(&page_boundary_pointer, gtid, thread, thread->th.naffin, thread->th.th_task_affinity_data);
-
-        
         current_data_domain = loc.data_domain;
         target_gtid = loc.gtid;
-
 
         switch (kmp_affinity_settings.affinity_map_mode) {
           case kmp_affinity_map_type_combined:
@@ -2532,12 +2648,12 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
                         KA_TRACE(3,("threshold: %lf\n", threshold))
 
                         
-                        if (task_ratio > threshold)
+                        if (task_ratio <= threshold)
                         {
                           found = true;
-                          thread->th.th_combined_strat_pushed_over_treshold++;
-                        } else {
                           thread->th.th_combined_strat_found_other_thread_under_threshold++;
+                        } else {
+                          thread->th.th_combined_strat_pushed_over_treshold++;
 
                           found = true;
                           target_gtid = thread_lowest;
@@ -2594,14 +2710,21 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
             break;
         }
 
-        
         // reset pointer & save temporary
         //__kmpc_omp_reg_task_with_affinity(loc_ref, gtid, new_task, thread->th.naffin, thread->th.th_task_affinity_data);
-        new_taskdata->affinity_info = thread->th.th_task_affinity_data;
-        new_taskdata->naffin = thread->th.naffin;
-        free(thread->th.th_task_affinity_data);
-        //thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
-        thread->th.naffin = 0;
+
+
+        //new_taskdata->affinity_info = thread->th.th_task_affinity_data;
+        //new_taskdata->naffin = thread->th.naffin;
+        /*if (thread->th.naffin > 0){
+          thread->th.naffin = 0;
+  #if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+          free(thread->th.th_task_affinity_data);
+          //thread->th.th_task_affinity_data = nullptr;
+  #else
+          thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
+  #endif         
+        }*/
 
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2()-time1;
@@ -2619,18 +2742,15 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
             // fall back mode if not possible to find any matching thread
             KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode 1 (should not happen under normal circumstances) , target_id: %d\n", gtid, target_tid));
             thread->th.th_count_task_pushed_in_fallback_mode1++;
-
             res = __kmp_omp_task(gtid, new_task, true);
           } else {
             if (gtid == target_gtid) {
-
               res = __kmp_omp_task(gtid, new_task, true);
             } else {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
               time2 = get_wall_time2();
 #endif
               res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
-              
 #if KMP_TASK_AFFINITY_MEASURE_TIME
               time2 = get_wall_time2()-time2;
               thread->th.th_sum_time_pushing_inaff += time2;
@@ -2674,18 +2794,13 @@ void __kmpc_set_task_affinity(void * data_start, int len)
 {
     int gtid = __kmp_entry_gtid();
     kmp_info_t *thread = __kmp_threads[gtid];
-
     KA_TRACE(30, ("__kmpc_set_task_affinity(enter): T#%d &data_start %p, len %d, number %d\n",
         gtid, (kmp_intptr_t) data_start, len, thread->th.naffin));
     //new info struct with data
     kmp_task_affinity_info_t task_affinity_info;
-
-    task_affinity_info.base_addr = (kmp_intptr_t) data_start;
-    if (len < 1) {
-      len = 1;
-    }//len <1 set to 1
-
-    task_affinity_info.len = len;
+    task_affinity_info.base_addr= (kmp_intptr_t) data_start;
+    if (len < 1){len = 1;}//len <1 set to 1
+    task_affinity_info.len= len;
     #if KMP_TASK_AFFINITY_MEASURE_TIME
         if (len > thread->th.th_count_max_aff_data_len)
         thread->th.th_count_max_aff_data_len = len;
@@ -2694,18 +2809,15 @@ void __kmpc_set_task_affinity(void * data_start, int len)
                 gtid, sizeof(kmp_task_affinity_info_t), thread->th.naffin, kmp_affinity_settings.page_weighting_strategy, kmp_affinity_settings.page_selection_strategy , kmp_affinity_settings.number_of_affinities, task_affinity_info.len));
 
     //malloc for 4, realloc ea time > 4.
-    /*if (thread->th.naffin>=4){
+  #if KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
+    if (thread->th.naffin == 0) {
+        thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
+    } else
+  #endif
+    if (thread->th.naffin>=4){
         thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) realloc(thread->th.th_task_affinity_data, (thread->th.naffin + 1) * sizeof(kmp_task_affinity_info_t));
-    }*/
-    if (thread->th.naffin == 0)
-    {
-      thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) malloc(4 * sizeof(kmp_task_affinity_info_t));
-    } else if (thread->th.naffin >= 4)
-    {
-      thread->th.th_task_affinity_data = (kmp_task_affinity_info_t*) realloc(thread->th.th_task_affinity_data, (thread->th.naffin + 1) * sizeof(kmp_task_affinity_info_t));
     }
-
-
+    //fprintf(stderr,"Robert wills wissen: naffin %d\n", thread->th.naffin);
     thread->th.th_task_affinity_data[thread->th.naffin] = task_affinity_info;
     thread->th.naffin++;
 }
@@ -3016,9 +3128,26 @@ This entry registers the affinity information attached to a task with the task t
 structure kmp_taskdata_t.
 */
 kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task, kmp_int32 naffins, kmp_task_affinity_info_t *affin_list){
+  
     kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
-    new_taskdata->affinity_info = affin_list;
+    //suche
+    //int num = 4;
+    //if (naffins >= 4)
+    //num = naffins;
+    new_taskdata->affinity_info = (kmp_task_affinity_info_t*) malloc(naffins * sizeof(kmp_task_affinity_info_t));
+
+    for (int i = 0; i < naffins; i++)
+    {
+      new_taskdata->affinity_info[i] = affin_list[i];
+    }
     new_taskdata->naffin = naffins;
+
+    kmp_info_t *thread = __kmp_threads[gtid];
+    if (thread->th.naffin > 0){
+      thread->th.naffin = 0;
+      free(thread->th.th_task_affinity_data);
+    }
+
     return 1;
 }
 
@@ -4589,22 +4718,19 @@ void __kmp_free_task_team(kmp_info_t *thread, kmp_task_team_t *task_team) {
   KA_TRACE(20, ("__kmp_free_task_team: T#%d task_team = %p\n",
                 thread ? __kmp_gtid_from_thread(thread) : -1, task_team));
 
-
-
-
   // Put task team back on free list
   __kmp_acquire_bootstrap_lock(&__kmp_task_team_lock);
 
-  free(task_team->tt.tt_numa_domain_size);
-  free(task_team->tt.tt_numa_domain_rr_counter);
-
+#if KMP_USE_TASK_AFFINITY && KMP_TASK_AFFINITY_NEW_MEMORY_ALLOC
   int i;
   for (i = 0; i < task_team->tt.tt_num_numa_domains; i++){
-        free(task_team->tt.tt_map_threads_in_domain[i]);
+    free(task_team->tt.tt_map_threads_in_domain[i]);
   }
-
+  free(task_team->tt.tt_numa_domain_size);
+  free(task_team->tt.tt_numa_domain_rr_counter);
   free(task_team->tt.tt_map_threads_in_domain);
-  
+#endif
+
   KMP_DEBUG_ASSERT(task_team->tt.tt_next == NULL);
   task_team->tt.tt_next = __kmp_free_task_teams;
   TCW_PTR(__kmp_free_task_teams, task_team);

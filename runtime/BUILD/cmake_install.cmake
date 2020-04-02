@@ -1,4 +1,4 @@
-# Install script for directory: /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime
+# Install script for directory: /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,8 +39,8 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/src/cmake_install.cmake")
-  include("/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/test/cmake_install.cmake")
+  include("/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/cmake_install.cmake")
+  include("/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/test/cmake_install.cmake")
 
 endif()
 
@@ -52,5 +52,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

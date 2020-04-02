@@ -424,7 +424,13 @@ void __kmp_release_deps(kmp_int32 gtid, kmp_taskdata_t *task) {
         KA_TRACE(20, ("__kmp_release_deps: T#%d successor %p of %p scheduled "
                       "for execution.\n",
                       gtid, successor->dn.task, task));
+                      
+#if KMP_USE_TASK_AFFINITY
+        __kmpc_omp_task_affinity(NULL, gtid, successor->dn.task);
+#else
         __kmp_omp_task(gtid, successor->dn.task, false);
+#endif
+        //__kmp_omp_task(gtid, successor->dn.task, false);
       }
     }
 

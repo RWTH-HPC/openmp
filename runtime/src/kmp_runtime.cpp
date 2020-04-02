@@ -7500,6 +7500,12 @@ void __kmp_cleanup(void) {
   __kmp_stats_fini();
 #endif
 
+#if KMP_USE_TASK_AFFINITY
+  for(int i = 0; i < NUMA_DOMAIN_MAX_NR; i++){
+    free(map_threads_in_numa_domain[i]);
+  }  
+#endif
+
   KA_TRACE(10, ("__kmp_cleanup: exit\n"));
 }
 

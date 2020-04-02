@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime
+CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD
+CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
 
 # Utility rule file for libomp-micro-tests.
 
@@ -63,10 +63,10 @@ src/CMakeFiles/libomp-micro-tests.dir/build: libomp-micro-tests
 .PHONY : src/CMakeFiles/libomp-micro-tests.dir/build
 
 src/CMakeFiles/libomp-micro-tests.dir/clean:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-micro-tests.dir/cmake_clean.cmake
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-micro-tests.dir/cmake_clean.cmake
 .PHONY : src/CMakeFiles/libomp-micro-tests.dir/clean
 
 src/CMakeFiles/libomp-micro-tests.dir/depend:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/src /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-micro-tests.dir/DependInfo.cmake --color=$(COLOR)
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-micro-tests.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/CMakeFiles/libomp-micro-tests.dir/depend
 

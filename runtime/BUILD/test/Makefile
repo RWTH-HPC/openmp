@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime
+CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD
+CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -126,14 +126,14 @@ install/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/test/CMakeFiles/progress.marks
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles 0
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/test/CMakeFiles/progress.marks
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/clean
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/clean
 .PHONY : clean
 
 # The main clean target
@@ -143,17 +143,17 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Help Target
@@ -179,6 +179,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

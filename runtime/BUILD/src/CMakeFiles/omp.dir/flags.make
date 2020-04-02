@@ -7,13 +7,13 @@ C_FLAGS = -O3 -DNDEBUG -fPIC   -D _GNU_SOURCE -D _REENTRANT
 
 C_DEFINES = -Domp_EXPORTS
 
-C_INCLUDES = -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/src -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src/i18n -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src/include/50 -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src/thirdparty/ittnotify 
+C_INCLUDES = -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src/i18n -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src/include/50 -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src/thirdparty/ittnotify 
 
 CXX_FLAGS = -O3 -DNDEBUG -fPIC   -D _GNU_SOURCE -D _REENTRANT
 
 CXX_DEFINES = -Domp_EXPORTS
 
-CXX_INCLUDES = -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/src -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src/i18n -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src/include/50 -I/rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/src/thirdparty/ittnotify 
+CXX_INCLUDES = -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src/i18n -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src/include/50 -I/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src/thirdparty/ittnotify 
 
 # Custom flags: src/CMakeFiles/omp.dir/thirdparty/ittnotify/ittnotify_static.c.o_FLAGS = -std=c++11 -fno-exceptions -fno-rtti -Wno-sign-compare -Wno-unused-function -Wno-unused-variable -Wno-switch -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-missing-braces -Wno-comment -Qoption,cpp,--extended_float_types -x c++
 

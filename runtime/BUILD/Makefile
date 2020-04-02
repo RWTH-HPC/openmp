@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime
+CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD
+CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -126,9 +126,9 @@ install/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/llvm-openmp/runtime/BUILD/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
