@@ -2492,6 +2492,7 @@ kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
 #if KMP_USE_TASK_AFFINITY
 kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task)
 {
+  //fprintf(stderr, "Enter kmpc task aff:\n");
 #if KMP_TASK_AFFINITY_MEASURE_TIME
   double t_overall = get_wall_time2();
   double time1, time2, time3;
@@ -2501,6 +2502,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
   
   kmp_info_t *thread = __kmp_threads[gtid];
   kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
+  //__kmpc_omp_reg_task_with_affinity(loc_ref, gtid, new_task, thread->th.naffin, thread->th.th_task_affinity_data);
   thread->th.th_count_overall_tasks_generated++;
 
   if(thread->th.th_task_affinity_msg)
@@ -2540,6 +2542,8 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
 
       //__kmpc_omp_reg_thread_with_affinity(gtid, new_task);
 
+      //fprintf(stderr, "Num affins:\tThread naffin: %d\tTask naffin: %d\n", thread->th.naffin, new_taskdata->naffin);
+
       //if(thread->th.naffin == 0 || nthreads_in_team <= 1)
       if(new_taskdata->naffin == 0 || nthreads_in_team <= 1)
       {
@@ -2575,6 +2579,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
 
         current_data_domain = loc.data_domain;
         target_gtid = loc.gtid;
+        //fprintf(stderr, "Enter scheduling:\n");
 
         switch (kmp_affinity_settings.affinity_map_mode) {
           case kmp_affinity_map_type_combined:
@@ -2684,6 +2689,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
                 KA_TRACE(50,("calling init thread: c2 domain %d, team %d, threads %d, tid %d, gtid %d, idx %d\n",current_data_domain, task_team, threads_data, tid, gtid, threads_data->td.td_idx_in_numa_map));
                 target_thread = __kmp_task_aff_get_initial_thread_in_numa_domain(current_data_domain, task_team, threads_data, &target_tid, &target_gtid);
             }
+
             new_taskdata->td_task_affinity_data_domain = current_data_domain;
             break;
           case kmp_affinity_map_type_thread:
@@ -2785,6 +2791,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
   new_taskdata->td_ts_strat_execution += time3;
 #endif
 
+
   return res;
 }
 #endif
@@ -2820,6 +2827,7 @@ void __kmpc_set_task_affinity(void * data_start, int len)
     //fprintf(stderr,"Robert wills wissen: naffin %d\n", thread->th.naffin);
     thread->th.th_task_affinity_data[thread->th.naffin] = task_affinity_info;
     thread->th.naffin++;
+    //fprintf(stderr, "Num affins:\t%d\n", thread->th.naffin);
 }
 
 void __kmpc_task_affinity_taskexectimes_set_enabled( int enabled )
@@ -3129,6 +3137,9 @@ structure kmp_taskdata_t.
 */
 kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t *new_task, kmp_int32 naffins, kmp_task_affinity_info_t *affin_list){
   
+    if (naffins == 0)
+      return 0;
+
     kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
     //suche
     //int num = 4;
@@ -3147,6 +3158,8 @@ kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, km
       thread->th.naffin = 0;
       free(thread->th.th_task_affinity_data);
     }
+
+     //fprintf(stderr, "Num affins:\t%d\n", naffins);
 
     return 1;
 }
