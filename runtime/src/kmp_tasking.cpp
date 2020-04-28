@@ -633,6 +633,7 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
             gtid, taskdata, current_task));
 
   KMP_DEBUG_ASSERT(taskdata->td_flags.tasktype == TASK_EXPLICIT);
+  KA_TRACE(30,("__kmp_task_start(info):\tT#%d\t target_domain is = %d, will be executed on thread domain %d\n", gtid, taskdata->td_task_affinity_data_domain,  thread->th.th_task_aff_my_domain_nr));
 
 #if KMP_USE_TASK_AFFINITY
   bool startet_at_correct_thread = false;
@@ -658,9 +659,9 @@ static void __kmp_task_start(kmp_int32 gtid, kmp_task_t *task,
     }
     else {
       if (taskdata->td_task_affinity_data_domain < 0) {
-        KA_TRACE(3,("task_start: Invalid Data Domain"));
+        KA_TRACE(3,("task_start: Invalid Data Domain\n"));
       } else { 
-        KA_TRACE(3,("task_start: false Data Domain"));
+        KA_TRACE(3,("task_start: false Data Domain, took Task Domain %d, executed on Thread Domain %d\n", taskdata->td_task_affinity_data_domain, thread->th.th_task_aff_my_domain_nr));
       }
     }
   }
@@ -1965,19 +1966,20 @@ task_aff_physical_data_location_t inline check_page(kmp_int32 gtid, kmp_info_t *
     #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
         auto search = task_aff_addr_map.find(page_start_address);
         found = search != task_aff_addr_map.end();
-
-        //if (search->second.data_domain == -1 || search->second.gtid == -1)
-          //found = false;
+        KA_TRACE(50,("check_page (found default map) T#%d: found=%d, data domain = %d, target gtid = %d\n", gtid, found, search->second.data_domain, search->second.gtid));
+        if (search->second.data_domain  < 0 || search->second.gtid < 0)
+          found = false;
     #else
         kmp_maphash_entry * cur_entry = __kmp_maphash_find(thread, task_aff_addr_map2, (kmp_intptr_t) page_start_address);
         found = cur_entry->val.gtid != -1 && cur_entry->val.data_domain != -1;
+        KA_TRACE(50,("check_page (found non default map) T#%d: found=%d, data domain = %d", gtid, found, cur_entry->val.data_domain));
     #endif
 
     #if KMP_TASK_AFFINITY_ALWAYS_CHECK_PHYSICAL_LOCATION
             found = false;
     #endif
 
-    //if (kmp_affinity_settings.affinity_map_mode == kmp_affinity_map_type_domain)
+    //if (kmp_affinity_settings.affinity_map_mode == kmp_affinity_map_type_domain || kmp_affinity_settings.affinity_map_mode == kmp_affinity_map_type_combined)
       //found = false;
 
 
@@ -1995,8 +1997,10 @@ task_aff_physical_data_location_t inline check_page(kmp_int32 gtid, kmp_info_t *
         #endif
 
         #if KMP_TASK_AFFINITY_USE_DEFAULT_MAP
+            KA_TRACE(50,("check_page (return default map) T#%d: return with data domain = %d\n", gtid, search->second.data_domain));
             return search->second;
         #else
+            KA_TRACE(50,("check_page (return non default map) T#%d: return with data domain = %d\n", gtid, cur_entry->val.data_domain));
             return cur_entry->val;
         #endif
     } else {
@@ -2262,6 +2266,7 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
     /*determine the max page length dependent of the chosen strategy*/
     /*----------------------------------------------------------------*/
 
+
     if(kmp_affinity_settings.page_weighting_strategy == 0) {
       max_len = 1;
     } else {
@@ -2299,7 +2304,12 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
     task_aff_physical_data_location_t page_loc[naffin][row];
     int array_size[naffin];//filled page loc array size
     int skipLen[naffin];
-
+    /*
+    for (int i = 0; i < naffin; i++) {
+      for (int j = 0; j < aff_info[i].len; j+=aff_info[i].len/10) {
+          KA_TRACE(1,("__affinity_schedule T#%d, check page[%d][%d].domain = %d\n", gtid ,i, j, check_page(gtid, thread, aff_info[i].base_addr + j)));
+      }
+    }*/
     for (int i = 0; i < naffin; i++) {
       array_size[i] = 0;
       skipLen[i] = 0;
@@ -2319,7 +2329,6 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
         array_size[0] = 1;
         break;
       case kmp_affinity_page_mode_divide_in_n_pages:
-
         for (int i=0;i<naffin;i++){
             skipLen[i] = aff_info[i].len/n;
             array_size[i] = row;
@@ -2502,8 +2511,9 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
   
   kmp_info_t *thread = __kmp_threads[gtid];
   kmp_taskdata_t *new_taskdata = KMP_TASK_TO_TASKDATA(new_task);
-  //__kmpc_omp_reg_task_with_affinity(loc_ref, gtid, new_task, thread->th.naffin, thread->th.th_task_affinity_data);
   thread->th.th_count_overall_tasks_generated++;
+
+  if(thread)
 
   if(thread->th.th_task_affinity_msg)
   {
@@ -2742,21 +2752,25 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
 
         KA_TRACE(3, ("_kmpc_omp_task_affinity: Strategy took Thread T#%d in numa domain %d with Target numa domain: %d\n", target_gtid,map_thread_to_numa_domain[target_gtid], current_data_domain));
 
+        bool serialize_immediate = true;
+        if (loc_ref == NULL)
+          serialize_immediate = false;
+
         if(current_data_domain >= 0) {
           if(target_tid == -1)
           {
             // fall back mode if not possible to find any matching thread
             KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode 1 (should not happen under normal circumstances) , target_id: %d\n", gtid, target_tid));
             thread->th.th_count_task_pushed_in_fallback_mode1++;
-            res = __kmp_omp_task(gtid, new_task, true);
+            res = __kmp_omp_task(gtid, new_task, serialize_immediate);
           } else {
             if (gtid == target_gtid) {
-              res = __kmp_omp_task(gtid, new_task, true);
+              res = __kmp_omp_task(gtid, new_task, serialize_immediate);
             } else {
 #if KMP_TASK_AFFINITY_MEASURE_TIME
               time2 = get_wall_time2();
 #endif
-              res = __kmp_omp_task_aff(gtid, target_gtid, new_task, true);
+              res = __kmp_omp_task_aff(gtid, target_gtid, new_task, serialize_immediate);
 #if KMP_TASK_AFFINITY_MEASURE_TIME
               time2 = get_wall_time2()-time2;
               thread->th.th_sum_time_pushing_inaff += time2;
@@ -2768,7 +2782,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
           // fall back mode if not possible to find any matching thread or not a correct numa domain for poninter
           KA_TRACE(5, ("__kmpc_omp_task: T#%d fallback mode, current_data_domain %d\n", gtid, current_data_domain));
           thread->th.th_count_task_pushed_in_fallback_mode2++;
-          res = __kmp_omp_task(gtid, new_task, true);
+          res = __kmp_omp_task(gtid, new_task, serialize_immediate);
         } // if
 #if KMP_TASK_AFFINITY_MEASURE_TIME
         time1 = get_wall_time2()-time1;
@@ -3149,7 +3163,10 @@ kmp_int32 __kmpc_omp_reg_task_with_affinity(ident_t *loc_ref, kmp_int32 gtid, km
 
     for (int i = 0; i < naffins; i++)
     {
-      new_taskdata->affinity_info[i] = affin_list[i];
+      //new_taskdata->affinity_info[i] = affin_list[i];
+      new_taskdata->affinity_info[i].len = affin_list[i].len;
+      new_taskdata->affinity_info[i].base_addr = affin_list[i].base_addr;
+      new_taskdata->affinity_info[i].flags = affin_list[i].flags;
     }
     new_taskdata->naffin = naffins;
 

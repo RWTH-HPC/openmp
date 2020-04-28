@@ -425,6 +425,7 @@ void __kmp_release_deps(kmp_int32 gtid, kmp_taskdata_t *task) {
                       "for execution.\n",
                       gtid, successor->dn.task, task));
         //__kmp_omp_task(gtid, successor->dn.task, false);
+        
         #if KMP_USE_TASK_AFFINITY
           __kmpc_omp_task_affinity(NULL, gtid, successor->dn.task);
         #else
