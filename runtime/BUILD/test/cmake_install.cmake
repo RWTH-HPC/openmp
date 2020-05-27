@@ -1,4 +1,4 @@
-# Install script for directory: /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/test
+# Install script for directory: /home/lc432959/repos/hpc/llvm-openmp/runtime/test
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

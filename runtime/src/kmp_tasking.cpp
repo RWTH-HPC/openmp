@@ -550,12 +550,12 @@ static kmp_int32 __kmp_push_task(kmp_int32 gtid, kmp_task_t *task) {
                 thread_data->td.td_deque_head, thread_data->td.td_deque_tail));
 
 #if KMP_USE_TASK_AFFINITY
-  if(taskdata->naffin != 0)
+  if(taskdata->naffin > 0)
   {
     thread->th.th_count_task_with_affinity_generated++;
+    taskdata->td_task_affinity_scheduled_thread = gtid;
+    taskdata->td_task_affinity_scheduled_thread_set = true;
   }
-  taskdata->td_task_affinity_scheduled_thread = gtid;
-  taskdata->td_task_affinity_scheduled_thread_set = true;
 #endif
   __kmp_release_bootstrap_lock(&thread_data->td.td_deque_lock);
   return TASK_SUCCESSFULLY_PUSHED;
@@ -2143,7 +2143,7 @@ inline int get_cur(task_aff_physical_data_location_t page_loc)
 {
   switch (kmp_affinity_settings.affinity_map_mode)
   {
-    case kmp_affinity_map_type_domain:
+    case kmp_affinity_map_type_domain: 
       return page_loc.data_domain;
       break;
     case kmp_affinity_map_type_combined:
@@ -2693,7 +2693,7 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
             new_taskdata->td_task_affinity_data_domain = current_data_domain;
             break;
           case kmp_affinity_map_type_thread:
-            current_data_domain = -1;
+            //current_data_domain = -1;
             if(target_gtid < 0)
               break;
 
@@ -2701,18 +2701,18 @@ kmp_int32 __kmpc_omp_task_affinity(ident_t *loc_ref, kmp_int32 gtid, kmp_task_t 
                 time2 = get_wall_time2();
             #endif
 
-            int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
+            //int tmp_err = move_pages(0 /*self memory */, 1, &page_boundary_pointer, NULL, &current_data_domain, 0);
             #if KMP_TASK_AFFINITY_MEASURE_TIME
               time2 = get_wall_time2()-time2;
               thread->th.th_sum_time_identify_physical_location += time2;
               thread->th.th_num_identify_physical_location++;
             #endif
-            if(tmp_err == 0 && current_data_domain >= 0)
+            if(current_data_domain >= 0)
               new_taskdata->td_task_affinity_data_domain = current_data_domain;
               // DEBUG
               // set data domain to some value >= 0; not really used but necessary to not run into fallback mode
-              current_data_domain = 0;
-              target_tid = __kmp_tid_from_gtid(target_gtid);
+            current_data_domain = 0;
+            target_tid = __kmp_tid_from_gtid(target_gtid);
             break;
         }
 

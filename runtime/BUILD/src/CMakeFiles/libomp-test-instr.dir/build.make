@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime
+CMAKE_SOURCE_DIR = /home/lc432959/repos/hpc/llvm-openmp/runtime
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
+CMAKE_BINARY_DIR = /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
 
 # Utility rule file for libomp-test-instr.
 
@@ -58,10 +58,10 @@ src/CMakeFiles/libomp-test-instr: src/test-instr/.success
 
 src/test-instr/.success: src/libomp.so
 src/test-instr/.success: ../tools/check-instruction-set.pl
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating test-instr/.success"
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E make_directory /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/test-instr
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/local_rwth/bin/perl /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/tools/check-instruction-set.pl --os=lin --arch=32e --show --mic-arch=knc /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/libomp.so
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E touch test-instr/.success
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating test-instr/.success"
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E make_directory /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/test-instr
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/local_rwth/bin/perl /home/lc432959/repos/hpc/llvm-openmp/runtime/tools/check-instruction-set.pl --os=lin --arch=32e --show --mic-arch=knc /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/libomp.so
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E touch test-instr/.success
 
 libomp-test-instr: src/CMakeFiles/libomp-test-instr
 libomp-test-instr: src/test-instr/.success
@@ -75,10 +75,10 @@ src/CMakeFiles/libomp-test-instr.dir/build: libomp-test-instr
 .PHONY : src/CMakeFiles/libomp-test-instr.dir/build
 
 src/CMakeFiles/libomp-test-instr.dir/clean:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-test-instr.dir/cmake_clean.cmake
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-test-instr.dir/cmake_clean.cmake
 .PHONY : src/CMakeFiles/libomp-test-instr.dir/clean
 
 src/CMakeFiles/libomp-test-instr.dir/depend:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-test-instr.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lc432959/repos/hpc/llvm-openmp/runtime /home/lc432959/repos/hpc/llvm-openmp/runtime/src /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-test-instr.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/CMakeFiles/libomp-test-instr.dir/depend
 

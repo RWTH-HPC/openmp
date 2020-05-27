@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime
+CMAKE_SOURCE_DIR = /home/lc432959/repos/hpc/llvm-openmp/runtime
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
+CMAKE_BINARY_DIR = /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
 
 # Utility rule file for libomp-test-relo.
 
@@ -57,11 +57,11 @@ src/CMakeFiles/libomp-test-relo: src/test-relo/.success
 
 
 src/test-relo/.success: src/libomp.so
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating test-relo/.success, test-relo/readelf.log"
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E make_directory /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/test-relo
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && readelf -d /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/libomp.so > test-relo/readelf.log
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && grep -e TEXTREL test-relo/readelf.log ; test $$? -eq 1
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E touch test-relo/.success
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating test-relo/.success, test-relo/readelf.log"
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E make_directory /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/test-relo
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && readelf -d /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/libomp.so > test-relo/readelf.log
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && grep -e TEXTREL test-relo/readelf.log ; test $$? -eq 1
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E touch test-relo/.success
 
 src/test-relo/readelf.log: src/test-relo/.success
 	@$(CMAKE_COMMAND) -E touch_nocreate src/test-relo/readelf.log
@@ -79,10 +79,10 @@ src/CMakeFiles/libomp-test-relo.dir/build: libomp-test-relo
 .PHONY : src/CMakeFiles/libomp-test-relo.dir/build
 
 src/CMakeFiles/libomp-test-relo.dir/clean:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-test-relo.dir/cmake_clean.cmake
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-test-relo.dir/cmake_clean.cmake
 .PHONY : src/CMakeFiles/libomp-test-relo.dir/clean
 
 src/CMakeFiles/libomp-test-relo.dir/depend:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-test-relo.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lc432959/repos/hpc/llvm-openmp/runtime /home/lc432959/repos/hpc/llvm-openmp/runtime/src /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-test-relo.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/CMakeFiles/libomp-test-relo.dir/depend
 

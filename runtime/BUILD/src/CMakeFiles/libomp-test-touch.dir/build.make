@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime
+CMAKE_SOURCE_DIR = /home/lc432959/repos/hpc/llvm-openmp/runtime
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
+CMAKE_BINARY_DIR = /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD
 
 # Utility rule file for libomp-test-touch.
 
@@ -58,12 +58,12 @@ src/CMakeFiles/libomp-test-touch: src/test-touch-rt/.success
 
 src/test-touch-rt/.success: ../src/test-touch.c
 src/test-touch-rt/.success: src/libomp.so
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating test-touch-rt/.success, test-touch-rt/test-touch, test-touch-rt/test-touch.o"
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E make_directory /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/test-touch-rt
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E remove -f test-touch-rt/*
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc -o test-touch-rt/test-touch /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src/test-touch.c -lpthread /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/libomp.so
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/sh -c "LD_LIBRARY_PATH=.:/rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src:/opt/intel/impi/2018.4.274/compilers_and_libraries/linux/mpi/lib64:/opt/intel/impi/2018.4.274/compilers_and_libraries/linux/mpi/lib:/opt/intel/Compiler/19.0/1.144/rwthlnk/daal/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/daal/lib/ia32_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/ipp/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/ipp/lib/ia32_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/mkl/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/mkl/lib/ia32_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/tbb/lib/intel64_lin/gcc4.7:/opt/intel/Compiler/19.0/1.144/rwthlnk/tbb/lib/ia32_lin/gcc4.7:/opt/intel/Compiler/19.0/1.144/rwthlnk/compiler/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/compiler/lib/ia32_lin KMP_VERSION=1 test-touch-rt/test-touch"
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E touch test-touch-rt/.success
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating test-touch-rt/.success, test-touch-rt/test-touch, test-touch-rt/test-touch.o"
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E make_directory /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/test-touch-rt
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E remove -f test-touch-rt/*
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /opt/intel/Compiler/19.0/1.144/rwthlnk/bin/intel64/icpc -o test-touch-rt/test-touch /home/lc432959/repos/hpc/llvm-openmp/runtime/src/test-touch.c -lpthread /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/libomp.so
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/sh -c "LD_LIBRARY_PATH=.:/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src:/opt/intel/impi/2018.4.274/compilers_and_libraries/linux/mpi/lib64:/opt/intel/impi/2018.4.274/compilers_and_libraries/linux/mpi/lib:/opt/intel/Compiler/19.0/1.144/rwthlnk/daal/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/daal/lib/ia32_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/ipp/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/ipp/lib/ia32_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/mkl/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/mkl/lib/ia32_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/tbb/lib/intel64_lin/gcc4.7:/opt/intel/Compiler/19.0/1.144/rwthlnk/tbb/lib/ia32_lin/gcc4.7:/opt/intel/Compiler/19.0/1.144/rwthlnk/compiler/lib/intel64_lin:/opt/intel/Compiler/19.0/1.144/rwthlnk/compiler/lib/ia32_lin KMP_VERSION=1 test-touch-rt/test-touch"
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && /usr/bin/cmake -E touch test-touch-rt/.success
 
 src/test-touch-rt/test-touch: src/test-touch-rt/.success
 	@$(CMAKE_COMMAND) -E touch_nocreate src/test-touch-rt/test-touch
@@ -85,10 +85,10 @@ src/CMakeFiles/libomp-test-touch.dir/build: libomp-test-touch
 .PHONY : src/CMakeFiles/libomp-test-touch.dir/build
 
 src/CMakeFiles/libomp-test-touch.dir/clean:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-test-touch.dir/cmake_clean.cmake
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src && $(CMAKE_COMMAND) -P CMakeFiles/libomp-test-touch.dir/cmake_clean.cmake
 .PHONY : src/CMakeFiles/libomp-test-touch.dir/clean
 
 src/CMakeFiles/libomp-test-touch.dir/depend:
-	cd /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src /rwthfs/rz/cluster/home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-test-touch.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lc432959/repos/hpc/llvm-openmp/runtime /home/lc432959/repos/hpc/llvm-openmp/runtime/src /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src /home/lc432959/repos/hpc/llvm-openmp/runtime/BUILD/src/CMakeFiles/libomp-test-touch.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : src/CMakeFiles/libomp-test-touch.dir/depend
 
