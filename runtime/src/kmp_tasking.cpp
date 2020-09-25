@@ -2153,9 +2153,10 @@ inline int get_cur(task_aff_physical_data_location_t page_loc)
       return page_loc.gtid;
       break;
   }
+  return -1;
 }
 
-inline task_aff_physical_data_location_t map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin,const int row, task_aff_physical_data_location_t page_loc[naffin][row], int array_size[naffin]) 
+inline task_aff_physical_data_location_t map_count_weighted(kmp_task_affinity_info *aff_info, const int naffin, const int row, task_aff_physical_data_location_t **page_loc, int *array_size) 
 {
   const int page_size = KMP_GET_PAGE_SIZE();
     int x = 0, y = 0;
@@ -2237,8 +2238,6 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
         double time1 = get_wall_time2();
     #endif
 
-
-
     void *pointer = *pointer2;
     const int page_size = KMP_GET_PAGE_SIZE();
     KA_TRACE(20, ("affinity_schedule (enter): T#%d #registred affinities %d\n",gtid, naffin));
@@ -2296,7 +2295,11 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
 
     const int row = max_len;
 
-    task_aff_physical_data_location_t page_loc[naffin][row];
+    task_aff_physical_data_location_t **page_loc = (task_aff_physical_data_location_t**) malloc(naffin*sizeof(task_aff_physical_data_location_t*));
+    for(int i = 0; i < naffin; i++) {
+        page_loc[i] = (task_aff_physical_data_location_t*) malloc(row*sizeof(task_aff_physical_data_location_t));
+    }
+
     int array_size[naffin];//filled page loc array size
     int skipLen[naffin];
 
@@ -2429,7 +2432,16 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
         thread->th.th_sum_time_strategy2 += time1;
         thread->th.th_num_strategy2++;
     #endif
-    return map_count_weighted(aff_info, naffin, row, page_loc, array_size);
+    
+    task_aff_physical_data_location_t ret_val = map_count_weighted(aff_info, naffin, row, page_loc, &(array_size[0]));
+    
+    // free memory again
+    for(int i = 0; i < naffin; i++) {
+        free(page_loc[i]);
+    }
+    free(page_loc);
+
+    return ret_val;
 }
 
 kmp_int32 __kmpc_omp_task(ident_t *loc_ref, kmp_int32 gtid,
