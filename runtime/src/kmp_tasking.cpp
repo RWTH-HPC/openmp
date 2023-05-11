@@ -2427,11 +2427,6 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
     KA_TRACE(1, (" affinity_schedule (exit): loc %d (%d %d), pointer %p\n", page_loc[x][y],x,y,pointer));
     
     return page_loc[x][y];*/
-    #if KMP_TASK_AFFINITY_MEASURE_TIME
-        time1 = get_wall_time2() - time1;
-        thread->th.th_sum_time_strategy2 += time1;
-        thread->th.th_num_strategy2++;
-    #endif
     
     task_aff_physical_data_location_t ret_val = map_count_weighted(aff_info, naffin, row, page_loc, &(array_size[0]));
     
@@ -2440,6 +2435,12 @@ task_aff_physical_data_location_t inline affinity_schedule(void **pointer2, kmp_
         free(page_loc[i]);
     }
     free(page_loc);
+
+    #if KMP_TASK_AFFINITY_MEASURE_TIME
+        time1 = get_wall_time2() - time1;
+        thread->th.th_sum_time_strategy2 += time1;
+        thread->th.th_num_strategy2++;
+    #endif
 
     return ret_val;
 }
